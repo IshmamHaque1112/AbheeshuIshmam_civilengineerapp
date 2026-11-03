@@ -1,0 +1,5 @@
+{
+ "summary": "No design is proposed, because this corner was rebuilt after its survey and one required value is a placeholder.",
+ "findings_narrative": "Limit checks were skipped. The surveyed values describe the corner before its latest construction.",
+ "engineer_note": "Use the site visit list to collect current measurements."
+}

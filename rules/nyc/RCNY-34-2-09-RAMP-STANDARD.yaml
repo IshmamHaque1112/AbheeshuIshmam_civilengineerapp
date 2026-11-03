@@ -1,0 +1,23 @@
+id: RCNY-34-2-09-RAMP-STANDARD
+title: Corner ramps follow the latest H-1011
+jurisdiction: nyc
+authority_type: city_rule
+applies_to:
+- corner_ramp_row
+parameter: null
+operator: reference
+limit: null
+unit: null
+source_document: Rules of the City of New York, Title 34
+edition: American Legal Publishing online edition, as retrieved 2026-11-03
+effective_date: Not stated in the retrieved text
+section: 34 RCNY §2-09(f)(4)(xiv)
+url: https://codelibrary.amlegal.com/codes/newyorkcity/latest/NYCrules/0-0-0-62402
+quote: Any person constructing, reconstructing or repairing a corner shall install
+  pedestrian ramps
+retrieved_on: '2026-11-03'
+status: verified
+reviewed_by: null
+notes: Source text checked by Claude through a web fetch on 2026-11-03. Human review
+  is still pending. It points to the latest revision of Standard Detail Drawing H-1011,
+  which has not been obtained.

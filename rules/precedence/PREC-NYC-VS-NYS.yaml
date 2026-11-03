@@ -1,0 +1,8 @@
+id: PREC-NYC-VS-NYS
+question: NYC or NYS building code at an NYC location?
+decision: NYC Construction Codes apply. The NYS Uniform Code does not.
+reason: NYS says the Uniform Code applies in all parts of the state except New York
+  City, which has its own construction code.
+source_section: NYS Legal Memorandum LG07, Legislative Authority
+url: https://dos.ny.gov/legal-memorandum-lg07-uniform-code-and-local-authority
+reviewed_by: null

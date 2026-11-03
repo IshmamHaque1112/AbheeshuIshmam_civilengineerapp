@@ -1,0 +1,23 @@
+id: NYS-BCNYS-2025
+title: 2025 Building Code of New York State limits
+jurisdiction: nys
+authority_type: state_code
+applies_to:
+- corner_ramp_row
+- building_route
+- building
+parameter: null
+operator: needs_source
+limit: null
+unit: null
+source_document: 2025 Building Code of New York State
+edition: null
+effective_date: null
+section: null
+url: https://dos.ny.gov/uniform-fire-prevention-and-building-code
+quote: null
+retrieved_on: null
+status: needs_source
+reviewed_by: null
+notes: Exact source text has not been obtained. Do not add a limit until a person
+  has checked it.

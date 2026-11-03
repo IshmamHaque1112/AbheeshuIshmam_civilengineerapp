@@ -1,0 +1,20 @@
+{
+ "constraints": [
+  {
+   "text": "The records show no obstacles at either ramp, but the sidewalk width is not recorded.",
+   "evidence_keys": [
+    "corner:sidewalk_width"
+   ]
+  }
+ ],
+ "options": [
+  {
+   "ramp_type": "C1 perpendicular",
+   "rationale": "The surveyed ramps run straight from the landing to the curb, and each landing is recorded at the top of its ramp.",
+   "evidence_keys": [
+    "8100001:lnd_length",
+    "8100002:lnd_length"
+   ]
+  }
+ ]
+}

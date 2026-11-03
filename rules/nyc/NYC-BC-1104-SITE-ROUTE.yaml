@@ -1,0 +1,21 @@
+id: NYC-BC-1104-SITE-ROUTE
+title: Accessible route from a public street or sidewalk to a building
+jurisdiction: nyc
+authority_type: building_code
+applies_to:
+- building_route
+parameter: null
+operator: needs_source
+limit: null
+unit: null
+source_document: NYC Building Code, §1104
+edition: null
+effective_date: null
+section: §1104.1
+url: https://codelibrary.amlegal.com/codes/newyorkcity/latest/NYCadmin/0-0-0-174859
+quote: null
+retrieved_on: null
+status: needs_source
+reviewed_by: null
+notes: Flag for engineer review. Confirm the code edition. This is not a corner ramp
+  limit.

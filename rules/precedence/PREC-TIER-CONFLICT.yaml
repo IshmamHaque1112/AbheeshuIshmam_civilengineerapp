@@ -1,0 +1,9 @@
+id: PREC-TIER-CONFLICT
+question: What happens when rule tiers set different limits?
+decision: Show both rules, use the stricter for the warning, and leave the decision
+  to an engineer.
+reason: The tool highlights differences. It does not settle which rule controls a
+  real project.
+source_section: Project rule for this prototype; no legal source
+url: ''
+reviewed_by: null

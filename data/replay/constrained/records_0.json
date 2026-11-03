@@ -1,0 +1,13 @@
+{
+ "summary": "One ramp has current measurements. The record shows a catch basin in the ramp area, a utility vault at the landing, pooling water and a complaint.",
+ "labels": [
+  {
+   "key": "8200001:ramp_running_slope_total",
+   "label": "measured"
+  },
+  {
+   "key": "8200001:lnd_width",
+   "label": "measured"
+  }
+ ]
+}

@@ -1,0 +1,5 @@
+{
+ "summary": "This corner probably needs a custom design because of its complex program status and recorded obstacles.",
+ "findings_narrative": "Several surveyed values exceed the checked city limits. Parallel and blended options are possible, but both depend on a site check of the vault, catch basin and grades.",
+ "engineer_note": "Review the drainage and obstacle locations before choosing a layout."
+}

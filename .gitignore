@@ -1,0 +1,7 @@
+.env
+__pycache__/
+runs/
+outbox/
+cache/
+.pytest_cache/
+.venv/

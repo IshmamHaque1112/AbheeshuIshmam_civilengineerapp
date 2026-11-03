@@ -1,0 +1,5 @@
+# Geometry assumptions for the concept model. Each one is labeled "assumed" in the brief.
+slab_thickness_in: {value: 4, basis: "34 RCNY §2-09 sidewalk course thickness, used here as an assumption for ramps"}
+dws_depth_ft: {value: 2, basis: "Assumed 24 inches in the direction of travel; confirm against the current H-1011"}
+curb_extra_length_ft: {value: 4, basis: "Assumed curb replacement beyond the ramp width, for the concept only"}
+removal_factor: {value: 1.25, basis: "Assumed existing-surface removal area compared with the new slab area"}

@@ -1,0 +1,21 @@
+id: NYC-ADMIN-19-112-SLOPE
+title: Curb ramp slope
+jurisdiction: nyc
+authority_type: local_law
+applies_to:
+- corner_ramp_row
+parameter: ramp_running_slope_total
+operator: max
+limit: 8
+unit: percent
+source_document: NYC Administrative Code
+edition: American Legal Publishing online edition, as retrieved 2026-11-03
+effective_date: Not stated in the retrieved text
+section: §19-112
+url: https://codelibrary.amlegal.com/codes/newyorkcity/latest/NYCadmin/0-0-0-204666
+quote: The slope of such ramp shall not exceed eight per cent.
+retrieved_on: '2026-11-03'
+status: verified
+reviewed_by: null
+notes: Source text checked by Claude through a web fetch on 2026-11-03. Human review
+  is still pending.

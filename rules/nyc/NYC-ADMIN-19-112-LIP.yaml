@@ -1,0 +1,22 @@
+id: NYC-ADMIN-19-112-LIP
+title: Lip at the roadway
+jurisdiction: nyc
+authority_type: local_law
+applies_to:
+- corner_ramp_row
+parameter: curb_reveal
+operator: max
+limit: 0.625
+unit: in
+source_document: NYC Administrative Code
+edition: American Legal Publishing online edition, as retrieved 2026-11-03
+effective_date: Not stated in the retrieved text
+section: §19-112
+url: https://codelibrary.amlegal.com/codes/newyorkcity/latest/NYCadmin/0-0-0-204666
+quote: the lip of such ramps shall not exceed a maximum of five-eights of an inch
+retrieved_on: '2026-11-03'
+status: verified
+reviewed_by: null
+notes: Source text checked by Claude through a web fetch on 2026-11-03. Human review
+  is still pending. This limit applies where a common level with the roadway is not
+  possible.

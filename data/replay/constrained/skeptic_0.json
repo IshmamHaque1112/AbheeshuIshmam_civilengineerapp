@@ -1,0 +1,10 @@
+{
+ "verdict": "rework",
+ "challenges": [
+  {
+   "claim": "C1 perpendicular",
+   "issue": "This keeps the landing where the record shows a utility vault, and it doesn't address the catch basin in the ramp area.",
+   "severity": "rework"
+  }
+ ]
+}

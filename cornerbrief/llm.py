@@ -1,0 +1,73 @@
+"""Agent model calls. Demo mode replays saved responses, so it makes no API calls."""
+import hashlib, json, os
+from pydantic import ValidationError
+from .paths import CACHE, DATA
+
+
+class AgentOutputError(Exception):
+    pass
+
+
+def parse_output(text: str, schema):
+    text = text.strip()
+    if text.startswith("```"):
+        text = text.strip("`").removeprefix("json").strip()
+    try:
+        return schema.model_validate_json(text)
+    except ValidationError as exc:
+        raise AgentOutputError(str(exc)) from exc
+
+
+class ReplayClient:
+    mode = "demo replay"
+
+    def __init__(self, corner_key: str):
+        self.dir = DATA / "replay" / corner_key
+
+    def call(self, agent, attempt, system, payload, schema, tier="main"):
+        path = self.dir / f"{agent}_{attempt}.json"
+        if not path.exists():
+            path = self.dir / f"{agent}_0.json"
+        text = path.read_text(encoding="utf-8")
+        return parse_output(text, schema), {"input_tokens": 0, "output_tokens": 0, "replayed": True}
+
+
+class LiveClient:
+    mode = "live"
+
+    def __init__(self):
+        try:
+            import anthropic
+        except ImportError as exc:
+            raise RuntimeError("Install the anthropic package to use live agents.") from exc
+        self.client = anthropic.Anthropic()
+
+    def call(self, agent, attempt, system, payload, schema, tier="main"):
+        model = os.environ.get("FAST_MODEL" if tier == "fast" else "MAIN_MODEL")
+        if not model:
+            raise RuntimeError("Set FAST_MODEL and MAIN_MODEL in .env.")
+        content = json.dumps(payload, sort_keys=True, default=str)
+        key = hashlib.sha256(f"{model}|{agent}|{attempt}|{system}|{content}".encode()).hexdigest()
+        path = CACHE / "agents" / f"{key}.json"
+        if path.exists():
+            saved = json.loads(path.read_text(encoding="utf-8"))
+            return parse_output(saved["text"], schema), {"input_tokens": 0, "output_tokens": 0, "cached": True}
+        schema_text = json.dumps(schema.model_json_schema())
+        response = self.client.messages.create(
+            model=model, max_tokens=2000,
+            system=f"{system}\nReturn only JSON matching this schema, with no other fields:\n{schema_text}",
+            messages=[{"role": "user", "content": content}])
+        text = "".join(b.text for b in response.content if b.type == "text")
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(json.dumps({"text": text}), encoding="utf-8")
+        usage = {"input_tokens": response.usage.input_tokens, "output_tokens": response.usage.output_tokens}
+        return parse_output(text, schema), usage
+
+
+def get_client(corner: dict):
+    demo = os.environ.get("DEMO_MODE", "").lower() == "true" or not os.environ.get("ANTHROPIC_API_KEY")
+    if not demo:
+        return LiveClient()
+    if corner.get("data_kind") != "SAMPLE DATA":
+        raise RuntimeError("Saved responses only cover sample corners. Add ANTHROPIC_API_KEY to analyze a real corner.")
+    return ReplayClient(corner["key"])

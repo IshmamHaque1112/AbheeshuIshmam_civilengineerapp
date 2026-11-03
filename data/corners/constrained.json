@@ -1,0 +1,13 @@
+{
+  "label": "Sample corner B: Brooklyn, utility vault at the landing",
+  "data_kind": "SAMPLE DATA",
+  "context": {"inside_nyc": true, "work_type": "corner_ramp_row", "road_control": "not_recorded"},
+  "locations": [
+    {"cornerid": 9000002, "rampid": 8200001, "geocyclora": "2023-08-02", "borough": 3, "stname1": "SAMPLE PLACE", "stname2": "EXAMPLE ROAD",
+     "curb_reveal": 0.75, "ramp_running_slope_total": 9.2, "dws_conditions": "Defective", "gutter_slope": 0.3, "lnd_width": 42, "lnd_length": 40,
+     "lnd_cross_slope": 3.4, "counter_slope": 5.2, "ramp_width": 44, "ramp_right_flare": 11.2, "ramp_left_flare": 12.4, "ramp_length": 5.5, "ramp_cross_slope": 3.1,
+     "ponding": "Yes", "obstacles_ramp": "Catch Basin", "obstacles_landing": "Utility Vault"}
+  ],
+  "progress": [{"cornerid": 9000002, "borough": "BROOKLYN", "constructi": "Upgrade", "construc_1": null, "construc_2": "Complex Planned Construction"}],
+  "complaints": [{"cmt_corner_id": 9000002, "borough": "BROOKLYN", "complaint_id": "SAMPLE-0001", "complaint_date": "2025-03-11", "temp_repair_feasible": "No", "temp_repair_date": null, "temp_repair_type": null}]
+}

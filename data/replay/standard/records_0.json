@@ -1,0 +1,17 @@
+{
+ "summary": "Two ramps at this corner have current measurements. The record has no sidewalk width, legal grade or ramp type.",
+ "labels": [
+  {
+   "key": "8100001:ramp_running_slope_total",
+   "label": "measured"
+  },
+  {
+   "key": "8100002:ramp_running_slope_total",
+   "label": "measured"
+  },
+  {
+   "key": "corner:sidewalk_width",
+   "label": "missing"
+  }
+ ]
+}

@@ -1,0 +1,34 @@
+{
+ "constraints": [
+  {
+   "text": "A utility vault at the landing and a catch basin in the ramp area may limit the layout.",
+   "evidence_keys": [
+    "8200001:lnd_width",
+    "8200001:ramp_width"
+   ]
+  },
+  {
+   "text": "Pooling water is recorded at the base of the ramp, so drainage needs review.",
+   "evidence_keys": [
+    "8200001:gutter_slope"
+   ]
+  }
+ ],
+ "options": [
+  {
+   "ramp_type": "C3 parallel",
+   "rationale": "A parallel layout could move the landing away from the recorded vault, if a site check confirms the vault's location. The city's guide says DOT approval may be needed for this type.",
+   "evidence_keys": [
+    "8200001:lnd_width",
+    "8200001:lnd_length"
+   ]
+  },
+  {
+   "ramp_type": "C5 blended transition",
+   "rationale": "A blended transition is another possibility, if the street grade allows it. The street grade at the corner still needs checking.",
+   "evidence_keys": [
+    "8200001:counter_slope"
+   ]
+  }
+ ]
+}

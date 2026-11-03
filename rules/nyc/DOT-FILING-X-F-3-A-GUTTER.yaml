@@ -1,0 +1,22 @@
+id: DOT-FILING-X-F-3-A-GUTTER
+title: Gutter longitudinal slope
+jurisdiction: nyc
+authority_type: agency_guidance
+applies_to:
+- corner_ramp_row
+parameter: gutter_slope
+operator: min
+limit: 0.5
+unit: percent
+source_document: NYC DOT Instructions for Filing Plans & Guidelines for the Design
+  of Sidewalks, Curbs, Roadways and Other Infrastructure Components
+edition: Booklet revised January 22, 2024
+effective_date: Revised January 22, 2024
+section: X.F.3.a
+url: https://www.nycstreetdesign.info/sites/default/files/2026-09/SCARA_instfilingplan.pdf
+quote: 'Minimum: 0.50%'
+retrieved_on: '2026-11-03'
+status: verified
+reviewed_by: null
+notes: Source text checked by Claude through a web fetch on 2026-11-03. Human review
+  is still pending.

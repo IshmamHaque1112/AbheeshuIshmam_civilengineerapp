@@ -1,0 +1,12 @@
+id: cost_dws
+kind: cost
+item: Detectable warning surface
+trade: null
+unit: sf
+value: 60
+currency: USD
+source: Placeholder for the demo. Not a market price.
+source_date: '2026-11-03'
+location: NYC (not adjusted)
+status: sample
+notes: Replace with a public or licensed rate before relying on it.

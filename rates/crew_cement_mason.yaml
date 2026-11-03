@@ -1,0 +1,12 @@
+id: crew_cement_mason
+kind: crew
+item: Cement masons, slab work
+trade: Cement mason
+unit: sf
+value: 0.25
+currency: null
+source: Placeholder for the demo. Not a market price.
+source_date: '2026-11-03'
+location: NYC (not adjusted)
+status: sample
+notes: Replace with a public or licensed rate before relying on it.

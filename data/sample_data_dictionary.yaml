@@ -1,0 +1,13 @@
+# SAMPLE DATA only. These units are documented because this project wrote the sample records.
+placeholder_values: [999, 999.0, -999, 9999]
+fields:
+  ramp_running_slope_total: {unit: percent, unit_status: documented, plausible: [0, 40]}
+  ramp_cross_slope: {unit: percent, unit_status: documented, plausible: [0, 40]}
+  gutter_slope: {unit: percent, unit_status: documented, plausible: [0, 40]}
+  counter_slope: {unit: percent, unit_status: documented, plausible: [0, 40]}
+  lnd_cross_slope: {unit: percent, unit_status: documented, plausible: [0, 40]}
+  ramp_width: {unit: in, unit_status: documented, plausible: [1, 400]}
+  lnd_width: {unit: in, unit_status: documented, plausible: [1, 400]}
+  lnd_length: {unit: in, unit_status: documented, plausible: [1, 400]}
+  ramp_length: {unit: ft, unit_status: documented, plausible: [0.1, 400]}
+  curb_reveal: {unit: in, unit_status: documented, plausible: [0, 12]}

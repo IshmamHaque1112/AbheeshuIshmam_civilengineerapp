@@ -1,0 +1,13 @@
+{
+ "summary": "This ramp was surveyed before the corner's latest construction, so its measurements are out of date. The lip value is a placeholder.",
+ "labels": [
+  {
+   "key": "8300001:ramp_running_slope_total",
+   "label": "stale"
+  },
+  {
+   "key": "8300001:curb_reveal",
+   "label": "missing"
+  }
+ ]
+}

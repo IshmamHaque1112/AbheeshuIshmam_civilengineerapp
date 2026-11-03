@@ -1,0 +1,15 @@
+# Live NYC data. Units below are assumptions from example values. They are not documented
+# by the dataset, so the checker returns "unknown" until a person confirms each one
+# and changes unit_status to documented.
+placeholder_values: [999, 999.0, -999, 9999]
+fields:
+  ramp_running_slope_total: {unit: percent, unit_status: assumed, plausible: [0, 40]}
+  ramp_cross_slope: {unit: percent, unit_status: assumed, plausible: [0, 40]}
+  gutter_slope: {unit: percent, unit_status: assumed, plausible: [0, 40]}
+  counter_slope: {unit: percent, unit_status: assumed, plausible: [0, 40]}
+  lnd_cross_slope: {unit: percent, unit_status: assumed, plausible: [0, 40]}
+  ramp_width: {unit: in, unit_status: assumed, plausible: [1, 400]}
+  lnd_width: {unit: in, unit_status: assumed, plausible: [1, 400]}
+  lnd_length: {unit: in, unit_status: assumed, plausible: [1, 400]}
+  ramp_length: {unit: unconfirmed, unit_status: assumed, plausible: [0.1, 400]}
+  curb_reveal: {unit: in, unit_status: assumed, plausible: [0, 12]}

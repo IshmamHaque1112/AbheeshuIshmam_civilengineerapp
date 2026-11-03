@@ -1,0 +1,21 @@
+id: SDM-RAMP-DESIGN-MARGIN
+title: Design margin below H-1011 acceptance slopes
+jurisdiction: nyc
+authority_type: agency_guidance
+applies_to:
+- corner_ramp_row
+parameter: null
+operator: reference
+limit: null
+unit: null
+source_document: NYC Street Design Manual
+edition: Online edition, as retrieved 2026-11-03
+effective_date: Not stated in the retrieved text
+section: Pedestrian Ramps, Blended Transitions & Cut-Throughs
+url: https://www.nycstreetdesign.info/node/582
+quote: at least 0.5% less than the maximum work acceptance slopes
+retrieved_on: '2026-11-03'
+status: verified
+reviewed_by: null
+notes: Source text checked by Claude through a web fetch on 2026-11-03. Human review
+  is still pending. This needs H-1011 values before it can be calculated.

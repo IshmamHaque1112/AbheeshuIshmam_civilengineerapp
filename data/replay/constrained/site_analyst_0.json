@@ -1,0 +1,19 @@
+{
+ "constraints": [
+  {
+   "text": "A utility vault is recorded at the landing.",
+   "evidence_keys": [
+    "8200001:lnd_width"
+   ]
+  }
+ ],
+ "options": [
+  {
+   "ramp_type": "C1 perpendicular",
+   "rationale": "This would keep the existing ramp direction.",
+   "evidence_keys": [
+    "8200001:ramp_width"
+   ]
+  }
+ ]
+}

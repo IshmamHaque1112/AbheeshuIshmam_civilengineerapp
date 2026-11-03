@@ -1,0 +1,24 @@
+id: RCNY-34-2-09-TRANSVERSE
+title: Sidewalk transverse slope
+jurisdiction: nyc
+authority_type: city_rule
+applies_to:
+- corner_ramp_row
+parameter: sidewalk_transverse_slope
+operator: range
+limit:
+  min: 1
+  max: 3
+unit: in_per_5ft
+source_document: Rules of the City of New York, Title 34
+edition: American Legal Publishing online edition, as retrieved 2026-11-03
+effective_date: Not stated in the retrieved text
+section: 34 RCNY §2-09(f)(4)(xi)
+url: https://codelibrary.amlegal.com/codes/newyorkcity/latest/NYCrules/0-0-0-62402
+quote: The minimum slope, calculated on a line perpendicular to the curb, shall be
+  1" in 5', and the maximum shall be 3" in 5'.
+retrieved_on: '2026-11-03'
+status: verified
+reviewed_by: null
+notes: Source text checked by Claude through a web fetch on 2026-11-03. Human review
+  is still pending.

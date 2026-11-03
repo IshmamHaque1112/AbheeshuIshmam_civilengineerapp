@@ -1,0 +1,8 @@
+id: PREC-OUTSIDE-NYC
+question: Which code applies outside NYC?
+decision: NYS rule files are selected. NYC rule files do not apply. Local additions
+  need checking.
+reason: The Uniform Code applies in every part of the state except New York City.
+source_section: NYS Department of State, Uniform Code page
+url: https://dos.ny.gov/uniform-fire-prevention-and-building-code
+reviewed_by: null
