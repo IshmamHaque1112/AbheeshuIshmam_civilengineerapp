@@ -1,0 +1,22 @@
+id: ADA-2010-405-3-CROSS
+title: ADA ramp cross slope
+jurisdiction: federal
+authority_type: federal_standard
+applies_to:
+- corner_ramp_row
+parameter: ramp_cross_slope
+operator: max
+limit: 2.08
+unit: percent
+source_document: 2010 ADA Standards for Accessible Design
+edition: 2010 Standards, read through the Corada reproduction
+effective_date: Not stated in the retrieved text
+section: §405.3, applied to curb ramps by §406.1
+url: https://www.corada.com/documents/2010ADAStandards/405
+quote: Cross slope of ramp runs shall not be steeper than 1:48.
+retrieved_on: '2026-11-03'
+status: verified
+reviewed_by: null
+notes: Source text checked by Claude through a web fetch on 2026-11-03. Human review
+  is still pending. This is a third-party reproduction, so confirm it on ada.gov.
+  1:48 is stored as 2.08%.

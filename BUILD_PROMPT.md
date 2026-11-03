@@ -1,5 +1,7 @@
 # CornerBrief initial prototype: build prompt
 
+This is the original prompt. Where its starter rule list differs, the files in `rules/` and the README are current.
+
 Build the initial prototype of CornerBrief, a multi-agent web app for NYC street corners. It produces a review-ready brief for an engineer showing what is known, what is missing and what to check on site.
 
 CornerBrief is a demo for pre-design investigation. It must never claim that a corner or design is compliant, approved, buildable or safe, or imply any affiliation with NYC. Use only these rule results: "limit exceeded," "no conflict found," "unknown" and "not applicable."

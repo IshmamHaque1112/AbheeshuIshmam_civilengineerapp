@@ -1,0 +1,23 @@
+id: DOT-BROCHURE-WIDTH
+title: 'DOT general requirement: ramp width'
+jurisdiction: nyc
+authority_type: agency_guidance
+applies_to:
+- corner_ramp_row
+parameter: ramp_width
+operator: min
+limit: 48
+unit: in
+source_document: NYC DOT Pedestrian Ramp Program brochure for private developers and
+  utility companies
+edition: Undated; file path shows 2021-11
+effective_date: Not stated in the retrieved text
+section: Examples of General Requirements
+url: https://www.nycpedramps.info/sites/default/files/2021-11/ContractorBrochure_Final.pdf
+quote: Must be at least 48 inches wide
+retrieved_on: '2026-11-03'
+status: verified
+reviewed_by: null
+notes: Source text checked by Claude through a web fetch on 2026-11-03. Human review
+  is still pending. The brochure lists these as general requirements. It does not
+  say whether they are design or acceptance values.

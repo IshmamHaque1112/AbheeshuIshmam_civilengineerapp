@@ -57,8 +57,9 @@ class Decision(BaseModel):
 class Conflict(BaseModel):
     parameter: str
     rules: list[dict]
-    stricter_min_percent: Optional[float] = None
-    stricter_max_percent: Optional[float] = None
+    stricter_min: Optional[float] = None
+    stricter_max: Optional[float] = None
+    unit: str = "percent"
     warning: str
     decision: str = "Engineer decides"
 

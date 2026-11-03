@@ -13,3 +13,5 @@ fields:
   lnd_length: {unit: in, unit_status: assumed, plausible: [1, 400]}
   ramp_length: {unit: unconfirmed, unit_status: assumed, plausible: [0.1, 400]}
   curb_reveal: {unit: in, unit_status: assumed, plausible: [0, 12]}
+  ramp_right_flare: {unit: percent, unit_status: assumed, plausible: [0, 40]}
+  ramp_left_flare: {unit: percent, unit_status: assumed, plausible: [0, 40]}

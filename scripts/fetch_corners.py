@@ -4,7 +4,7 @@
 List candidates:  python scripts/fetch_corners.py
 Save a corner:    python scripts/fetch_corners.py --save standard 1370422
 """
-import argparse, json, os, sys, time, urllib.parse, urllib.request
+import argparse, hashlib, json, os, sys, time, urllib.parse, urllib.request
 from datetime import date
 from pathlib import Path
 
@@ -18,10 +18,22 @@ ROOT = Path(__file__).resolve().parent.parent
 PORTAL = os.environ.get("CB_PORTAL", "https://data.cityofnewyork.us")
 LOC, PROG, COMP = "ufzp-rrqu", "e7gc-ub6z", "jagj-gttd"
 PLACEHOLDER = {999, 9999, -999}
+REFRESH = {"on": False}
 REQUIRED = ["ramp_running_slope_total", "ramp_cross_slope", "ramp_width", "ramp_length", "lnd_width", "lnd_length", "lnd_cross_slope", "curb_reveal"]
 
 
 def get(url):
+    key = hashlib.sha256(url.encode()).hexdigest()
+    path = ROOT / "cache" / "nyc" / f"{key}.json"
+    if path.exists() and not REFRESH["on"]:
+        return json.loads(path.read_text(encoding="utf-8"))
+    data = _download(url)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(data), encoding="utf-8")
+    return data
+
+
+def _download(url):
     req = urllib.request.Request(url, headers={"User-Agent": "CornerBriefDemo/0.1"})
     for attempt in range(3):
         try:
@@ -113,7 +125,9 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--save", nargs=2, metavar=("ROLE", "CORNERID"))
     parser.add_argument("--limit", type=int, default=3000)
+    parser.add_argument("--refresh", action="store_true", help="Ignore saved API responses")
     args = parser.parse_args()
+    REFRESH["on"] = args.refresh
     if args.save:
         if args.save[0] not in ("standard", "constrained", "missing_or_stale"):
             sys.exit("ROLE must be standard, constrained or missing_or_stale.")

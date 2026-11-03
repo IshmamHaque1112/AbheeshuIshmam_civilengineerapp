@@ -73,7 +73,7 @@ def test_needs_source_rule_cannot_hold_limit():
 def test_needs_source_rule_returns_unknown():
     _, ev = evidence("standard")
     out = run_checks(RULES, resolve(CTX, RULES, PREC), ev)
-    for rule_id in ("H1011-FLARE", "H1011-RAMP-SLOPES", "ADA-2010-CURB-RAMP"):
+    for rule_id in ("H1011-FLARE", "H1011-RAMP-SLOPES", "H1011-LANDING"):
         assert [o.result for o in out if o.rule_id == rule_id] == ["unknown"]
 
 
@@ -169,13 +169,13 @@ def test_conflicting_tiers_show_both_and_use_stricter():
     conflicts = find_conflicts(RULES, resolve(CTX, RULES, PREC), [])
     c = next(x for x in conflicts if x.parameter == "sidewalk_transverse_slope")
     assert len(c.rules) == 2 and c.decision == "Engineer decides"
-    assert c.stricter_max_percent == 2.1
-    assert round(c.stricter_min_percent, 2) == 1.67
+    assert c.stricter_max == 2.1
+    assert round(c.stricter_min, 2) == 1.67
 
 
 def test_conflict_warning_uses_stricter_limit():
     e = item(field="sidewalk_transverse_slope", value=3.0)  # Within 5%, outside 2.1%
-    c = find_conflicts(RULES, resolve(CTX, RULES, PREC), [e])[0]
+    c = next(x for x in find_conflicts(RULES, resolve(CTX, RULES, PREC), [e]) if x.parameter == "sidewalk_transverse_slope")
     assert "outside the stricter" in c.warning
 
 
@@ -184,3 +184,24 @@ def test_site_visit_lists_missing_and_stale_items():
     corner, ev = evidence("missing_or_stale")
     actions = " ".join(i["action"] for i in build_list(ev, corner))
     assert "lip height" in actions and "Re-measure" in actions and "sidewalk width" in actions
+
+
+def test_city_ada_and_dot_slope_limits_conflict_and_stricter_wins():
+    c = next(x for x in find_conflicts(RULES, resolve(CTX, RULES, PREC), []) if x.parameter == "ramp_running_slope_total")
+    assert c.stricter_max == 8 and len(c.rules) == 3
+    e = item(field="ramp_running_slope_total", value=8.2)
+    c = next(x for x in find_conflicts(RULES, resolve(CTX, RULES, PREC), [e]) if x.parameter == "ramp_running_slope_total")
+    assert "outside the stricter" in c.warning
+
+
+def test_width_conflict_compares_feet_and_inches():
+    c = next(x for x in find_conflicts(RULES, resolve(CTX, RULES, PREC), []) if x.parameter == "ramp_width")
+    assert len(c.rules) == 3 and c.stricter_min == 48 and c.unit == "in"
+
+
+def test_ada_limits_use_hand_checked_values():
+    assert check_value(BY_ID["ADA-2010-405-3-CROSS"], item(value=2.0)).result == "no conflict found"
+    assert check_value(BY_ID["ADA-2010-405-3-CROSS"], item(value=2.1)).result == "limit exceeded"
+    assert check_value(BY_ID["ADA-2010-406-3-FLARE-LEFT"], item(value=10.5)).result == "limit exceeded"
+    assert check_value(BY_ID["ADA-2010-406-4-LANDING"], item(value=35, unit="in")).result == "limit exceeded"
+    assert check_value(BY_ID["DOT-BROCHURE-COUNTER"], item(value=5.2)).result == "limit exceeded"

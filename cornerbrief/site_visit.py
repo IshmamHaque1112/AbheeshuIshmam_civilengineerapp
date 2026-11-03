@@ -13,6 +13,8 @@ ACTIONS = {
     "curb_reveal": "Measure the lip height at the dropped curb.",
     "gutter_slope": "Measure the gutter slope.",
     "counter_slope": "Measure the roadway slope at the ramp.",
+    "ramp_right_flare": "Measure the right flare slope.",
+    "ramp_left_flare": "Measure the left flare slope.",
 }
 
 

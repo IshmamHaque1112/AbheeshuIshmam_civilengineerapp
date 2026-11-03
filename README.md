@@ -26,6 +26,12 @@ No API key is needed. These corners use made-up sample records and saved agent r
 
 Enter a name and select **Release brief** to turn on the download. Releasing a brief doesn't approve a design.
 
+To print all three results without the browser, run `python scripts/run_demo.py`.
+
+## Connect the app's email later
+
+Create the address and an email service account, then fill in `EMAIL_ALLOWLIST`, `EMAIL_FROM`, `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER` and `SMTP_PASSWORD` in `.env`. Set `EMAIL_ENABLED=true` to send. A person must still release each brief, and every recipient must be on the allowlist.
+
 ## Use real NYC corners
 
 ```powershell
@@ -64,7 +70,7 @@ Regular code handles data checks, rule selection, limit checks, geometry, quanti
 - **Live agents:** The live API path hasn't been run with a real key. Tests use saved or scripted responses.
 - **Real data fetch:** `scripts/fetch_corners.py` hasn't run against the NYC portal, because the build environment blocks it. Its sorting logic is tested.
 - **Open Library:** It hasn't been called live. A test uses a fake response. It stores citation details only and sends no book text to a model.
-- **Email:** Dry run only. It saves messages to `outbox`. No email service is connected, and inbound email isn't supported.
+- **Email:** It defaults to a dry run that saves messages to `outbox`, because the app's address doesn't exist yet. Sending through a service's SMTP settings is built and tested against a fake server, but it has never sent a real message. Inbound email isn't supported.
 - **Cost and labor:** All rates are placeholders, not market prices.
 - **Stack changes:** The app uses Starlette (FastAPI's foundation) and a small built-in 3D renderer instead of FastAPI and three.js, because those packages weren't available during the build.
 - **Python version:** Tests ran on Python 3.13. Use Python 3.10 or newer.
@@ -73,9 +79,7 @@ Regular code handles data checks, rule selection, limit checks, geometry, quanti
 
 These return "unknown" until a person adds the exact text and limit:
 
-- Current H-1011 ramp slopes, landing limits and flare limits
-- 2010 ADA Standards curb ramp limits
-- NYC Building Code §1104 edition and text
-- 2025 NYS Building Code and Residential Code limits
+- H-1011 ramp slopes, landing limits and flare limits. The current sheet is [H-1011-1](https://www.nycstreetdesign.info/sites/default/files/specs/H-1011-1.pdf), which the build environment couldn't open. Save it as `docs/sources/H-1011-1.pdf` so its values can be added.
+- 2025 NYS Building Code and Residential Code limits. These don't apply to NYC corners.
 
-Rules marked `verified` were checked against linked text through a web fetch on November 3, 2026. No person has reviewed them yet, so `reviewed_by` is empty. An engineer should review the rules and precedence decisions before anyone relies on them.
+Rules marked `verified` were checked against linked text through a web fetch on November 3, 2026. No person has reviewed them yet, so `reviewed_by` is empty, and the ADA rules use a third-party reproduction of the text. An engineer should review the rules and precedence decisions before anyone relies on them.

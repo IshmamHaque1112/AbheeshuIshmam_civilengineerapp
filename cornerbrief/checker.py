@@ -7,7 +7,7 @@ CONVERT = {("in", "ft"): 1 / 12, ("ft", "in"): 12, ("in", "in"): 1, ("ft", "ft")
 
 def rule_limits_percent(rule: dict) -> tuple[Optional[float], Optional[float]]:
     limit, op = rule["limit"], rule["operator"]
-    factor = 100 / 60 if rule["unit"] == "in_per_5ft" else 1  # 5 feet is 60 inches
+    factor = {"in_per_5ft": 100 / 60, "ft": 12}.get(rule["unit"], 1)  # 5 feet is 60 inches; lengths compare in inches
     if op == "max":
         return None, limit * factor
     if op == "min":
@@ -85,7 +85,7 @@ def run_checks(rules: list[dict], decisions: list[Decision], evidence: list[Evid
         elif rule["status"] != "verified":
             outcomes.append(RuleOutcome(**_base(rule), result="unknown", reason="The exact source text is still needed. No limit was checked."))
         elif rule["operator"] == "reference":
-            outcomes.append(RuleOutcome(**_base(rule), result="unknown", reason="This rule points to H-1011, whose current values are still needed."))
+            outcomes.append(RuleOutcome(**_base(rule), result="unknown", reason=rule.get("notes") or "This rule has no numeric check."))
         else:
             items = by_field.get(rule["parameter"], [])
             if not items:
@@ -102,8 +102,9 @@ def find_conflicts(rules: list[dict], decisions: list[Decision], evidence: list[
             groups.setdefault(rule["parameter"], []).append(rule)
     conflicts = []
     for parameter, group in groups.items():
-        if len(group) < 2 or any(r["unit"] not in ("percent", "in_per_5ft") for r in group):
+        if len(group) < 2:
             continue
+        unit = "in" if group[0]["unit"] in ("in", "ft") else "percent"
         bounds = [rule_limits_percent(r) for r in group]
         if len({(round(a or -1, 3), round(b or -1, 3)) for a, b in bounds}) < 2:
             continue
@@ -111,13 +112,13 @@ def find_conflicts(rules: list[dict], decisions: list[Decision], evidence: list[
         maxes = [b for _, b in bounds if b is not None]
         low, high = (max(mins) if mins else None), (min(maxes) if maxes else None)
         measured = [e for e in evidence if e.field == parameter and e.label == "measured" and e.unit_documented]
-        outside = [e for e in measured if (low is not None and abs(e.value) < low) or (high is not None and abs(e.value) > high)]
+        outside = [e for e in measured if (low is not None and abs(e.value) * (1 if e.unit != "ft" else 12) < low) or (high is not None and abs(e.value) > high)]
         if not measured:
             warning = "These rules set different limits, and no measured value is available yet."
         elif outside:
             warning = "A measured value falls outside the stricter limit. An engineer should decide which rule controls."
         else:
             warning = "Measured values fall within the stricter limit, but an engineer should still decide which rule controls."
-        conflicts.append(Conflict(parameter=parameter, stricter_min_percent=low, stricter_max_percent=high, warning=warning,
+        conflicts.append(Conflict(parameter=parameter, stricter_min=low, stricter_max=high, unit=unit, warning=warning,
                                   rules=[{"rule_id": r["id"], "section": r["section"], "limit": limit_text(r), "url": r["url"]} for r in group]))
     return conflicts

@@ -90,3 +90,15 @@ def test_real_corner_fixture_runs_with_unknown_limits(tmp_path, monkeypatch):
     run = analyze(corner, client=ReplayClient("standard"))
     assert all(o["result"] in ("unknown", "not applicable") for o in run["rule_results"])
     assert run["planning"] is None
+
+
+def test_fetch_caches_api_responses(tmp_path, monkeypatch):
+    calls = []
+    monkeypatch.setattr(fetch, "ROOT", tmp_path)
+    monkeypatch.setattr(fetch, "_download", lambda url: calls.append(url) or {"ok": 1})
+    assert fetch.get("https://example.test/a") == {"ok": 1}
+    assert fetch.get("https://example.test/a") == {"ok": 1}
+    assert len(calls) == 1
+    monkeypatch.setitem(fetch.REFRESH, "on", True)
+    fetch.get("https://example.test/a")
+    assert len(calls) == 2

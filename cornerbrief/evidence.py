@@ -5,7 +5,7 @@ from .models import EvidenceItem, RecordsOutput
 
 REQUIRED_FIELDS = ["ramp_running_slope_total", "ramp_cross_slope", "ramp_width", "ramp_length",
                    "lnd_width", "lnd_length", "lnd_cross_slope", "curb_reveal"]
-CHECK_FIELDS = REQUIRED_FIELDS + ["gutter_slope", "counter_slope"]
+CHECK_FIELDS = REQUIRED_FIELDS + ["gutter_slope", "counter_slope", "ramp_right_flare", "ramp_left_flare"]
 NOT_IN_DATASETS = {
     "sidewalk_width": "Measure the sidewalk width at the corner.",
     "legal_grade": "Find the legal grade on the Borough President's section map.",

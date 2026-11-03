@@ -1,0 +1,22 @@
+id: DOT-TI-22-001-INFEASIBILITY
+title: Technical infeasibility guidance for street grades over 2%
+jurisdiction: nyc
+authority_type: agency_guidance
+applies_to:
+- corner_ramp_row
+parameter: null
+operator: reference
+limit: null
+unit: null
+source_document: NYC DOT Technical Instruction TI 22-001
+edition: Signed August 1, 2022
+effective_date: Projects advertised on or after June 27, 2022
+section: Supplemental Guidance on Technical Infeasibilities
+url: https://www.nycpedramps.info/sites/default/files/2022-08/TI_22-001%20Supplemental%20Guidance%20on%20Technical%20Infeasibilities.pdf
+quote: exceeds 2%
+retrieved_on: '2026-11-03'
+status: verified
+reviewed_by: null
+notes: Source text checked by Claude through a web fetch on 2026-11-03. Human review
+  is still pending. It covers certain crossings where existing street grades prevent
+  a fully accessible ramp. An engineer must decide whether it applies.

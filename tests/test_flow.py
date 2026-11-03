@@ -269,3 +269,57 @@ def test_every_corner_shows_applicable_law():
     for key in ("standard", "constrained", "missing_or_stale"):
         decisions = run_corner(key)["applicability"]
         assert next(d for d in decisions if d["rule_id"] == "NYS-BCNYS-2025")["applies"] is False
+
+
+def test_smtp_needs_settings_and_is_off_by_default(monkeypatch):
+    run = approve(run_corner("standard"), "Reviewer")
+    assert "No email left" in send_brief(run, "test@example.com", "b")
+    monkeypatch.setenv("EMAIL_ENABLED", "true")
+    for key in ("EMAIL_FROM", "SMTP_HOST", "SMTP_USER", "SMTP_PASSWORD"):
+        monkeypatch.delenv(key, raising=False)
+    with pytest.raises(EmailBlocked, match="settings are missing"):
+        send_brief(run, "test@example.com", "b")
+
+
+def test_smtp_sends_after_approval_with_settings(monkeypatch):
+    sent = {}
+    class FakeSMTP:
+        def __init__(self, host, port, timeout=0): sent.update(host=host, port=port)
+        def __enter__(self): return self
+        def __exit__(self, *a): return False
+        def starttls(self): sent["tls"] = True
+        def login(self, user, password): sent["user"] = user
+        def send_message(self, mail): sent["to"], sent["from"] = mail["To"], mail["From"]
+    monkeypatch.setattr("smtplib.SMTP", FakeSMTP)
+    for k, v in dict(EMAIL_ENABLED="true", EMAIL_FROM="app@example.com", SMTP_HOST="smtp.example.com", SMTP_USER="u", SMTP_PASSWORD="p").items():
+        monkeypatch.setenv(k, v)
+    run = approve(run_corner("standard"), "Reviewer")
+    assert "Sent to" in send_brief(run, "test@example.com", "b")
+    assert sent == dict(host="smtp.example.com", port=587, tls=True, user="u", to="test@example.com", **{"from": "app@example.com"})
+
+
+def test_export_includes_every_brief_section():
+    text = to_markdown(approve(run_corner("standard"), "Reviewer"))
+    for part in ("Corner records", "Program status", "Applicable rules", "Evidence", "Rule results", "Rule conflicts", "Stricter values", "Likely options", "Constraints", "Skeptic notes", "Site visit list", "Labor hours", "Work sequence", "Likely equipment types", "Assumptions", "Excluded", "Questions for a safety professional", "Background reading", "still need human review", "Agent tokens"):
+        assert part in text, part
+
+
+def test_export_explains_stopped_corner_and_complaint():
+    assert "Why no design is proposed" in to_markdown(approve(run_corner("missing_or_stale"), "R"))
+    assert "Complaint SAMPLE-0001" in to_markdown(approve(run_corner("constrained"), "R"))
+
+
+def test_export_handles_missing_rate():
+    corner = load_corner("standard")
+    rates = load_rates()
+    del rates["cost_curb"]
+    run = analyze(corner, client=ReplayClient("standard"), rates=rates)
+    assert "Cost range: unknown" in to_markdown(approve(run, "R"))
+
+
+def test_rule_review_flags_unreviewed_and_old_checks():
+    from cornerbrief.orchestrator import rule_review
+    from cornerbrief.rules import load_rules
+    rules = load_rules()
+    assert len(rule_review(rules)["awaiting_human_review"]) == rule_review(rules)["verified"]
+    assert rule_review(rules, today=date(2030, 1, 1))["source_check_overdue"]

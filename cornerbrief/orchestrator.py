@@ -1,5 +1,6 @@
 """Run the required flow. Python decides data sufficiency, applicability, limits and status."""
 import json, time, uuid
+from datetime import date, timedelta
 from .agents import brief_writer, records, site_analyst, skeptic
 from .applicability import resolve
 from .checker import find_conflicts, run_checks
@@ -34,6 +35,20 @@ def decide_status(sufficient, corner, outcomes) -> tuple[str, str]:
     if reasons:
         return "probably custom", "Probably custom because " + " and ".join(dict.fromkeys(reasons)) + "."
     return "probably standard", "No recorded complexity or obstacle was found in the available records."
+
+
+def corner_records(corner: dict) -> dict:
+    return dict(
+        program=[dict(status=r.get("construc_2"), construction_type=r.get("constructi"), completed=r.get("construc_1")) for r in corner.get("progress", [])],
+        complaints=[dict(id=r.get("complaint_id"), date=str(r.get("complaint_date") or "")[:10], repair_feasible=r.get("temp_repair_feasible"), repair_date=str(r.get("temp_repair_date") or "")[:10], repair_type=r.get("temp_repair_type")) for r in corner.get("complaints", [])],
+        ramps=[dict(ramp_id=str(r.get("rampid")), surveyed=str(r.get("geocyclora") or "")[:10], warning_surface=r.get("dws_conditions"), ponding=r.get("ponding"), obstacles_ramp=r.get("obstacles_ramp"), obstacles_landing=r.get("obstacles_landing")) for r in corner.get("locations", [])])
+
+
+def rule_review(rules: list[dict], today: date | None = None) -> dict:
+    today = today or date.today()
+    verified = [r for r in rules if r["status"] == "verified"]
+    overdue = [r["id"] for r in verified if date.fromisoformat(str(r["retrieved_on"])) < today - timedelta(days=365)]
+    return dict(verified=len(verified), awaiting_human_review=[r["id"] for r in verified if not r.get("reviewed_by")], source_check_overdue=overdue)
 
 
 def _log(log, agent, attempt, payload, output, usage, error=None):
@@ -150,6 +165,7 @@ def analyze(corner: dict, client=None, rules=None, rates=None, save=True) -> dic
                constraints=constraints, challenges=challenges, site_visit=visits, planning=planning, planning_note=planning_note,
                background=background_reading(), rejections=rejections, retries=retries, retry_limit_hit=retry_limit_hit,
                tokens=dict(input=token_in, output=token_out), approval=None, agent_log=log,
+               records=corner_records(corner), rule_review=rule_review(rules),
                rules_needing_sources=[r["id"] for r in rules if r["status"] == "needs_source"])
     if save:
         save_run(run)

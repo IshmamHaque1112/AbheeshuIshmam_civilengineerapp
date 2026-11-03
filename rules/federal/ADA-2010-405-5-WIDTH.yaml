@@ -1,0 +1,21 @@
+id: ADA-2010-405-5-WIDTH
+title: ADA ramp clear width
+jurisdiction: federal
+authority_type: federal_standard
+applies_to:
+- corner_ramp_row
+parameter: ramp_width
+operator: min
+limit: 36
+unit: in
+source_document: 2010 ADA Standards for Accessible Design
+edition: 2010 Standards, read through the Corada reproduction
+effective_date: Not stated in the retrieved text
+section: §405.5, applied to curb ramps by §406.1
+url: https://www.corada.com/documents/2010ADAStandards/405
+quote: shall be 36 inches (915 mm) minimum.
+retrieved_on: '2026-11-03'
+status: verified
+reviewed_by: null
+notes: Source text checked by Claude through a web fetch on 2026-11-03. Human review
+  is still pending. This is a third-party reproduction, so confirm it on ada.gov.

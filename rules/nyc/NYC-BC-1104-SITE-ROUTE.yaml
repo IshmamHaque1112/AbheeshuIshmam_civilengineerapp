@@ -5,17 +5,20 @@ authority_type: building_code
 applies_to:
 - building_route
 parameter: null
-operator: needs_source
+operator: reference
 limit: null
 unit: null
 source_document: NYC Building Code, §1104
-edition: null
+edition: American Legal Publishing online edition, as retrieved 2026-11-03; code year
+  is not shown
 effective_date: null
 section: §1104.1
 url: https://codelibrary.amlegal.com/codes/newyorkcity/latest/NYCadmin/0-0-0-174859
-quote: null
-retrieved_on: null
-status: needs_source
+quote: At least one accessible route within the site shall be provided from public
+  transportation stops, accessible parking
+retrieved_on: '2026-11-03'
+status: verified
 reviewed_by: null
-notes: Flag for engineer review. Confirm the code edition. This is not a corner ramp
-  limit.
+notes: Source text checked by Claude through a web fetch on 2026-11-03. Human review
+  is still pending. Flag for engineer review, and confirm the code edition. This is
+  not a corner ramp limit.
