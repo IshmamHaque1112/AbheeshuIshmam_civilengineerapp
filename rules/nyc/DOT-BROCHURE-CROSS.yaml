@@ -16,9 +16,10 @@ section: Examples of General Requirements
 url: https://www.nycpedramps.info/sites/default/files/2021-11/ContractorBrochure_Final.pdf
 quote: Cross slopes must not exceed 1:48 (2%)
 retrieved_on: '2026-11-03'
-status: verified
+status: unreviewed
 reviewed_by: null
 notes: Source text checked by Claude through a web fetch on 2026-11-03. Human review
   is still pending. The brochure lists these as general requirements. It does not
   say whether they are design or acceptance values.
 stage: general
+reviewed_on: null

@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """Find real demo corners from NYC Open Data, then save the ones you choose.
 
-List candidates:  python scripts/fetch_corners.py
-Save a corner:    python scripts/fetch_corners.py --save standard 1370422
+List candidates:  python scripts/fetch_corners.py --borough QUEENS --street THOMSON
+Save the test:    python scripts/fetch_corners.py --save real_test 1370422
 """
 import argparse, hashlib, json, os, sys, time, urllib.parse, urllib.request
 from datetime import date
@@ -18,6 +18,7 @@ ROOT = Path(__file__).resolve().parent.parent
 PORTAL = os.environ.get("CB_PORTAL", "https://data.cityofnewyork.us")
 LOC, PROG, COMP = "ufzp-rrqu", "e7gc-ub6z", "jagj-gttd"
 PLACEHOLDER = {999, 9999, -999}
+BOROUGHS = {"MANHATTAN": 1, "BRONX": 2, "BROOKLYN": 3, "QUEENS": 4, "STATEN ISLAND": 5}
 REFRESH = {"on": False}
 REQUIRED = ["ramp_running_slope_total", "ramp_cross_slope", "ramp_width", "ramp_length", "lnd_width", "lnd_length", "lnd_cross_slope", "curb_reveal"]
 
@@ -79,8 +80,22 @@ def classify(locations, progress):
     return "standard"
 
 
-def list_candidates(limit):
-    rows = num(query(LOC, limit=limit, order="cornerid", where="geocyclora IS NOT NULL"))
+def build_where(borough=None, street=None):
+    """Build the location filter. Ramp records use borough numbers 1 to 5."""
+    parts = ["geocyclora IS NOT NULL"]
+    if borough:
+        code = BOROUGHS.get(borough.strip().upper())
+        if code is None:
+            raise ValueError("Borough must be one of: " + ", ".join(BOROUGHS))
+        parts.append(f"borough={code}")
+    if street:
+        safe = street.strip().upper().replace("'", "''")
+        parts.append(f"(upper(stname1) like '%{safe}%' OR upper(stname2) like '%{safe}%')")
+    return " AND ".join(parts)
+
+
+def list_candidates(limit, borough=None, street=None):
+    rows = num(query(LOC, limit=limit, order="cornerid", where=build_where(borough, street)))
     corners = {}
     for r in rows:
         corners.setdefault(r["cornerid"], []).append(r)
@@ -106,6 +121,7 @@ def save(role, cid):
     first = locations[0]
     corner = dict(label=f"{first.get('stname1')} and {first.get('stname2')}", data_kind="NYC Open Data",
                   retrieved=date.today().isoformat(), sources=[LOC, PROG, COMP],
+                  dataset_note="Real test corner. The ramp measurement dataset was last updated in October 2021, so its values may not match the corner today.",
                   context=dict(inside_nyc=True, work_type="corner_ramp_row", road_control="not_recorded"),
                   locations=locations, progress=progress, complaints=complaints)
     out = ROOT / "data" / "live"
@@ -125,15 +141,17 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--save", nargs=2, metavar=("ROLE", "CORNERID"))
     parser.add_argument("--limit", type=int, default=3000)
+    parser.add_argument("--borough", help="MANHATTAN, BRONX, BROOKLYN, QUEENS or STATEN ISLAND")
+    parser.add_argument("--street", help="Part of a street name, such as THOMSON")
     parser.add_argument("--refresh", action="store_true", help="Ignore saved API responses")
     args = parser.parse_args()
     REFRESH["on"] = args.refresh
     if args.save:
-        if args.save[0] not in ("standard", "constrained", "missing_or_stale"):
-            sys.exit("ROLE must be standard, constrained or missing_or_stale.")
+        if args.save[0] != "real_test":
+            sys.exit("ROLE must be real_test. The sample corners don't change.")
         save(args.save[0], int(args.save[1]))
         return
-    found, total, joined = list_candidates(args.limit)
+    found, total, joined = list_candidates(args.limit, args.borough, args.street)
     lines = ["# Real corner candidates", "", f"Checked {total} corners. {joined} joined to Program Progress.", ""]
     for role, rows in found.items():
         lines += [f"## {role}: {len(rows)} found", "", "| Corner ID | Ramps | Streets | Borough | Status | Survey |", "| --- | --- | --- | --- | --- | --- |"]

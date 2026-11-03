@@ -23,7 +23,7 @@ def resolve(context: dict, rules: list[dict], precedence: dict) -> list[Decision
             prec = "PREC-BUILDING-ROUTE"
         else:
             prec = "PREC-CORNER-RAMP"
-        if applies and inside and road == "state":
+        if applies and inside and road != "city":
             forced, prec = True, "PREC-STATE-ROAD"
         p = precedence[prec]
         reason = p["reason"] if applies or prec != "PREC-CORNER-RAMP" else "This rule is for a different type of work, so it is not a corner ramp limit."

@@ -25,7 +25,8 @@ def parse_date(value) -> Optional[date]:
 
 
 def latest_construction(corner: dict) -> Optional[date]:
-    dates = [parse_date(r.get("construc_1")) for r in corner.get("progress", [])]
+    ids = {r.get("cornerid") for r in corner.get("locations", [])}
+    dates = [parse_date(r.get("construc_1")) for r in corner.get("progress", []) if r.get("cornerid") in ids]
     dates = [d for d in dates if d]
     return max(dates) if dates else None
 
@@ -33,6 +34,19 @@ def latest_construction(corner: dict) -> Optional[date]:
 def is_stale(survey, built) -> bool:
     survey_date, built_date = parse_date(survey), built if isinstance(built, date) else parse_date(built)
     return bool(survey_date and built_date and built_date > survey_date)
+
+
+def currency_problem(corner: dict, row: dict) -> str:
+    """Return why a measurement can't be confirmed as current. A blank result means the dates allow a comparison."""
+    if not parse_date(row.get("geocyclora")):
+        return "The survey date is missing or unreadable."
+    matches = [r for r in corner.get("progress", []) if r.get("cornerid") == row.get("cornerid")]
+    if not matches:
+        return "No Program Progress record matches this corner."
+    for r in matches:
+        if "Constructed" in str(r.get("construc_2")) and not parse_date(r.get("construc_1")):
+            return "The corner is listed as constructed, but its completion date is missing or unreadable."
+    return ""
 
 
 def join_report(corner: dict) -> list[str]:
@@ -61,6 +75,7 @@ def build_evidence(corner: dict, dictionary: dict) -> list[EvidenceItem]:
         ramp = str(row.get("rampid"))
         survey = str(row.get("geocyclora", ""))[:10] or None
         stale = is_stale(survey, built)
+        uncertain = currency_problem(corner, row)
         for field in CHECK_FIELDS:
             spec = dictionary["fields"][field]
             raw = row.get(field)
@@ -77,6 +92,8 @@ def build_evidence(corner: dict, dictionary: dict) -> list[EvidenceItem]:
                 value, label, reason = None, "missing", f"{raw} is a placeholder value."
             elif not low <= abs(number) <= high:
                 value, label, reason = None, "missing", f"{raw} is outside the plausible range."
+            elif uncertain:
+                value, label, reason = number, "assumed", f"Unknown whether this is current. {uncertain}"
             elif stale:
                 value, label, reason = number, "stale", f"Surveyed {survey}, but construction finished {built}."
             else:
@@ -93,14 +110,14 @@ def build_evidence(corner: dict, dictionary: dict) -> list[EvidenceItem]:
             rise = abs(float(length.value)) * 12 * abs(float(slope.value)) / 100
             items.append(EvidenceItem(key=f"{ramp}:ramp_rise", ramp_id=ramp, field="ramp_rise", value=round(rise, 2), unit="in",
                                       unit_documented=length.unit_documented and slope.unit_documented, label="measured",
-                                      source=f"Calculated from ramp {ramp}'s surveyed length and running slope", date=length.date))
+                                      source=f"Calculated from ramp {ramp}'s surveyed length and running slope", date=length.date,
+                                      reason="Calculated, not directly surveyed."))
     for field, why in NOT_IN_DATASETS.items():
         items.append(EvidenceItem(key=f"corner:{field}", field=field, label="missing",
                                   source="Not in the three NYC datasets", reason=why))
-    if corner.get("context", {}).get("road_control") == "not_recorded":
-        items.append(EvidenceItem(key="corner:road_control", field="road_control", value="city", label="assumed",
-                                  source="Not in the three NYC datasets",
-                                  reason="Assumed to be a city street until ownership is confirmed."))
+    if corner.get("context", {}).get("road_control") != "city":
+        items.append(EvidenceItem(key="corner:road_control", field="road_control", label="missing",
+                                  source="Not in the three NYC datasets", reason="The road owner isn't confirmed."))
     return items
 
 
@@ -111,6 +128,11 @@ def data_sufficient(corner: dict, evidence: list[EvidenceItem]) -> tuple[bool, l
     for item in evidence:
         if item.field in REQUIRED_FIELDS and item.label != "measured":
             problems.append(f"{item.key} is {item.label}. {item.reason}".strip())
+    undocumented = sorted({e.field for e in evidence if e.field in REQUIRED_FIELDS and e.label == "measured" and not e.unit_documented})
+    if undocumented:
+        problems.append("Measurement units aren't documented for: " + ", ".join(undocumented) + ".")
+    if corner.get("context", {}).get("road_control") != "city":
+        problems.append("The road owner isn't confirmed, so the applicable rules are unknown.")
     return (not problems, problems)
 
 

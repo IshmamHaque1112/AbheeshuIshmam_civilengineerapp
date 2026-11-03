@@ -20,7 +20,8 @@ quote: 'RAMP CROSS SLOPE; LANDING (TURNING SPACE) RUNNING SLOPE AND CROSS SLOPE;
   GUTTER FLOW SLOPE: 0.5% (1:200) MIN. 1.5% (1:67) MAX. Work acceptance: 2.0% (1:50)
   MAX.'
 retrieved_on: '2026-11-03'
-status: verified
+status: unreviewed
 reviewed_by: null
 notes: Read by Claude from the PDF in docs/sources on 2026-11-03. Human review is
   still pending.
+reviewed_on: null

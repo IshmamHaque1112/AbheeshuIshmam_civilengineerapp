@@ -16,25 +16,30 @@ from .rules import load_precedence, load_rules
 from .site_visit import build_list
 
 MAX_RETRIES = 2
-NOTICE = "Pre-design support only. This is not a compliance decision, and a licensed professional must review any design."
+NOTICE = "Demo only, with no affiliation to NYC. Pre-design support, not a compliance decision. A licensed professional must review any design."
 
 
 def _dump(x):
     return x.model_dump() if hasattr(x, "model_dump") else x
 
 
-def decide_status(sufficient, corner, outcomes) -> tuple[str, str]:
+def decide_status(sufficient, corner, outcomes, review_complete=True) -> tuple[str, str]:
     if not sufficient:
-        return "unknown", "Required data is missing or out of date, so no design is proposed."
+        return "unknown", "Required data is missing, out of date or unconfirmed, so no design is proposed."
     reasons = []
+    program = "the sample program record" if corner.get("data_kind") == "SAMPLE DATA" else "the city's program record"
     if any("Complex" in str(r.get("construc_2")) for r in corner.get("progress", [])):
-        reasons.append("the city's program lists this corner as complex")
+        reasons.append(f"{program} lists this corner as complex")
     obstacles = [row[f] for row in corner.get("locations", []) for f in ("obstacles_ramp", "obstacles_landing") if row.get(f) not in (None, "None")]
     if obstacles:
         reasons.append("the record shows these obstacles: " + ", ".join(dict.fromkeys(obstacles)))
     if reasons:
-        return "probably custom", "Probably custom because " + " and ".join(dict.fromkeys(reasons)) + "."
-    return "probably standard", "No recorded complexity or obstacle was found in the available records."
+        return "probably custom", "Probably custom because " + " and ".join(reasons) + "."
+    if not review_complete:
+        return "unknown", "The agent review didn't finish, so this corner can't be sorted yet."
+    if any("limit exceeded" in (o.result, o.preview) for o in outcomes):
+        return "unknown", "A surveyed value is above a limit, and no recorded constraint explains why. An engineer should look at this corner."
+    return "probably standard", "Provisional: no recorded complexity or obstacle, and no calculated value above a limit. This isn't an approval."
 
 
 def corner_records(corner: dict) -> dict:
@@ -44,11 +49,15 @@ def corner_records(corner: dict) -> dict:
         ramps=[dict(ramp_id=str(r.get("rampid")), surveyed=str(r.get("geocyclora") or "")[:10], warning_surface=r.get("dws_conditions"), ponding=r.get("ponding"), obstacles_ramp=r.get("obstacles_ramp"), obstacles_landing=r.get("obstacles_landing")) for r in corner.get("locations", [])])
 
 
-def rule_review(rules: list[dict], today: date | None = None) -> dict:
+def rule_review(rules: list[dict], precedence: dict | None = None, today: date | None = None) -> dict:
     today = today or date.today()
     verified = [r for r in rules if r["status"] == "verified"]
-    overdue = [r["id"] for r in verified if date.fromisoformat(str(r["retrieved_on"])) < today - timedelta(days=365)]
-    return dict(verified=len(verified), awaiting_human_review=[r["id"] for r in verified if not r.get("reviewed_by")], source_check_overdue=overdue)
+    waiting = [r for r in rules if r["status"] == "unreviewed"]
+    sourced = verified + waiting
+    overdue = [r["id"] for r in sourced if date.fromisoformat(str(r["retrieved_on"])) < today - timedelta(days=365)]
+    precedence = load_precedence() if precedence is None else precedence
+    return dict(verified=len(verified), awaiting_human_review=[r["id"] for r in waiting], source_check_overdue=overdue,
+                precedence_awaiting_review=[k for k, v in precedence.items() if not v.get("reviewed_by")])
 
 
 def _log(log, agent, attempt, payload, output, usage, error=None):
@@ -69,7 +78,11 @@ def analyze(corner: dict, client=None, rules=None, rates=None, save=True) -> dic
         out, usage = records.run(client, 0, payload)
         _log(log, "records", 0, payload, out, usage)
         rejections += validate_labels(out, evidence)
-        records_summary = out.summary
+        issues = check_text(out.summary, payload)
+        if issues:
+            rejections += [f"Records agent: {i}" for i in issues]
+        else:
+            records_summary = out.summary
     except AgentOutputError as exc:
         _log(log, "records", 0, payload, None, {}, str(exc))
         rejections.append("The Records agent's output was rejected, so Python's labels were used.")
@@ -79,6 +92,7 @@ def analyze(corner: dict, client=None, rules=None, rates=None, save=True) -> dic
     sufficient, problems = data_sufficient(corner, evidence)
     visits = build_list(evidence, corner)
     outcomes, options, constraints, challenges, retries, retry_limit_hit = [], [], [], [], 0, False
+    review_complete = not sufficient
 
     if sufficient:
         keys = {e.key for e in evidence}
@@ -111,11 +125,16 @@ def analyze(corner: dict, client=None, rules=None, rates=None, save=True) -> dic
                     _log(log, "skeptic", attempt, skeptic_in, review, usage)
                     challenges = [c.model_dump() for c in review.challenges]
                     feedback, verdict = challenges, review.verdict
+                    text_issues = check_text(" ".join(c.claim + " " + c.issue for c in review.challenges), skeptic_in)
+                    if text_issues:
+                        challenges, feedback, verdict = [], [{"claim": "Your previous review", "issue": i, "severity": "rework"} for i in text_issues], "rework"
+                        rejections += [f"Skeptic attempt {attempt + 1}: {i}" for i in text_issues]
                 except AgentOutputError as exc:
                     _log(log, "skeptic", attempt, skeptic_in, None, {}, str(exc))
-                    rejections.append("The Skeptic's output was rejected, so its review is missing.")
-                    verdict = "pass"
+                    rejections.append(f"Skeptic attempt {attempt + 1}: the output was invalid, so the review isn't complete.")
+                    verdict = "rework"
             if verdict == "pass":
+                review_complete = True
                 break
             if retries >= MAX_RETRIES:
                 retry_limit_hit = True
@@ -130,20 +149,21 @@ def analyze(corner: dict, client=None, rules=None, rates=None, save=True) -> dic
 
     targets = design_targets(rules, decisions, evidence) if sufficient else []
     conflicts = find_conflicts(rules, decisions, evidence if sufficient else [])
-    status, status_reason = decide_status(sufficient, corner, outcomes)
+    status, status_reason = decide_status(sufficient, corner, outcomes, review_complete)
     planning = run_planning(evidence, rates) if sufficient and status == "probably standard" else None
     planning_note = None
-    if sufficient and status != "probably standard":
-        planning_note = "No model or estimate was made, because a custom layout needs an engineer first."
+    if sufficient and status == "probably custom":
+        planning_note = "No model or quantities were made, because a custom layout needs an engineer first."
     elif sufficient and planning is None:
-        planning_note = "No model or estimate was made, because the measurement units aren't confirmed yet."
+        planning_note = "No model or quantities were made, because this corner couldn't be sorted as probably standard."
+    elif not sufficient and any("units aren't documented" in x for x in problems):
+        planning_note = "No model or quantities were made, because the measurement units aren't confirmed yet."
     elif not sufficient:
-        planning_note = "No model or estimate was made, because required data is missing or out of date."
+        planning_note = "No model or quantities were made, because required data is missing, out of date or unconfirmed."
 
     record = dict(status=status, status_reason=status_reason, problems=problems, evidence=[e.model_dump() for e in evidence],
                   rule_results=[o.model_dump() for o in outcomes], design_targets=[o.model_dump() for o in targets], options=options, constraints=constraints, challenges=challenges,
-                  site_visit=visits, planning_quantities=planning["takeoff"]["items"] if planning else [],
-                  planning_cost=({k: planning["cost"][k] for k in ("base", "low", "high")} if planning else None))
+                  site_visit=visits, planning_quantities=planning["takeoff"]["items"] if planning else [])
     writer_in = {"corner": corner["label"], "record": record, "records_summary": records_summary}
     try:
         written, usage = brief_writer.run(client, 0, writer_in)
@@ -164,9 +184,10 @@ def analyze(corner: dict, client=None, rules=None, rates=None, save=True) -> dic
                brief=written.model_dump(), applicability=[d.model_dump() for d in decisions], evidence=[e.model_dump() for e in evidence],
                rule_results=[o.model_dump() for o in outcomes], design_targets=[o.model_dump() for o in targets], conflicts=[c.model_dump() for c in conflicts], options=options,
                constraints=constraints, challenges=challenges, site_visit=visits, planning=planning, planning_note=planning_note,
-               background=background_reading(), rejections=rejections, retries=retries, retry_limit_hit=retry_limit_hit,
+               background=background_reading(), rejections=rejections, retries=retries, retry_limit_hit=retry_limit_hit, review_complete=review_complete,
+               dataset_note=corner.get("dataset_note"),
                tokens=dict(input=token_in, output=token_out), approval=None, agent_log=log,
-               records=corner_records(corner), rule_review=rule_review(rules), unreviewed_sources=["H-1011-2 to H-1011-9 drawing sheets"],
+               records=corner_records(corner), rule_review=rule_review(rules, precedence),
                rules_needing_sources=[r["id"] for r in rules if r["status"] == "needs_source"])
     if save:
         save_run(run)

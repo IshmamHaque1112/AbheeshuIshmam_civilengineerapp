@@ -16,39 +16,54 @@ python -m cornerbrief
 
 Open http://127.0.0.1:8000 in your browser. If PowerShell blocks the activate script, run `Set-ExecutionPolicy -Scope Process RemoteSigned` and try again.
 
-## Run the three-corner demo
+On a Mac, use Python 3.10 or newer. For example, if Homebrew installed Python 3.12, run:
 
-No API key is needed. These corners use made-up sample records and saved agent responses.
+```bash
+python3.12 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+python -m pytest -q
+python -m cornerbrief
+```
 
-1. **Sample corner A:** Shows a likely standard layout, rule math, the concept model and the estimate.
-2. **Sample corner B:** Shows a probable custom design, recorded obstacles and one Skeptic rework.
-3. **Sample corner C:** Stops because of stale and placeholder data, then produces a site visit list.
+## Run the demo
+
+No API key is needed. The sample corners use made-up records and saved agent responses.
+
+1. **Sample corner A, Queens:** Provisionally standard, with the rule math, a concept view and quantities.
+2. **Sample corner B, Brooklyn:** Probably custom because of a utility vault, with one Skeptic rework.
+3. **Real test corner:** Appears only after you save one. It runs offline, and limits stay "unknown."
+4. **Sample corner C, Bronx:** Stops because of stale and placeholder data, then produces a site visit list.
 
 Enter a name and select **Release brief** to turn on the download. Releasing a brief doesn't approve a design.
 
-To print all three results without the browser, run `python scripts/run_demo.py`.
+To print the results without the browser, run `python scripts/run_demo.py`.
 
-## Connect the app's email later
+## Why results say "unknown"
 
-Create the address and an email service account, then fill in `EMAIL_ALLOWLIST`, `EMAIL_FROM`, `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER` and `SMTP_PASSWORD` in `.env`. Set `EMAIL_ENABLED=true` to send. A person must still release each brief, and every recipient must be on the allowlist.
+A rule counts as verified only after a named person checks it against its source. No one has yet, so every limit result is "unknown," with the math shown as an "unreviewed calculation." To record a review, run:
 
-## Use real NYC corners
+```powershell
+python scripts/review_rule.py NYC-ADMIN-19-112-SLOPE --reviewer "Full Name"
+```
+
+That rule can then return "limit exceeded" or "no conflict found."
+
+## Add a real test corner
 
 ```powershell
 pip install truststore
-python scripts/fetch_corners.py
-python scripts/fetch_corners.py --save standard CORNER_ID
+python scripts/fetch_corners.py --borough QUEENS --street THOMSON
+python scripts/fetch_corners.py --save real_test CORNER_ID
 ```
 
-The first command writes `docs/candidates.md`. Repeat the save command for `constrained` and `missing_or_stale`. To go back to a sample corner, delete its file from `data/live`.
+The first command writes `docs/candidates.md`. The saved corner is added to the demo list, and the sample corners don't change. Limits stay "unknown" until its measurement units are documented in `data/data_dictionary.yaml` and its road owner is confirmed.
 
-Real corners need live agents:
+## Connect live agents or email later
 
-1. Copy `.env.example` to `.env`.
-2. Add your API key and set `DEMO_MODE=false`.
-3. Run `pip install anthropic`.
-
-Real corners show limit results as "unknown" until you confirm units. Find the dataset's documentation, then change each confirmed field in `data/data_dictionary.yaml` to `unit_status: documented`.
+- **Live agents:** Copy `.env.example` to `.env`, add your API key, set `DEMO_MODE=false` and run `pip install anthropic`.
+- **Email:** Create the address and an email service account, then fill in `EMAIL_ALLOWLIST`, `EMAIL_FROM`, `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER` and `SMTP_PASSWORD` in `.env`. Set `EMAIL_ENABLED=true` to send. A person must release each brief, and every recipient must be on the allowlist. The email form stays hidden until `EMAIL_ALLOWLIST` is set.
+- **Dollar figures:** They are hidden by default for the city demo. Set `SHOW_DOLLARS=true` to show them.
 
 ## How it's organized
 
@@ -67,10 +82,12 @@ Regular code handles data checks, rule selection, limit checks, geometry, quanti
 ## Known limits
 
 - **Sample data:** The included corners are made up. They are not real NYC locations.
+- **Rule review:** No named person has reviewed any rule or which-rule-applies decision yet.
 - **Live agents:** The live API path hasn't been run with a real key. Tests use saved or scripted responses.
-- **Real data fetch:** `scripts/fetch_corners.py` hasn't run against the NYC portal, because the build environment blocks it. Its sorting logic is tested.
-- **Open Library:** It hasn't been called live. A test uses a fake response. It stores citation details only and sends no book text to a model.
-- **Email:** It defaults to a dry run that saves messages to `outbox`, because the app's address doesn't exist yet. Sending through a service's SMTP settings is built and tested against a fake server, but it has never sent a real message. Inbound email isn't supported.
+- **Real data fetch:** `scripts/fetch_corners.py` hasn't run against the NYC portal, because the build environment blocks it. Its filter and sorting logic are tested.
+- **Ramp data age:** The ramp measurement dataset was last updated in October 2021.
+- **Open Library:** It hasn't been called live, and it's hidden until `OPEN_LIBRARY_CONTACT` is set. It stores citation details only and sends no book text to a model.
+- **Email:** It defaults to a dry run that saves messages to `outbox`. Sending through SMTP is built and tested against a fake server, but it has never sent a real message. Inbound email isn't supported.
 - **Cost and labor:** All rates are placeholders, not market prices.
 - **Stack changes:** The app uses Starlette (FastAPI's foundation) and a small built-in 3D renderer instead of FastAPI and three.js, because those packages weren't available during the build.
 - **Python version:** Tests ran on Python 3.13. Use Python 3.10 or newer.
@@ -79,8 +96,7 @@ Regular code handles data checks, rule selection, limit checks, geometry, quanti
 
 These return "unknown" until a person adds the exact text and limit:
 
+- H-1011 sheets 2 to 9, so case-specific details aren't checked.
 - 2025 NYS Building Code and Residential Code limits. These don't apply to NYC corners.
 
-H-1011 Table 1 and its general notes come from `docs/sources/H-1011-1.pdf`. Surveyed ramps are checked against its work acceptance limits. Its stricter design limits appear only under "If this corner is rebuilt." Sheets H-1011-2 to H-1011-9 haven't been reviewed, so case-specific details aren't checked.
-
-Rules marked `verified` were checked by Claude against the linked or supplied text on November 3, 2026. No person has reviewed them yet, so `reviewed_by` is empty, and the ADA rules use a third-party reproduction of the text. An engineer should review the rules and precedence decisions before anyone relies on them.
+H-1011 Table 1 and its general notes come from `docs/sources/H-1011-1.pdf`. Surveyed ramps are compared with its work acceptance limits. Its stricter design limits appear only under "If this corner is rebuilt." The ADA rules use a third-party reproduction of the text, so confirm them on ada.gov.

@@ -18,8 +18,9 @@ url: https://codelibrary.amlegal.com/codes/newyorkcity/latest/NYCrules/0-0-0-624
 quote: The minimum slope, calculated on a line perpendicular to the curb, shall be
   1" in 5', and the maximum shall be 3" in 5'.
 retrieved_on: '2026-11-03'
-status: verified
+status: unreviewed
 reviewed_by: null
 notes: Source text checked by Claude through a web fetch on 2026-11-03. Human review
   is still pending.
 stage: general
+reviewed_on: null

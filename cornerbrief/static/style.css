@@ -39,6 +39,8 @@ th,td { padding:7px 10px; border-bottom:1px solid var(--line); vertical-align:to
 .tag.stale { background:repeating-linear-gradient(135deg,#d6d9d5,#d6d9d5 4px,#f5f6f3 4px,#f5f6f3 8px); }
 .tag.exceeded { background:var(--stop); border-color:var(--stop); color:#fff; }
 .tag.clear { color:var(--go); border-color:var(--go); }
+.tag.preview-over { color:var(--stop); border-color:var(--stop); margin-top:3px; }
+.tag.preview-in { color:var(--go); border-color:var(--go); margin-top:3px; }
 .tag.na { color:var(--quiet); border-color:var(--line); }
 details { background:var(--surface); border:1px solid var(--line); border-radius:4px; margin:10px 0; }
 summary { padding:9px 12px; cursor:pointer; font-weight:600; }

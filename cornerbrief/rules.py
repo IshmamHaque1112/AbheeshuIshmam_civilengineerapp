@@ -6,7 +6,7 @@ from .paths import RULES, RATES
 REQUIRED = ["id", "title", "jurisdiction", "authority_type", "applies_to", "parameter", "operator",
             "limit", "unit", "stage", "source_document", "edition", "effective_date", "section", "url",
             "quote", "retrieved_on", "status", "reviewed_by", "notes"]
-STATUSES = {"verified", "needs_source", "superseded"}
+STATUSES = {"verified", "unreviewed", "needs_source", "superseded"}
 STAGES = {"general", "design", "work_acceptance"}
 OPERATORS = {"max", "min", "range", "reference", "needs_source"}
 
@@ -26,12 +26,14 @@ def validate_rule(rule: dict, name: str = "") -> dict:
         raise RuleError(f"{label}: bad stage {rule['stage']}")
     if rule["operator"] not in OPERATORS:
         raise RuleError(f"{label}: bad operator {rule['operator']}")
-    if rule["status"] == "verified":
+    if rule["status"] in ("verified", "unreviewed"):
         for key in ("section", "url", "quote", "edition"):
             if not rule.get(key):
-                raise RuleError(f"{label}: a verified rule needs an exact {key}")
+                raise RuleError(f"{label}: this rule needs an exact {key}")
         if rule["operator"] in ("max", "min", "range") and rule.get("limit") is None:
-            raise RuleError(f"{label}: a verified numeric rule needs a limit")
+            raise RuleError(f"{label}: a numeric rule needs a limit")
+    if rule["status"] == "verified" and not (str(rule.get("reviewed_by") or "").strip() and rule.get("reviewed_on")):
+        raise RuleError(f"{label}: a verified rule needs a named reviewer and review date")
     if rule["status"] == "needs_source" and rule.get("limit") is not None:
         raise RuleError(f"{label}: a needs_source rule cannot hold a limit")
     return rule
@@ -64,7 +66,7 @@ def load_rates(root: Path = RATES) -> dict[str, dict]:
     out = {}
     for path in sorted(root.glob("*.yaml")):
         rate = yaml.safe_load(path.read_text(encoding="utf-8"))
-        for key in ("id", "item", "unit", "value", "source", "source_date", "location", "status", "notes"):
+        for key in ("id", "item", "unit", "value", "currency", "source", "source_date", "location", "status", "notes"):
             if key not in rate:
                 raise RuleError(f"{path.name}: missing {key}")
         if rate["status"] not in {"sample", "public", "licensed"}:

@@ -1,5 +1,6 @@
 """Approval gate and plain-text export."""
 import time
+from .cost import dollars_shown, hide_dollars
 from .orchestrator import save_run
 
 
@@ -17,6 +18,13 @@ def approve(run: dict, reviewer: str) -> dict:
     return run
 
 
+def presented(run: dict) -> dict:
+    """Apply the demo's display rules, so the page and the download match."""
+    if run.get("planning") and not dollars_shown():
+        run = {**run, "planning": {**run["planning"], "cost": hide_dollars(run["planning"]["cost"])}}
+    return run
+
+
 def stricter(c: dict) -> str:
     unit = "%" if c["unit"] == "percent" else " in"
     parts = []
@@ -30,6 +38,7 @@ def stricter(c: dict) -> str:
 def to_markdown(run: dict) -> str:
     if not run.get("approval"):
         raise NotApproved("A person must approve this brief before it can be downloaded.")
+    run = presented(run)
     L = [f"# CornerBrief: {run['corner']['label']}", "", f"**{run['notice']}**", "",
          f"Data: {run['corner']['data_kind']}. Agent mode: {run['mode']}.",
          f"Released by {run['approval']['reviewer']} on {run['approval']['at']}. {run['approval']['meaning']}", "",
@@ -43,11 +52,13 @@ def to_markdown(run: dict) -> str:
     L += [f"- Complaint {c['id']} on {c['date']}: temporary repair feasible: {c['repair_feasible']}" for c in rec["complaints"]]
     L += [f"- Join note: {x}" for x in run["join_notes"]] + [""]
     review = run["rule_review"]
-    L += [f"Rule review: {len(review['awaiting_human_review'])} of {review['verified']} checked rules still need human review. {len(run['rules_needing_sources'])} rules still need sources. Not reviewed yet: {', '.join(run['unreviewed_sources'])}.", ""]
+    L += [f"Rule review: {len(review['awaiting_human_review'])} of {review['verified'] + len(review['awaiting_human_review'])} sourced rules still need a named reviewer. {len(run['rules_needing_sources'])} rules still need sources. {len(review['precedence_awaiting_review'])} which-rule-applies decisions still need review.", ""]
+    if run.get("dataset_note"):
+        L += [run["dataset_note"], ""]
     L += ["## Applicable rules", "", "| Rule | Applies | Why | Decision source |", "| --- | --- | --- | --- |"]
     L += [f"| {d['title']} | {'Yes' if d['applies'] else 'No'} | {d['reason']} | {d['source_section']} {d['url']} |" for d in run["applicability"]]
-    L += ["", "## Evidence", "", "| Input | Value | Unit | Label | Source | Note |", "| --- | --- | --- | --- | --- | --- |"]
-    L += [f"| {e['key']} | {'' if e['value'] is None else e['value']} | {e['unit'] or ''} | {e['label']} | {e['source']} | {e['reason']} |" for e in run["evidence"]]
+    L += ["", "## Evidence", "", "| Input | Value | Unit | Label | Source | Date | Note |", "| --- | --- | --- | --- | --- | --- | --- |"]
+    L += [f"| {e['key']} | {'' if e['value'] is None else e['value']} | {e['unit'] or ''} | {e['label']} | {e['source']} | {e['date'] or ''} | {e['reason']} |" for e in run["evidence"]]
     L += ["", "## Rule results", "", "| Rule | Ramp | Limit | Result | Math or reason | Source |", "| --- | --- | --- | --- | --- | --- |"]
     L += [f"| {o['title']} | {o['ramp_id'] or ''} | {o['limit_text']} | {o['result']} | {o['math'] or o['reason']} | {o['section'] or ''} {o['url'] or ''} |" for o in run["rule_results"]]
     if run["design_targets"]:
@@ -65,23 +76,32 @@ def to_markdown(run: dict) -> str:
     L += ["", "## Site visit list", ""] + [f"- {v['where']}: {v['action']} {v['why']}" for v in run["site_visit"]]
     if run["planning"]:
         p = run["planning"]
-        L += ["", f"## Concept plan: {p['cost']['label']}", "", p["cost"]["range_note"], ""]
+        L += ["", f"## Concept plan: {p['cost']['label']}", ""]
+        L += [p["cost"]["range_note"], ""] if p["cost"].get("range_note") else []
         L += [f"- {i['label']}: {i['qty']} {i['unit']}" for i in p["takeoff"]["items"]]
-        if p["cost"]["base"] is None:
+        if p["cost"].get("hidden"):
+            L += ["", p["cost"]["note"]]
+        elif p["cost"]["base"] is None:
             L += ["", "Cost range: unknown, because a rate is missing."]
         else:
             L += ["", f"Cost range: ${p['cost']['low']:,} to ${p['cost']['high']:,}. Base: ${p['cost']['base']:,}. Uses sample rates: {p['cost']['contains_sample_rates']}."]
-        L += ["", "### Labor hours", ""] + [f"- {h['trade']}: {h['hours']} hours" for h in p["crew"]["hours"]]
+            L += [f"- {l['item']}: rate {l.get('rate', 'unknown')} per {l.get('unit', '')}; status {l['status']}; source date {l.get('source_date', 'unknown')}" for l in p["cost"]["lines"]]
+        L += ["", "### Labor hours", ""]
+        if p["crew"]["result"] == "unknown":
+            L += ["Unknown, because a crew rate is missing."]
+        else:
+            L += [f"- {h['trade']}: {h['hours']} hours{', from sample rates' if p['crew']['contains_sample_rates'] else ''}{', from an out-of-date rate' if p['crew']['rates_out_of_date'] else ''}" for h in p["crew"]["hours"]]
         L += ["", "### Work sequence", ""] + [f"{i}. {s}" for i, s in enumerate(p["crew"]["sequence"], 1)]
         L += ["", "### Likely equipment types", ""] + [f"- {e['type']}: {e['use']}" for e in p["equipment"]]
         L += ["", "### Assumptions", ""] + [f"- {a['basis']}" for a in p["takeoff"]["assumptions"]]
         L += ["", "Excluded: " + "; ".join(p["takeoff"]["exclusions"]) + ".", "", "### Questions for a safety professional", ""]
-        L += [f"- {q['topic']}: {q['question']}" for q in p["safety_questions"]]
+        L += [f"- {q['topic']}: {q['question']}{' Source: ' + q['url'] if q['url'] else ''}" for q in p["safety_questions"]]
     elif run["planning_note"]:
         L += ["", "## Concept plan", "", run["planning_note"]]
     if run["rejections"]:
         L += ["", "## Rejected agent output", ""] + [f"- {x}" for x in run["rejections"]]
     L += ["", f"Agent tokens used: {run['tokens']['input'] + run['tokens']['output']}."]
-    L += ["", "## Background reading", "", run["background"]["note"]]
-    L += [f"- {b['title']} ({b.get('year') or 'year unknown'}): {b['url']}" for b in run["background"]["items"]]
+    if run["background"]["items"]:
+        L += ["", "## Background reading", "", run["background"]["note"]]
+        L += [f"- {b['title']} ({b.get('year') or 'year unknown'}): {b['url']}" for b in run["background"]["items"]]
     return "\n".join(L) + "\n"

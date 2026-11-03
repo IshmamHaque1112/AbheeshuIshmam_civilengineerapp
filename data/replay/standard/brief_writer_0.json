@@ -1,5 +1,5 @@
 {
- "summary": "This corner looks like a standard layout based on current survey records, and a perpendicular ramp is the likely type.",
- "findings_narrative": "The surveyed values did not exceed the checked acceptance limits. Some fall outside H-1011's design targets, so a rebuild would need to change them.",
+ "summary": "This sample corner is provisionally a standard layout, and a perpendicular ramp is the likely type if a site check confirms the path width.",
+ "findings_narrative": "Unreviewed calculations show no surveyed value above the acceptance limits. Some fall outside H-1011's design targets, so a rebuild would need to change them.",
  "engineer_note": "Confirm the ramp type, sidewalk width, legal grade and road ownership on site. H-1011 uses the path width to choose the ramp case."
 }

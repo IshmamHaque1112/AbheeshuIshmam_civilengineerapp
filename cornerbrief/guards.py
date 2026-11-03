@@ -1,7 +1,7 @@
 """Check agent text. Agents cannot add unsupported numbers or claim approval."""
 import json, re
 
-FORBIDDEN = re.compile(r"\b(compliant|complies|comply|approved|safe|buildable|up to code|passes|passed)\b", re.I)
+FORBIDDEN = re.compile(r"\b(compliant|complies|comply|approved|allowed|safe|buildable|up to code|passes|passed)\b", re.I)
 NUMBER = re.compile(r"(?<![A-Za-z0-9.-])\d+(?:\.\d+)?")
 
 

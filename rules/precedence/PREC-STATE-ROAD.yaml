@@ -1,8 +1,10 @@
 id: PREC-STATE-ROAD
-question: How should a state-controlled road in NYC be handled?
+question: How should a state-controlled road, or a road with no recorded owner, be
+  handled in NYC?
 decision: Return unknown until ownership is confirmed.
-reason: State design rules may matter on state projects, so the tool does not assume
-  which authority controls.
+reason: State design rules may matter on state projects, and the records do not show
+  who controls every road, so the tool does not assume.
 source_section: NYSDOT Highway Design Manual Revision 104
 url: https://eieb.dot.ny.gov/publiceiebdocuments/Details/15698
 reviewed_by: null
+reviewed_on: null

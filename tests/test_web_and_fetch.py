@@ -81,6 +81,24 @@ def test_classify_stale_placeholder_and_complex():
     assert fetch.classify([{**LOC, "obstacles_landing": "Utility Vault"}], [{"construc_2": "Constructed"}]) == "constrained"
 
 
+def test_location_filter_uses_borough_code_and_street():
+    where = fetch.build_where("Queens", "Thomson")
+    assert "borough=4" in where and "like '%THOMSON%'" in where and "stname2" in where
+    assert "''" in fetch.build_where(None, "O'Brien")
+    with pytest.raises(ValueError):
+        fetch.build_where("Jersey City")
+
+
+def test_list_candidates_sends_the_filter(monkeypatch):
+    seen = {}
+    def fake(dataset, **params):
+        seen.setdefault(dataset, params)
+        return []
+    monkeypatch.setattr(fetch, "query", fake)
+    fetch.list_candidates(10, "QUEENS", "THOMSON")
+    assert "borough=4" in seen[fetch.LOC]["where"]
+
+
 def test_real_corner_fixture_runs_with_unknown_limits(tmp_path, monkeypatch):
     from cornerbrief.llm import ReplayClient
     from cornerbrief.orchestrator import analyze

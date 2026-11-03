@@ -24,10 +24,12 @@ WHY = {"sidewalk_width": "H-1011 General Notes 27 and 28 use the pedestrian path
 def build_list(evidence: list[EvidenceItem], corner: dict) -> list[dict]:
     items, seen = [], set()
     for e in evidence:
-        if e.label not in ("missing", "stale"):
+        if e.label not in ("missing", "stale", "assumed") or e.field == "road_control":
             continue
         action = NOT_IN_DATASETS.get(e.field) or ACTIONS.get(e.field)
-        if e.label == "stale":
+        if e.label == "assumed":
+            action = "Confirm this is current. " + action
+        elif e.label == "stale":
             action = "Re-measure" + action[7:] if action.startswith("Measure ") else f"Re-check: {action}"
         where = f"Ramp {e.ramp_id}" if e.ramp_id else "Corner"
         id_ = (where, e.field)
@@ -41,6 +43,8 @@ def build_list(evidence: list[EvidenceItem], corner: dict) -> list[dict]:
                 items.append({"where": f"Ramp {row.get('rampid')}", "action": f"Locate and photograph: {value}.", "why": "A recorded obstacle may limit the ramp layout."})
         if row.get("ponding") == "Yes":
             items.append({"where": f"Ramp {row.get('rampid')}", "action": "Check drainage at the base of the ramp.", "why": "The record shows pooling water."})
-    if corner.get("context", {}).get("road_control") == "not_recorded":
+    if any(e.unit is not None and e.label == "measured" and not e.unit_documented for e in evidence):
+        items.append({"where": "Dataset", "action": "Confirm the measurement units in the ramp dataset's documentation.", "why": "Limit checks stay unknown until the units are documented."})
+    if corner.get("context", {}).get("road_control") != "city":
         items.append({"where": "Corner", "action": "Confirm whether the city or state controls the road.", "why": "State control would change which rules can be used."})
     return items

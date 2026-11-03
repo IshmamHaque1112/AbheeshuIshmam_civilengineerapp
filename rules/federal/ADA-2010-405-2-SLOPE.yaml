@@ -15,9 +15,10 @@ section: §405.2, applied to curb ramps by §406.1
 url: https://www.corada.com/documents/2010ADAStandards/405
 quote: Ramp runs shall have a running slope not steeper than 1:12.
 retrieved_on: '2026-11-03'
-status: verified
+status: unreviewed
 reviewed_by: null
 notes: Source text checked by Claude through a web fetch on 2026-11-03. Human review
   is still pending. This is a third-party reproduction, so confirm it on ada.gov.
   1:12 is stored as 8.33%.
 stage: general
+reviewed_on: null

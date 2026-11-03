@@ -16,7 +16,8 @@ section: General Note 24
 url: https://www.nycstreetdesign.info/sites/default/files/specs/H-1011-1.pdf
 quote: MUST NOT EXCEED 13.3%.
 retrieved_on: '2026-11-03'
-status: verified
+status: unreviewed
 reviewed_by: null
 notes: Read by Claude from the PDF in docs/sources on 2026-11-03. Human review is
   still pending. The dataset does not give slope directions, so this is not calculated.
+reviewed_on: null

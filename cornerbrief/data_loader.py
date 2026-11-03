@@ -1,24 +1,29 @@
-"""Load saved corner records. Saved real corners in data/live replace sample corners with the same key."""
+"""Load saved corner records. Sample corners never change. A saved real corner is an extra, labeled test."""
 import json
 import yaml
 from .paths import DATA
 
-KEYS = ["standard", "constrained", "missing_or_stale"]
+SAMPLE_KEYS = ["standard", "constrained", "missing_or_stale"]
+REAL_KEY = "real_test"
+KEYS = SAMPLE_KEYS + [REAL_KEY]
 
 
 def load_corner(key: str) -> dict:
     if key not in KEYS:
         raise KeyError(key)
-    live = DATA / "live" / f"{key}.json"
-    path = live if live.exists() else DATA / "corners" / f"{key}.json"
+    path = DATA / "live" / f"{key}.json" if key == REAL_KEY else DATA / "corners" / f"{key}.json"
+    if not path.exists():
+        raise KeyError(key)
     corner = json.loads(path.read_text(encoding="utf-8"))
     corner["key"] = key
     return corner
 
 
 def list_corners() -> list[dict]:
+    """Demo order: standard, constrained, the real test if saved, then the stop case."""
+    order = ["standard", "constrained"] + ([REAL_KEY] if (DATA / "live" / f"{REAL_KEY}.json").exists() else []) + ["missing_or_stale"]
     out = []
-    for key in KEYS:
+    for key in order:
         c = load_corner(key)
         out.append({"key": key, "label": c["label"], "data_kind": c["data_kind"]})
     return out

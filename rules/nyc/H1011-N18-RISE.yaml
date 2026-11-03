@@ -16,7 +16,8 @@ section: General Note 18
 url: https://www.nycstreetdesign.info/sites/default/files/specs/H-1011-1.pdf
 quote: THE MAXIMUM RISE OF ANY RAMP RUN MUST NOT EXCEED 30 INCHES.
 retrieved_on: '2026-11-03'
-status: verified
+status: unreviewed
 reviewed_by: null
 notes: Read by Claude from the PDF in docs/sources on 2026-11-03. Human review is
   still pending. The rise is calculated from surveyed length and slope.
+reviewed_on: null

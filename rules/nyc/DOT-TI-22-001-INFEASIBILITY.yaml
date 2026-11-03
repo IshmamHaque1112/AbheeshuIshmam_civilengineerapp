@@ -15,9 +15,10 @@ section: Supplemental Guidance on Technical Infeasibilities
 url: https://www.nycpedramps.info/sites/default/files/2022-08/TI_22-001%20Supplemental%20Guidance%20on%20Technical%20Infeasibilities.pdf
 quote: exceeds 2%
 retrieved_on: '2026-11-03'
-status: verified
+status: unreviewed
 reviewed_by: null
 notes: Source text checked by Claude through a web fetch on 2026-11-03. Human review
   is still pending. It covers certain crossings where existing street grades prevent
   a fully accessible ramp. An engineer must decide whether it applies.
 stage: general
+reviewed_on: null

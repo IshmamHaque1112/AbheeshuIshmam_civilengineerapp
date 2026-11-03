@@ -19,8 +19,9 @@ url: https://www.nycstreetdesign.info/sites/default/files/specs/H-1011-1.pdf
 quote: 'SIDE FLARE INSIDE PEDESTRIAN CIRCULATION PATH: 5.0% (1:20) MIN. 9.5% (1:10.5)
   MAX. Work acceptance: 10.0% (1:10) MAX.'
 retrieved_on: '2026-11-03'
-status: verified
+status: unreviewed
 reviewed_by: null
 notes: Read by Claude from the PDF in docs/sources on 2026-11-03. Human review is
   still pending. This limit applies where the side adjoins a pedestrian circulation
   path. The dataset does not record that, so an engineer should confirm it.
+reviewed_on: null

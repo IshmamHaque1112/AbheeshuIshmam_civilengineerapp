@@ -16,9 +16,10 @@ section: General Notes 27 and 28
 url: https://www.nycstreetdesign.info/sites/default/files/specs/H-1011-1.pdf
 quote: PEDESTRIAN CIRCULATION PATH IS EIGHT FEET (8') WIDE OR GREATER
 retrieved_on: '2026-11-03'
-status: verified
+status: unreviewed
 reviewed_by: null
 notes: Read by Claude from the PDF in docs/sources on 2026-11-03. Human review is
   still pending. Paths 8 feet or wider use C1 or C2, and narrower paths use C3. Limited
   arc length can lead to C5 or C4. The dataset has no sidewalk width, so this needs
   a site check.
+reviewed_on: null

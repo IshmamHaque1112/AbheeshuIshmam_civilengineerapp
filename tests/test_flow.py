@@ -56,9 +56,10 @@ def test_standard_corner():
     assert run["status"] == "probably standard"
     assert run["options"][0]["ramp_type"].startswith("C1")
     results = [o for o in run["rule_results"] if o["rule_id"] == "NYC-ADMIN-19-112-SLOPE"]
-    assert len(results) == 2 and all(o["result"] == "no conflict found" and "≤ 8%" in o["math"] for o in results)
+    assert len(results) == 2 and all(o["result"] == "unknown" and o["preview"] == "no conflict found" and "≤ 8%" in o["math"] for o in results)
     assert all(o["section"] == "§19-112" for o in results)
     assert run["planning"]["cost"]["base"] > 0
+    assert "Provisional" in run["status_reason"]
 
 
 def test_constrained_corner_flags_custom_with_evidence():
@@ -67,7 +68,7 @@ def test_constrained_corner_flags_custom_with_evidence():
     assert "complex" in run["status_reason"] and "Utility Vault" in run["status_reason"]
     assert run["retries"] == 1
     assert run["options"][0]["ramp_type"].startswith("C3")
-    assert any(o["result"] == "limit exceeded" for o in run["rule_results"])
+    assert any(o["preview"] == "limit exceeded" for o in run["rule_results"])
     assert any("Utility Vault" in v["action"] for v in run["site_visit"])
     assert run["planning"] is None
 
@@ -88,6 +89,7 @@ def test_retry_limit():
     assert spy.calls.count("skeptic") == MAX_RETRIES + 1
     assert spy.calls.count("site_analyst") == MAX_RETRIES + 1
     assert run["retry_limit_hit"] is True
+    assert run["review_complete"] is False and run["status"] == "unknown" and run["planning"] is None
 
 
 # Agents cannot supply limits, numbers or claims
@@ -108,7 +110,7 @@ def test_agent_output_cannot_change_rule_results():
     assert [o["result"] for o in run["rule_results"]] == [o["result"] for o in baseline]
 
 
-@pytest.mark.parametrize("text", ["This corner is compliant.", "The design is safe.", "It is approved.", "Buildable as drawn."])
+@pytest.mark.parametrize("text", ["This corner is compliant.", "The design is safe.", "It is approved.", "Buildable as drawn.", "This ramp is allowed."])
 def test_banned_claims_rejected(text):
     assert check_text(text, {})
 
@@ -208,7 +210,7 @@ def test_undocumented_units_produce_no_planning():
     corner = copy.deepcopy(load_corner("standard"))
     corner["data_kind"] = "live"
     run = analyze(corner, client=ReplayClient("standard"))
-    assert run["planning"] is None and "units" in run["planning_note"]
+    assert run["planning"] is None and "units" in run["planning_note"] and run["status"] == "unknown"
 
 
 # Background reading and email
@@ -300,7 +302,7 @@ def test_smtp_sends_after_approval_with_settings(monkeypatch):
 
 def test_export_includes_every_brief_section():
     text = to_markdown(approve(run_corner("standard"), "Reviewer"))
-    for part in ("Corner records", "Program status", "Applicable rules", "Evidence", "Rule results", "Rule conflicts", "Stricter values", "Likely options", "Constraints", "Skeptic notes", "Site visit list", "Labor hours", "Work sequence", "Likely equipment types", "Assumptions", "Excluded", "Questions for a safety professional", "Background reading", "still need human review", "Agent tokens"):
+    for part in ("Corner records", "Program status", "Applicable rules", "Evidence", "Rule results", "Rule conflicts", "Stricter values", "Likely options", "Constraints", "Skeptic notes", "Site visit list", "Labor hours", "Work sequence", "Likely equipment types", "Assumptions", "Excluded", "Questions for a safety professional", "still need a named reviewer", "Agent tokens", "No affiliation".lower()[3:], "2023-06-14", "Source: https"):
         assert part in text, part
 
 
@@ -309,7 +311,8 @@ def test_export_explains_stopped_corner_and_complaint():
     assert "Complaint SAMPLE-0001" in to_markdown(approve(run_corner("constrained"), "R"))
 
 
-def test_export_handles_missing_rate():
+def test_export_handles_missing_rate(monkeypatch):
+    monkeypatch.setenv("SHOW_DOLLARS", "true")
     corner = load_corner("standard")
     rates = load_rates()
     del rates["cost_curb"]
@@ -321,17 +324,130 @@ def test_rule_review_flags_unreviewed_and_old_checks():
     from cornerbrief.orchestrator import rule_review
     from cornerbrief.rules import load_rules
     rules = load_rules()
-    assert len(rule_review(rules)["awaiting_human_review"]) == rule_review(rules)["verified"]
+    assert rule_review(rules)["verified"] == 0 and rule_review(rules)["awaiting_human_review"]
     assert rule_review(rules, today=date(2030, 1, 1))["source_check_overdue"]
+    assert rule_review(rules)["precedence_awaiting_review"]
 
 
 def test_standard_corner_shows_design_targets_without_failing_it():
     run = run_corner("standard")
     assert run["status"] == "probably standard"
-    assert not [o for o in run["rule_results"] if o["result"] == "limit exceeded"]
-    assert [o for o in run["design_targets"] if o["result"] == "limit exceeded"]
+    assert not [o for o in run["rule_results"] if o["preview"] == "limit exceeded"]
+    assert [o for o in run["design_targets"] if o["preview"] == "limit exceeded"]
     assert "If this corner is rebuilt" in to_markdown(approve(run, "R"))
 
 
 def test_stopped_corner_has_no_design_targets():
     assert run_corner("missing_or_stale")["design_targets"] == []
+
+
+# Status and review rules from PRD v2
+def test_probably_standard_needs_no_exceeded_limit():
+    corner = copy.deepcopy(load_corner("standard"))
+    corner["locations"][0]["ramp_running_slope_total"] = 9.5
+    run = analyze(corner, client=ReplayClient("standard"))
+    assert run["status"] == "unknown" and "above a limit" in run["status_reason"] and run["planning"] is None
+
+
+def test_invalid_skeptic_reply_is_incomplete_not_a_pass():
+    class Bad(Spy):
+        def call(self, agent, attempt, system, payload, schema, tier="main"):
+            if agent == "skeptic":
+                raise AgentOutputError("invalid")
+            return super().call(agent, 0, system, payload, schema, tier)
+    run = analyze(load_corner("standard"), client=Bad("standard"))
+    assert run["review_complete"] is False and run["status"] == "unknown"
+    assert any("isn't complete" in r for r in run["rejections"])
+
+
+def test_skeptic_and_records_text_are_guarded():
+    class Claims(Spy):
+        def call(self, agent, attempt, system, payload, schema, tier="main"):
+            if agent == "skeptic":
+                return schema(verdict="pass", challenges=[dict(claim="x", issue="This ramp is compliant.", severity="note")]), {}
+            if agent == "records":
+                return schema(summary="This corner is safe.", labels=[]), {}
+            return super().call(agent, 0, system, payload, schema, tier)
+    run = analyze(load_corner("standard"), client=Claims("standard"))
+    assert any(r.startswith("Records agent") for r in run["rejections"])
+    assert any(r.startswith("Skeptic attempt") for r in run["rejections"])
+    assert not run["challenges"] and run["review_complete"] is False
+
+
+def test_export_carries_notices_and_sample_label():
+    text = to_markdown(approve(run_corner("standard"), "R"))
+    assert "no affiliation to NYC" in text and "SAMPLE DATA" in text and "not a compliance decision" in text
+
+
+def test_dollars_are_hidden_by_default(monkeypatch):
+    monkeypatch.delenv("SHOW_DOLLARS", raising=False)
+    run = approve(run_corner("standard"), "R")
+    text = to_markdown(run)
+    assert "$" not in text and "hidden for this demo" in text
+    from cornerbrief.app import public
+    shown = public(run)["planning"]["cost"]
+    assert shown["hidden"] and "base" not in shown and "rate" not in shown["lines"][0]
+    monkeypatch.setenv("SHOW_DOLLARS", "true")
+    assert "$" in to_markdown(run)
+
+
+def test_takeoff_has_counts():
+    t = run_corner("standard")["planning"]["takeoff"]
+    assert qty(t, "ramp_count") == 2 and qty(t, "landing_count") == 2
+
+
+def test_missing_crew_rate_returns_unknown():
+    rates = load_rates()
+    del rates["crew_laborer_curb"]
+    t = build_takeoff(build_parts([dict(ramp_id="1", width_ft=5, length_ft=6, landing_width_ft=5, landing_length_ft=4, slope_pct=6)]))
+    crew = build_crew(t, rates)
+    assert crew["result"] == "unknown" and crew["hours"] == []
+
+
+def test_old_crew_rate_is_flagged():
+    t = build_takeoff(build_parts([dict(ramp_id="1", width_ft=5, length_ft=6, landing_width_ft=5, landing_length_ft=4, slope_pct=6)]))
+    assert build_crew(t, load_rates(), today=date(2030, 1, 1))["rates_out_of_date"]
+
+
+def test_email_and_reading_are_hidden_unless_configured(monkeypatch):
+    monkeypatch.delenv("EMAIL_ALLOWLIST", raising=False)
+    from cornerbrief.app import public
+    run = approve(run_corner("standard"), "R")
+    assert public(run)["features"]["email"] is False
+    assert "Background reading" not in to_markdown(run)
+
+
+REAL = dict(key="real_test", label="A and B", data_kind="NYC Open Data", dataset_note="Real test corner. The ramp measurement dataset was last updated in October 2021.",
+            context=dict(inside_nyc=True, work_type="corner_ramp_row", road_control="not_recorded"),
+            locations=[dict(cornerid=1, rampid=2, geocyclora="2023-01-01", curb_reveal="0.2", ramp_running_slope_total="6", ramp_cross_slope="1", ramp_width="60", ramp_length="6",
+                            lnd_width="60", lnd_length="60", lnd_cross_slope="1", gutter_slope="1", counter_slope="2", ramp_right_flare="8", ramp_left_flare="8", obstacles_ramp="None", obstacles_landing="None")],
+            progress=[dict(cornerid=1, construc_2="Constructed", construc_1="2022/01/01")], complaints=[])
+
+
+def test_real_test_corner_runs_offline_with_every_limit_unknown():
+    from cornerbrief.llm import OfflineClient, get_client
+    client = get_client(REAL)
+    assert isinstance(client, OfflineClient)
+    run = analyze(REAL, client=client)
+    assert run["status"] == "unknown" and run["options"] == [] and run["planning"] is None and run["tokens"] == dict(input=0, output=0)
+    assert all(o["result"] in ("unknown", "not applicable") and o["preview"] is None for o in run["rule_results"])
+    assert any("units" in p for p in run["problems"]) and any("road owner" in p for p in run["problems"])
+    assert next(e for e in run["evidence"] if e["field"] == "ramp_width")["label"] == "measured"
+    assert any("units" in v["action"] for v in run["site_visit"])
+    assert "October 2021" in to_markdown(approve(run, "R"))
+
+
+def test_real_test_only_listed_when_saved_and_samples_never_change(tmp_path, monkeypatch):
+    import shutil
+    from pathlib import Path
+    from cornerbrief import data_loader
+    data = tmp_path / "data"
+    shutil.copytree(Path(__file__).parent.parent / "data", data)
+    monkeypatch.setattr(data_loader, "DATA", data)
+    assert [c["key"] for c in data_loader.list_corners()] == ["standard", "constrained", "missing_or_stale"]
+    with pytest.raises(KeyError):
+        data_loader.load_corner("real_test")
+    (data / "live" / "real_test.json").write_text(json.dumps(REAL))
+    (data / "live" / "standard.json").write_text(json.dumps(REAL))
+    assert [c["key"] for c in data_loader.list_corners()] == ["standard", "constrained", "real_test", "missing_or_stale"]
+    assert data_loader.load_corner("standard")["data_kind"] == "SAMPLE DATA"

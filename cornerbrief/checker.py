@@ -70,6 +70,14 @@ def check_value(rule: dict, item: EvidenceItem) -> RuleOutcome:
     return RuleOutcome(**base, result="no conflict found" if ok else "limit exceeded", math=shown)
 
 
+def _gate(rule: dict, outcome: RuleOutcome) -> RuleOutcome:
+    """Only a rule verified by a named reviewer can produce a limit result. Keep the math visible as a preview."""
+    if rule["status"] == "verified" or outcome.result == "unknown":
+        return outcome
+    return outcome.model_copy(update={"preview": outcome.result, "result": "unknown", "math": f"Unreviewed calculation: {outcome.math}",
+                                      "reason": "This rule is waiting for a named reviewer."})
+
+
 def run_checks(rules: list[dict], decisions: list[Decision], evidence: list[EvidenceItem]) -> list[RuleOutcome]:
     by_decision = {d.rule_id: d for d in decisions}
     by_field: dict[str, list[EvidenceItem]] = {}
@@ -84,7 +92,7 @@ def run_checks(rules: list[dict], decisions: list[Decision], evidence: list[Evid
             outcomes.append(RuleOutcome(**_base(rule), result="not applicable", reason=decision.reason))
         elif decision.forced_unknown:
             outcomes.append(RuleOutcome(**_base(rule), result="unknown", reason=decision.reason))
-        elif rule["status"] != "verified":
+        elif rule["status"] in ("needs_source", "superseded"):
             outcomes.append(RuleOutcome(**_base(rule), result="unknown", reason="The exact source text is still needed. No limit was checked."))
         elif rule["operator"] == "reference":
             outcomes.append(RuleOutcome(**_base(rule), result="unknown", reason=rule.get("notes") or "This rule has no numeric check."))
@@ -92,7 +100,7 @@ def run_checks(rules: list[dict], decisions: list[Decision], evidence: list[Evid
             items = by_field.get(rule["parameter"], [])
             if not items:
                 outcomes.append(RuleOutcome(**_base(rule), result="unknown", reason="There is no value for this field."))
-            outcomes.extend(check_value(rule, item) for item in items)
+            outcomes.extend(_gate(rule, check_value(rule, item)) for item in items)
     return outcomes
 
 
@@ -110,7 +118,7 @@ def design_targets(rules: list[dict], decisions: list[Decision], evidence: list[
             if applying[rule["id"]].forced_unknown:
                 out.append(RuleOutcome(**_base(rule, item.ramp_id), result="unknown", reason=applying[rule["id"]].reason))
             else:
-                out.append(check_value(rule, item))
+                out.append(_gate(rule, check_value(rule, item)))
     return out
 
 
@@ -118,7 +126,7 @@ def find_conflicts(rules: list[dict], decisions: list[Decision], evidence: list[
     applying = {d.rule_id for d in decisions if d.applies}
     groups: dict[str, list[dict]] = {}
     for rule in rules:
-        if rule["id"] in applying and rule["status"] == "verified" and rule["stage"] != "design" and rule["operator"] in ("max", "min", "range"):
+        if rule["id"] in applying and rule["status"] in ("verified", "unreviewed") and rule["stage"] != "design" and rule["operator"] in ("max", "min", "range"):
             groups.setdefault(rule["parameter"], []).append(rule)
     conflicts = []
     for parameter, group in groups.items():

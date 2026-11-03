@@ -7,15 +7,17 @@ from starlette.routing import Mount, Route
 from starlette.staticfiles import StaticFiles
 from .config import load_env
 from .data_loader import list_corners
-from .email_delivery import EmailBlocked, send_brief
+from .email_delivery import EmailBlocked, allowlist, send_brief
 from .orchestrator import load_run, run_corner
-from .review_export import NotApproved, approve, to_markdown
+from .review_export import NotApproved, approve, presented, to_markdown
 
 load_env()
 
 
 def public(run: dict) -> dict:
-    return {k: v for k, v in run.items() if k != "agent_log"}
+    shown = {k: v for k, v in presented(run).items() if k != "agent_log"}
+    shown["features"] = {"email": bool(allowlist())}
+    return shown
 
 
 def error(message: str, status: int) -> JSONResponse:

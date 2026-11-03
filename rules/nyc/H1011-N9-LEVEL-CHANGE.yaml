@@ -16,8 +16,9 @@ section: General Note 9
 url: https://www.nycstreetdesign.info/sites/default/files/specs/H-1011-1.pdf
 quote: VERTICAL CHANGES IN LEVEL MUST NOT EXCEED ONE QUARTER INCH (1/4").
 retrieved_on: '2026-11-03'
-status: verified
+status: unreviewed
 reviewed_by: null
 notes: Read by Claude from the PDF in docs/sources on 2026-11-03. Human review is
   still pending. This treats the dataset's lip height as a vertical change in level.
   An engineer should confirm that.
+reviewed_on: null

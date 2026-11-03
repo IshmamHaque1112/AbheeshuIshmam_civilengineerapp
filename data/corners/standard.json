@@ -1,17 +1,69 @@
 {
   "label": "Sample corner A: Queens, 2-ramp corner",
   "data_kind": "SAMPLE DATA",
-  "context": {"inside_nyc": true, "work_type": "corner_ramp_row", "road_control": "not_recorded"},
+  "context": {
+    "inside_nyc": true,
+    "work_type": "corner_ramp_row",
+    "road_control": "city"
+  },
   "locations": [
-    {"cornerid": 9000001, "rampid": 8100001, "geocyclora": "2023-06-14", "borough": 4, "stname1": "SAMPLE AVENUE", "stname2": "EXAMPLE STREET",
-     "curb_reveal": 0.25, "ramp_running_slope_total": 6.4, "dws_conditions": "Good Condition", "gutter_slope": 1.2, "lnd_width": 60, "lnd_length": 60,
-     "lnd_cross_slope": 1.5, "counter_slope": 3.1, "ramp_width": 60, "ramp_right_flare": 8.5, "ramp_left_flare": 8.8, "ramp_length": 6.5, "ramp_cross_slope": 1.4,
-     "ponding": "No", "obstacles_ramp": "None", "obstacles_landing": "None"},
-    {"cornerid": 9000001, "rampid": 8100002, "geocyclora": "2023-06-14", "borough": 4, "stname1": "SAMPLE AVENUE", "stname2": "EXAMPLE STREET",
-     "curb_reveal": 0.25, "ramp_running_slope_total": 7.1, "dws_conditions": "Good Condition", "gutter_slope": 0.9, "lnd_width": 60, "lnd_length": 54,
-     "lnd_cross_slope": 1.7, "counter_slope": 2.8, "ramp_width": 54, "ramp_right_flare": 8.1, "ramp_left_flare": 8.6, "ramp_length": 6, "ramp_cross_slope": 1.6,
-     "ponding": "No", "obstacles_ramp": "None", "obstacles_landing": "None"}
+    {
+      "cornerid": 9000001,
+      "rampid": 8100001,
+      "geocyclora": "2023-06-14",
+      "borough": 4,
+      "stname1": "SAMPLE AVENUE",
+      "stname2": "EXAMPLE STREET",
+      "curb_reveal": 0.25,
+      "ramp_running_slope_total": 6.4,
+      "dws_conditions": "Good Condition",
+      "gutter_slope": 1.2,
+      "lnd_width": 60,
+      "lnd_length": 60,
+      "lnd_cross_slope": 1.5,
+      "counter_slope": 3.1,
+      "ramp_width": 60,
+      "ramp_right_flare": 8.5,
+      "ramp_left_flare": 8.8,
+      "ramp_length": 6.5,
+      "ramp_cross_slope": 1.4,
+      "ponding": "No",
+      "obstacles_ramp": "None",
+      "obstacles_landing": "None"
+    },
+    {
+      "cornerid": 9000001,
+      "rampid": 8100002,
+      "geocyclora": "2023-06-14",
+      "borough": 4,
+      "stname1": "SAMPLE AVENUE",
+      "stname2": "EXAMPLE STREET",
+      "curb_reveal": 0.25,
+      "ramp_running_slope_total": 7.1,
+      "dws_conditions": "Good Condition",
+      "gutter_slope": 0.9,
+      "lnd_width": 60,
+      "lnd_length": 54,
+      "lnd_cross_slope": 1.7,
+      "counter_slope": 2.8,
+      "ramp_width": 54,
+      "ramp_right_flare": 8.1,
+      "ramp_left_flare": 8.6,
+      "ramp_length": 6,
+      "ramp_cross_slope": 1.6,
+      "ponding": "No",
+      "obstacles_ramp": "None",
+      "obstacles_landing": "None"
+    }
   ],
-  "progress": [{"cornerid": 9000001, "borough": "QUEENS", "constructi": "Upgrade", "construc_1": "2021/09/30", "construc_2": "Constructed"}],
+  "progress": [
+    {
+      "cornerid": 9000001,
+      "borough": "QUEENS",
+      "constructi": "Upgrade",
+      "construc_1": "2021/09/30",
+      "construc_2": "Constructed"
+    }
+  ],
   "complaints": []
 }

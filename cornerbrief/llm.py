@@ -32,6 +32,24 @@ class ReplayClient:
         return parse_output(text, schema), {"input_tokens": 0, "output_tokens": 0, "replayed": True}
 
 
+class OfflineClient:
+    """Runs a real corner with no API key. It writes no analysis, so only checked results appear."""
+    mode = "offline, no agents"
+
+    def call(self, agent, attempt, system, payload, schema, tier="main"):
+        usage = {"input_tokens": 0, "output_tokens": 0, "offline": True}
+        if agent == "records":
+            labels = [{"key": e["key"], "label": e["label"], "note": ""} for e in payload["evidence"]]
+            return schema(summary="Loaded from saved NYC Open Data records. No agent analysis was run.", labels=labels), usage
+        if agent == "site_analyst":
+            return schema(constraints=[], options=[]), usage
+        if agent == "skeptic":
+            return schema(verdict="pass", challenges=[]), usage
+        return schema(summary="No agent analysis was run for this real test corner.",
+                      findings_narrative="The records are shown with their labels. See the sections below for what is unknown.",
+                      engineer_note="Confirm the measurement units and road owner before relying on any calculation."), usage
+
+
 class LiveClient:
     mode = "live"
 
@@ -69,5 +87,5 @@ def get_client(corner: dict):
     if not demo:
         return LiveClient()
     if corner.get("data_kind") != "SAMPLE DATA":
-        raise RuntimeError("Saved responses only cover sample corners. Add ANTHROPIC_API_KEY to analyze a real corner.")
+        return OfflineClient()
     return ReplayClient(corner["key"])

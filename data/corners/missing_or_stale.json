@@ -1,13 +1,45 @@
 {
   "label": "Sample corner C: Bronx, rebuilt after the survey",
   "data_kind": "SAMPLE DATA",
-  "context": {"inside_nyc": true, "work_type": "corner_ramp_row", "road_control": "not_recorded"},
+  "context": {
+    "inside_nyc": true,
+    "work_type": "corner_ramp_row",
+    "road_control": "city"
+  },
   "locations": [
-    {"cornerid": 9000003, "rampid": 8300001, "geocyclora": "2019-10-19", "borough": 2, "stname1": "SAMPLE BOULEVARD", "stname2": "EXAMPLE AVENUE",
-     "curb_reveal": 999, "ramp_running_slope_total": 5.5, "dws_conditions": "Missing", "gutter_slope": 1.2, "lnd_width": 60, "lnd_length": 48,
-     "lnd_cross_slope": 2.2, "counter_slope": 4.9, "ramp_width": 60, "ramp_right_flare": 8.8, "ramp_left_flare": 60, "ramp_length": 3.3, "ramp_cross_slope": 4.3,
-     "ponding": "No", "obstacles_ramp": "None", "obstacles_landing": "None"}
+    {
+      "cornerid": 9000003,
+      "rampid": 8300001,
+      "geocyclora": "2019-10-19",
+      "borough": 2,
+      "stname1": "SAMPLE BOULEVARD",
+      "stname2": "EXAMPLE AVENUE",
+      "curb_reveal": 999,
+      "ramp_running_slope_total": 5.5,
+      "dws_conditions": "Missing",
+      "gutter_slope": 1.2,
+      "lnd_width": 60,
+      "lnd_length": 48,
+      "lnd_cross_slope": 2.2,
+      "counter_slope": 4.9,
+      "ramp_width": 60,
+      "ramp_right_flare": 8.8,
+      "ramp_left_flare": 60,
+      "ramp_length": 3.3,
+      "ramp_cross_slope": 4.3,
+      "ponding": "No",
+      "obstacles_ramp": "None",
+      "obstacles_landing": "None"
+    }
   ],
-  "progress": [{"cornerid": 9000003, "borough": "BRONX", "constructi": "Upgrade", "construc_1": "2025/05/20", "construc_2": "Constructed"}],
+  "progress": [
+    {
+      "cornerid": 9000003,
+      "borough": "BRONX",
+      "constructi": "Upgrade",
+      "construc_1": "2025/05/20",
+      "construc_2": "Constructed"
+    }
+  ],
   "complaints": []
 }

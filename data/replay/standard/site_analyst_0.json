@@ -10,7 +10,7 @@
  "options": [
   {
    "ramp_type": "C1 perpendicular",
-   "rationale": "The surveyed ramps run straight from the landing to the curb, and each landing is recorded at the top of its ramp.",
+   "rationale": "The surveyed ramps run straight from the landing to the curb. This is provisional, because H-1011 uses the path width to choose the case and the width isn't recorded.",
    "evidence_keys": [
     "8100001:lnd_length",
     "8100002:lnd_length"

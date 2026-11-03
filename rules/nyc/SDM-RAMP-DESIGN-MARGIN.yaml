@@ -15,9 +15,10 @@ section: Pedestrian Ramps, Blended Transitions & Cut-Throughs
 url: https://www.nycstreetdesign.info/node/582
 quote: at least 0.5% less than the maximum work acceptance slopes
 retrieved_on: '2026-11-03'
-status: verified
+status: unreviewed
 reviewed_by: null
 notes: Source text checked by Claude through a web fetch on 2026-11-03. Human review
   is still pending. H-1011 Table 1 now supplies the design limits, which sit below
   its work acceptance limits.
 stage: general
+reviewed_on: null

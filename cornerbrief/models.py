@@ -33,6 +33,7 @@ class RuleOutcome(BaseModel):
     value_unit: Optional[str] = None
     limit_text: str = ""
     result: RuleResult
+    preview: Optional[RuleResult] = None
     math: str = ""
     reason: str = ""
     authority_type: str = ""

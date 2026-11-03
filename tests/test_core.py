@@ -10,7 +10,7 @@ from cornerbrief.site_visit import build_list
 
 RULES, PREC = load_rules(), load_precedence()
 BY_ID = {r["id"]: r for r in RULES}
-CTX = {"inside_nyc": True, "work_type": "corner_ramp_row", "road_control": "not_recorded"}
+CTX = {"inside_nyc": True, "work_type": "corner_ramp_row", "road_control": "city"}
 
 
 def item(field="f", value=1.0, unit="percent", documented=True, label="measured", reason=""):
@@ -172,6 +172,14 @@ def test_conflicting_tiers_show_both_and_use_stricter():
     assert round(c.stricter_min, 2) == 1.67
 
 
+def test_unrecorded_road_owner_returns_unknown():
+    _, ev = evidence("standard")
+    ctx = {**CTX, "road_control": "not_recorded"}
+    out = [o for o in run_checks(RULES, resolve(ctx, RULES, PREC), ev) if o.rule_id == "NYC-ADMIN-19-112-SLOPE"]
+    assert out and all(o.result == "unknown" and o.preview is None for o in out)
+    assert "road owner" in " ".join(data_sufficient({"context": ctx, "locations": [{}]}, [])[1])
+
+
 def test_conflict_warning_uses_stricter_limit():
     e = item(field="sidewalk_transverse_slope", value=3.0)  # Within 5%, outside 2.1%
     c = next(x for x in find_conflicts(RULES, resolve(CTX, RULES, PREC), [e]) if x.parameter == "sidewalk_transverse_slope")
@@ -238,7 +246,7 @@ def test_existing_ramps_are_not_failed_on_design_targets():
     decisions = resolve(CTX, RULES, PREC)
     assert not [o for o in run_checks(RULES, decisions, ev) if BY_ID[o.rule_id]["stage"] == "design"]
     from cornerbrief.checker import design_targets
-    over = [o for o in design_targets(RULES, decisions, ev) if o.result == "limit exceeded"]
+    over = [o for o in design_targets(RULES, decisions, ev) if o.preview == "limit exceeded"]
     assert {o.rule_id for o in over} >= {"H1011-T1-RAMP-CROSS-DESIGN", "H1011-N17-WIDTH-TARGET"}
 
 
@@ -252,3 +260,70 @@ def test_stage_is_required():
     del bad["stage"]
     with pytest.raises(RuleError):
         validate_rule(bad)
+
+
+# Named-reviewer gate
+def test_sourced_rule_without_reviewer_returns_unknown_with_math():
+    _, ev = evidence("standard")
+    out = [o for o in run_checks(RULES, resolve(CTX, RULES, PREC), ev) if o.rule_id == "NYC-ADMIN-19-112-SLOPE"]
+    assert all(o.result == "unknown" and o.preview == "no conflict found" and o.math.startswith("Unreviewed calculation") for o in out)
+
+
+def test_reviewed_rule_returns_a_limit_result():
+    _, ev = evidence("standard")
+    reviewed = [dict(r, status="verified", reviewed_by="Pat Example", reviewed_on="2026-11-03") if r["id"] == "NYC-ADMIN-19-112-SLOPE" else r for r in RULES]
+    out = [o for o in run_checks(reviewed, resolve(CTX, reviewed, PREC), ev) if o.rule_id == "NYC-ADMIN-19-112-SLOPE"]
+    assert all(o.result == "no conflict found" and o.preview is None for o in out)
+
+
+def test_verified_status_needs_a_named_reviewer():
+    bad = dict(BY_ID["NYC-ADMIN-19-112-SLOPE"], status="verified", reviewed_by=None)
+    with pytest.raises(RuleError):
+        validate_rule(bad)
+
+
+def test_no_rule_is_verified_until_someone_reviews_it():
+    assert not [r["id"] for r in RULES if r["status"] == "verified"]
+
+
+def test_review_script_records_a_named_reviewer(tmp_path):
+    import importlib.util, shutil
+    from pathlib import Path
+    spec = importlib.util.spec_from_file_location("review_rule", Path(__file__).parent.parent / "scripts" / "review_rule.py")
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    root = tmp_path / "rules"
+    shutil.copytree(Path(__file__).parent.parent / "rules", root)
+    with pytest.raises(ValueError):
+        mod.review("NYC-ADMIN-19-112-SLOPE", "Pat", root=root)
+    with pytest.raises(ValueError):
+        mod.review("NYS-BCNYS-2025", "Pat Example", root=root)
+    mod.review("NYC-ADMIN-19-112-SLOPE", "Pat Example", root=root)
+    assert next(r for r in load_rules(root) if r["id"] == "NYC-ADMIN-19-112-SLOPE")["status"] == "verified"
+
+
+# Unknown currency
+@pytest.mark.parametrize("change,progress", [
+    ({"geocyclora": None}, None),
+    ({}, []),
+    ({}, [{"cornerid": 123, "construc_2": "Constructed", "construc_1": "2020/01/01"}]),
+    ({}, [{"cornerid": 9000001, "construc_2": "Constructed", "construc_1": None}]),
+])
+def test_missing_date_or_unmatched_record_is_unknown(change, progress):
+    corner = copy.deepcopy(load_corner("standard"))
+    corner["locations"][0].update(change)
+    if progress is not None:
+        corner["progress"] = progress
+    ev = build_evidence(corner, load_dictionary(corner))
+    ok, problems = data_sufficient(corner, ev)
+    assert not ok and any("Unknown whether" in p for p in problems)
+    width = next(e for e in ev if e.field == "ramp_width" and e.ramp_id == "8100001")
+    assert width.label == "assumed"
+    assert check_value(BY_ID["NYC-ADMIN-19-112-WIDTH"], width).result == "unknown"
+
+
+def test_undocumented_units_stop_the_design_path():
+    corner = copy.deepcopy(load_corner("standard"))
+    corner["data_kind"] = "NYC Open Data"
+    ok, problems = data_sufficient(corner, build_evidence(corner, load_dictionary(corner)))
+    assert not ok and any("units" in p for p in problems)

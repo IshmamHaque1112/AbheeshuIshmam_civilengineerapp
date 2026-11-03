@@ -19,9 +19,10 @@ url: https://www.nycstreetdesign.info/sites/default/files/2026-09/SCARA_instfili
 quote: 'Recommended minimum: 0.50% (0.3” of drop per 5’ of width). Recommended maximum:
   2.1% (1.25” of drop per 5’ of width) for a minimum width of 5’ of sidewalk'
 retrieved_on: '2026-11-03'
-status: verified
+status: unreviewed
 reviewed_by: null
 notes: Source text checked by Claude through a web fetch on 2026-11-03. Human review
   is still pending. The 2.1% limit covers at least 5 feet of width, and the recommended
   maximum is 5% for the rest. The recommended minimum is 0.50%.
 stage: general
+reviewed_on: null

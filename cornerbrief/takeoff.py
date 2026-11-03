@@ -16,6 +16,8 @@ def build_takeoff(parts: list[dict]) -> dict:
         dict(id="curb_length", label="Curb", qty=round(curb, 1), unit="lf"),
         dict(id="removal_area", label="Existing surface removal", qty=round(removal, 1), unit="sf"),
         dict(id="concrete_volume", label="Slab concrete", qty=round(slab_ft3 / 27, 2), unit="cy"),
+        dict(id="ramp_count", label="Ramps", qty=sum(p["kind"] == "ramp" for p in parts), unit="count"),
+        dict(id="landing_count", label="Landings", qty=sum(p["kind"] == "landing" for p in parts), unit="count"),
     ]
     return {"items": items, "assumptions": [{"id": k, **v} for k, v in a.items()],
             "exclusions": ["Utilities and utility relocation", "Drainage changes", "Traffic and pedestrian control",

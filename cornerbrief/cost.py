@@ -1,6 +1,7 @@
 """Quantities times dated rates. A missing rate returns unknown, never a number."""
 from datetime import date, timedelta
 from .takeoff import qty
+import os
 
 LINES = [("slab_area", "cost_ramp_concrete"), ("dws_area", "cost_dws"), ("curb_length", "cost_curb"), ("removal_area", "cost_removal")]
 LABEL = "Class 5 concept estimate, not a bid"
@@ -23,3 +24,13 @@ def build_cost(takeoff: dict, rates: dict, today: date | None = None) -> dict:
     return dict(label=LABEL, range_note=RANGE_NOTE, lines=lines, base=base, low=None if base is None else round(base * 0.5),
                 high=None if base is None else round(base * 2), result="unknown" if unknown else "calculated",
                 contains_sample_rates=any(l.get("status") == "sample" for l in lines))
+
+
+def dollars_shown() -> bool:
+    return os.environ.get("SHOW_DOLLARS", "false").lower() == "true"
+
+
+def hide_dollars(cost: dict) -> dict:
+    """The city demo shows quantities only, so a placeholder price can't be quoted."""
+    lines = [dict(item=l["item"], quantity=l["quantity"], unit=l.get("unit", "")) for l in cost["lines"]]
+    return dict(label=cost["label"], lines=lines, hidden=True, note="Dollar figures are hidden for this demo.")
