@@ -1,0 +1,675 @@
+CornerBrief PRD
+
+
+
+
+  CornerBrief PRD
+    Nov 3, 2026   · ​@Ishmam Haque
+
+  CornerBrief turns a NYC street corner into a review-ready brief showing what is known,
+  what is missing and what an engineer should check on site. It assists an engineer and does
+  not approve designs or claim compliance.
+
+
+  Problem and goal
+  The demo must prove that a multi-agent system can support early engineering
+  investigation without hiding uncertainty. Established tools already help design and
+  inspect ramps, so CornerBrief focuses on the research that comes before detailed design.
+
+       Job it supports: The Junior Engineer (Design) posting includes research studies,
+       engineering investigations, field surveys and design work under an Engineer-In-
+       Charge.
+       Why corners: DDC runs a pedestrian ramp unit, and some ramps need custom designs
+       because of obstacles such as private utilities.
+       Differentiator: The tool labels every input as measured, assumed or missing, and it
+       stops when the data is too thin.
+
+  The team has adopted the street corner direction, with one added requirement: a strong
+  rule set covering both the NYC and New York State codes. "CornerBrief" is a working
+  name.
+
+
+  Users and scope
+  The primary user is a junior engineer preparing a corner for review, and the engineer in
+  charge reviews the result.
+
+
+     In scope for the demo                        Out of scope
+
+     Three real NYC corners, with raw records     Citywide batch processing
+     saved locally
+
+     Standard, custom or unknown sorting          Final design or construction drawings
+
+
+
+
+                                                                                          Page 1 of 15
+CornerBrief PRD
+
+
+
+
+     In scope for the demo                          Out of scope
+
+     Rule set with one file per rule and an exact   Declaring a corner compliant, approved or
+     source section                                 safe
+
+     An applicable-law decision for every corner    Legal advice or replacing an engineer's
+                                                    judgment
+
+     Stale-data detection using the survey and      Replacing surveys or field inspection
+     construction dates
+
+     Site visit list                                Filing plans or technical infeasibility forms
+
+     Simple browser 3D model and takeoff of         Detailed CAD, photorealistic rendering or
+     modeled parts                                  structural design
+
+     Concept cost range, labor hours, equipment     Bids, contract schedules, crane selection or
+     types and work sequence for one corner         crane positions
+
+     Safety questions for a professional            Site safety plans or final PPE lists
+
+     Background reading from Open Library           Using books as rule or design inputs, or
+                                                    processing borrowed in-copyright text
+
+     Download, and approved email to test           Reading email replies or sending to real
+     addresses                                      engineers
+
+
+  Future ideas, not part of the demo: urban gardening site briefs, an architectural concept
+  visualizer, and a separate book-grounded design and estimate tool for larger projects such
+  as the LaGuardia garage concept.
+
+
+  System diagram
+  The flow splits as soon as the records are labeled, so a corner with too little data never
+  receives a design suggestion.
+
+
+
+
+                                                                                               Page 2 of 15
+CornerBrief PRD
+
+
+
+
+  CornerBrief system flow · 4 agents, 1 data check, 1 approval step
+
+  A failed rule check or weak claim returns to the site analyst, with a retry limit. Python
+  decides which rules apply for every corner, including corners that go straight to a site
+  visit, and that decision appears in the brief. Open Library and the 3D model feed only the
+  brief, and neither can change a rule result.
+
+
+  Components and modules
+  The initial prototype builds the core modules first, then adds planning for one corner if
+  the core tests pass. Plain code does every calculation, and all planning results come from
+  one measured takeoff.
+
+
+
+
+                                                                                        Page 3 of 15
+CornerBrief PRD
+
+
+
+
+     Module               What it does                         Run by            Prototype
+                                                                                 stage
+
+     Data loader          Loads saved ramp, progress and       Code              Core
+                          complaint records
+
+     Evidence checker     Handles placeholders, units, stale   Code and          Core
+                          data and evidence labels             Records agent
+
+     Rule library         Stores one file per rule, plus       Code              Core
+                          precedence files
+
+     Applicability        Decides which rules apply and        Code              Core
+     resolver             records why
+
+     Site analyst         Proposes likely constraints and      Agent             Core
+                          ramp options
+
+     Rule checker         Runs limits and returns the four     Code              Core
+                          allowed results
+
+     Skeptic              Challenges weak sources,             Agent             Core
+                          conflicts and claims
+
+     Site visit planner   Lists missing inputs and what to     Code              Core
+                          measure
+
+     Brief writer         Drafts the brief from validated      Agent             Core
+                          results
+
+     Review and           Requires approval and offers a       Code and person   Core
+     export               download
+
+     Parts kit and 3D     Builds simple ramp, landing and      Code              Add-on 1
+     model                curb geometry
+
+     Takeoff              Measures modeled area, volume        Code              Add-on 1
+                          and length
+
+     Cost                 Applies dated rates and shows a      Code              Add-on 2
+                          concept range
+
+     Crew and             Estimates labor hours by trade       Code              Add-on 2
+     sequence             and orders the work
+
+
+
+
+                                                                                            Page 4 of 15
+CornerBrief PRD
+
+
+
+
+     Module                What it does                            Run by                Prototype
+                                                                                         stage
+
+     Equipment types       Lists likely equipment types, with      Code                  Add-on 2
+                           no crane choice or position
+
+     Safety questions      Lists silica, traffic and training      Code                  Add-on 2
+                           items for a professional to check
+
+     Library               Adds cited public-domain                Code and Brief        Add-on 3
+                           background reading                      writer
+
+     Email                 Sends approved briefs to                Code and person       Add-on 3
+                           allowlisted test addresses
+
+
+  Cost rates and crew rates live in separate dated files, each marked as sample, public or
+  licensed. Planning results use the label "Class 5 concept estimate, not a bid" and list what
+  the model excludes.
+
+
+  Compliance rule set
+  The rule set covers NYC and New York State codes, but it must first decide what applies.
+  For a street corner in NYC, the state Uniform Code does not apply, and the NYC
+  Construction Codes mainly govern buildings. The limits checked at the corner come
+  mostly from NYC street rules and the ADA.
+
+
+  Rule file requirements
+       One rule per file: Each file lists its limit, unit, jurisdiction, authority type, edition,
+       effective date and scope.
+       Exact source: Each file gives the section, a link, a short quote and the date it was
+       retrieved.
+       No recited law: Models cannot create, edit or supply limits, and a person reviews each
+       rule.
+       Status controls checks: Only verified rules can produce a limit result. A rule marked
+        needs_source returns "unknown."
+       Careful result wording: Results are "limit exceeded," "no conflict found," "unknown" or
+       "not applicable."
+
+
+
+
+                                                                                                    Page 5 of 15
+CornerBrief PRD
+
+
+
+
+  Which rule applies
+  These decisions live in reviewed precedence files, each with its own source and
+  reasoning. The brief shows the rule chosen and the reason.
+
+
+     Question                        Decision                          Why
+
+     NYC or NYS building code        NYC; the Uniform Code does        NYS says the Uniform Code
+     at an NYC location?             not apply                         excludes NYC, which has its
+                                                                       own construction code
+
+     Same question outside           NYS Uniform Code                  It applies in every part of the
+     NYC?                                                              state except NYC; check for
+                                                                       approved local additions
+
+     Corner ramp in the public       ADA, NYC Administrative           The city's design guide and
+     right-of-way?                   Code, Highway Rules and H-        §2-09(f)(4)(xiv) point to
+                                     1011                              these
+
+     Route from the sidewalk         NYC Building Code, as a flag      §1104.1 covers routes within a
+     to a building?                  for engineer review               site, not the ramp itself
+
+     A rule tier is stricter than    Flag both, and use the stricter   The tool highlights the
+     another?                        for the warning                   conflict, and an engineer
+                                                                       decides
+
+     State-controlled road in        Unknown until ownership is        NYSDOT's manual may
+     NYC?                            confirmed                         matter on state projects, so
+                                                                       the tool should not assume
+
+
+
+  Starter rules
+  These sections were checked against the linked text. A person should still confirm each
+  one before use.
+
+
+     Rule                           Limit                     Exact source           Status
+
+     Curb ramp slope                8% maximum                NYC Admin. Code        Verified
+                                                              §19-112
+
+     Curb ramp width                4 feet minimum            NYC Admin. Code        Verified
+                                                              §19-112
+
+
+
+
+                                                                                                   Page 6 of 15
+CornerBrief PRD
+
+
+
+
+     Rule                      Limit                     Exact source           Status
+
+     Lip at the roadway        5/8 inch maximum          NYC Admin. Code        Verified
+                               where a common level      §19-112
+                               is not possible
+
+     Sidewalk transverse       1 to 3 inches in 5 feet   34 RCNY §2-09(f)       Verified
+     slope                     (about 1.67% to 5%)       (4)(xi)
+
+     Corner ramp standard      Must follow the latest    34 RCNY §2-09(f)       Verified
+                               H-1011                    (4)(xiv)
+
+     Recommended               0.50% minimum; 2.1%       NYC DOT filing         Verified;
+     sidewalk slope            maximum for at least 5    guidelines, VIII.F.2   guidance
+                               feet of width, 5% for
+                               the rest
+
+     Gutter slope              0.50% minimum             NYC DOT filing         Verified;
+                                                         guidelines, X.F        guidance
+
+     Ramp design margin        At least 0.5% below H-    NYC Street Design      Verified; needs
+                               1011's acceptance         Manual                 H-1011 values
+                               slopes
+
+     H-1011 slopes and         Not yet available         Current H-1011         Needs source
+     landing
+
+     Flare slope               9.5% maximum next to      2021 H-1011            Needs current
+                               a pedestrian path         presentation           H-1011
+
+     ADA curb ramp limits      Not yet available         2010 ADA               Needs source
+                                                         Standards, exact
+                                                         sections
+
+     2025 NYS Building and     Not yet available         Exact sections of      Needs source;
+     Residential Code limits                             the 2025 codes         applies outside
+                                                                                NYC
+
+
+  PROWAG is not a starter limit. USDOT adopted it for transit stops, and a February 2026
+  congressional letter says DOJ had not adopted it. Treat it as reference material unless an
+  engineer or agency says otherwise.
+
+
+
+
+                                                                                            Page 7 of 15
+CornerBrief PRD
+
+
+
+
+  Requirements
+  The demo is complete when every P0 requirement passes. P1 items should follow if time
+  and budget allow.
+
+
+     ID           Requirement                                            Priority
+
+     R1           Accept a corner from the demo list and load its        P0
+                  saved records
+
+     R2           Label every input as measured, assumed or              P0
+                  missing, with its source and survey date
+
+     R3           Stop design suggestions and create a site visit list   P0
+                  when required data is missing or stale
+
+     R4           Suggest likely ramp options only when required         P0
+                  data is present
+
+     R5           Check values in Python against one file per rule,      P0
+                  each with an exact source section
+
+     R6           Have the skeptic challenge weak sources, conflicts     P0
+                  and unsupported claims, with a retry limit
+
+     R7           Produce a brief with findings, reasoning,              P0
+                  unknowns, site checks and sources
+
+     R8           Require a person to approve a brief before it can      P0
+                  be emailed
+
+     R9           Show that the output is pre-design support and         P0
+                  not a compliance decision
+
+     R10          Offer a brief download                                 P0
+
+     R11          Show a simple 3D model built from checked              P1
+                  dimensions
+
+     R12          Email approved briefs from the app's dedicated         P1
+                  address to allowlisted test addresses only
+
+     R13          Add cited Open Library reading in a section labeled    P1
+                  background only
+
+
+
+
+                                                                                    Page 8 of 15
+CornerBrief PRD
+
+
+
+
+     ID           Requirement                                            Priority
+
+     R14          Record each agent's input, output and token use        P1
+                  for debugging and cost tracking
+
+     R15          Decide in Python which NYC, state and federal          P0
+                  rules apply, then state the reason and source in the
+                  brief
+
+     R16          Reject a rule file with no exact source, and return    P0
+                  "unknown" for any unverified rule
+
+     R17          Show both rules when tiers differ, use the stricter    P0
+                  for the warning, and leave the decision to an
+                  engineer
+
+     R18          Prevent models from creating, changing or              P0
+                  supplying rule limits
+
+     R19          Treat placeholder values such as 999 as missing,       P0
+                  and require documented units before a limit check
+
+     R20          Compare survey and construction dates, and mark        P0
+                  measurements stale if a corner was rebuilt later
+
+     R21          Measure modeled area, volume, length and counts        P1
+                  from one takeoff
+
+     R22          Calculate cost and labor hours in code from dated      P1
+                  rate files with a source and status
+
+     R23          Show likely trades, equipment types and work           P1
+                  sequence, with no crane choice or position
+
+     R24          List safety questions for a professional, without      P1
+                  presenting them as a safety plan or final PPE list
+
+     R25          Label planning results "Class 5 concept estimate,      P1
+                  not a bid," show exclusions, and skip them when
+                  dimensions are not checked
+
+
+
+
+                                                                                    Page 9 of 15
+CornerBrief PRD
+
+
+
+
+  Agents and data
+  Four agents handle interpretation and writing, while regular code handles data fetching,
+  math, rule checks and sending.
+
+
+     Agent        Job                                     Must not
+
+     Records      Organize corner records and label the   Fill gaps with guesses
+                  evidence
+
+     Site         Identify likely constraints and ramp    Supply a limit or decide whether a
+     analyst      options                                 rule passes
+
+     Skeptic      Challenge weak sources, conflicts       Override a Python check or
+                  and unsupported claims                  applicability decision
+
+     Brief        Draft the brief for the engineer        Add facts, limits or legal conclusions
+     writer                                               missing from the record
+
+
+
+
+                                                                                            Page 10 of 15
+CornerBrief PRD
+
+
+
+
+     Source              Rows         Last         Use in the demo      Limits
+                                      updated
+
+     Pedestrian Ramp     217,679      Oct 2021     Ramp slopes,         Old; units are not
+     Locations ( ufzp-                             widths, curb lip,    documented; 999
+     rrqu )                                        ponding, obstacles   appears as a value
+                                                   and survey date
+
+     Pedestrian Ramp     187,749      Nov 2026     Corner status,       No measurements
+     Program Progress                              construction type
+     ( e7gc-ub6z )                                 and completion
+                                                   date
+
+     Pedestrian Ramp     6,571        Nov 2026     Complaints and       No coordinates; test
+     Complaints                                    temporary repairs    the join on corner ID
+     ( jagj-gttd )
+
+     Rule files          12 starter   Varies       Applicable limits    Some still need
+                         rules                     and source           sources
+                                                   sections
+
+     Open Library        Not          Not          Optional             Cite results; never
+                         applicable   applicable   background           use them as rule
+                                                   reading              inputs
+
+
+  These counts come from the first data report, which read column details and the first
+  1,000 rows of each dataset. The full datasets still need to be checked. The report found no
+  sidewalk width, legal grade or ramp type field, so those values must be marked missing or
+  gathered from another source.
+
+  The app's dedicated email should use a sending service, with its API key stored in an
+  environment variable. The Open Library user agent should include a shared contact
+  address.
+
+
+  Demo and acceptance
+  The demo passes when all three test corners behave as expected, ending with the corner
+  where the tool stops.
+
+
+
+
+                                                                                          Page 11 of 15
+CornerBrief PRD
+
+
+
+
+     Test corner          Expected result                     Pass criteria
+
+     Standard             Suggests a likely ramp type and     Hand-checked calculations match;
+                          shows the math                      every limit shows its exact source
+                                                              and why it applies
+
+     Constrained          Flags the corner as probably        Uses evidence such as a complex
+                          custom                              construction status or recorded
+                                                              obstacle, or marks a site check as
+                                                              needed
+
+     Missing or stale     Refuses to propose a design         Lists the missing inputs or stale
+     data                                                     measurements, plus what to
+                                                              measure on site
+
+
+  These rules apply to every run:
+
+       No brief claims that a corner is compliant or safe.
+       No email leaves without a person's approval, and every recipient must be on the
+       allowlist.
+       A civil engineer reviews the rule file and the three briefs before the final demo.
+
+  The applicability tests must also pass:
+
+       An NYC location rejects the NYS Uniform Code and cites the reason.
+       A non-NYC test location selects the NYS rule files and uses "unknown" until their
+       sources are verified.
+       A corner ramp does not use a building code limit.
+       A rule file missing its exact source section fails to load.
+
+  If the planning add-ons are built, they must also pass these tests:
+
+       Hand-checked takeoff, cost and labor calculations match on one corner.
+       All planning results use the same takeoff, and a dimension change updates all of them.
+       A sample rate is labeled as sample wherever it affects a result.
+       A missing rate returns "unknown" instead of a number.
+       The missing or stale corner produces no takeoff or estimate.
+
+
+
+
+                                                                                                  Page 12 of 15
+CornerBrief PRD
+
+
+
+
+  Risks and open questions
+  The largest risks are outdated measurements and missing H-1011 values, because both can
+  make a confident result wrong.
+
+
+     Risk                                          Response
+
+     Measurements predate a rebuild                Compare survey and construction dates,
+                                                   and mark them stale
+
+     Field meanings or units are misread           Confirm the data dictionary; use "unknown"
+                                                   until units are documented
+
+     Sidewalk width, legal grade or ramp type is   Mark it missing and add it to the site visit list
+     unavailable
+
+     The wrong code is applied                     Use reviewed precedence files, tests and
+                                                   engineer review
+
+     A rule is outdated or misquoted               Store edition, date, link and quote; expire
+                                                   rules that need review
+
+     H-1011 or NYS code text is unavailable        Keep those rules as needs_source ; do not
+                                                   fill them from memory
+
+     An agent sounds more certain than the         Keep evidence labels, the skeptic and
+     evidence                                      Python checks in the flow
+
+     API costs run too high                        Cache responses, use fixed corners and
+                                                   limit retries
+
+     Book passages get used as rules               Keep Open Library output in a separate
+                                                   section that cannot reach the checks
+
+     Email goes to the wrong person                Require approval and use an allowlist
+
+     An output misleads readers                    Label it as a demo, make no compliance
+                                                   claim, and don't imply any NYC affiliation
+
+     An estimate is taken as a bid                 Show the class label, rate sources,
+                                                   exclusions and sample-data warnings
+
+     Modeled quantities look complete              List excluded work such as utilities,
+                                                   drainage, traffic control and any unmodeled
+                                                   parts
+
+
+
+
+                                                                                               Page 13 of 15
+CornerBrief PRD
+
+
+
+
+     Risk                                         Response
+
+     Planning output is taken as safety advice    Use questions for a professional, with no site
+                                                  safety plan, final PPE list or crane choice
+
+     Add-ons delay the demo                       Build the core first, and drop add-ons before
+                                                  cutting core tests
+
+
+
+  Open questions
+       Does your colleague agree to the corner direction? Yes.
+       Which three corners will the demo use?
+       Where can we get the current H-1011?
+       Where can we read the exact 2025 NYS code and ADA sections for the rule files?
+       Which public source can provide sidewalk width and legal grade?
+       What units do the ramp dataset's measurements use?
+       Which public bid prices can replace sample rates?
+       Which civil engineer can review the rules and precedence decisions?
+       Does the $40 API budget still apply, and what is the demo date?
+       What domain and email-sending service will the app use?
+
+
+  Sources
+  Rule sources were checked through linked pages, but a person should confirm each one
+  against the official text before it enters the rule set. Dataset figures come from the
+  project's data report.
+
+       NYC DDC: Junior Engineer (Design) posting
+       NYC Mayor's Office for People with Disabilities: Accessible NYC 2025, built
+       environment section
+       DDC letter on non-standard ramps (search listing)
+       NYC Administrative Code §19-112
+       34 RCNY §2-09
+       NYC Street Design Manual: pedestrian ramps
+       NYC DOT filing guidelines
+       NYC DOT H-1011 presentation (2021)
+
+
+
+                                                                                           Page 14 of 15
+CornerBrief PRD
+
+
+
+
+       NYC Building Code §1104 (confirm edition)
+       NYS Department of State: Uniform Code
+       NYS Legal Memorandum LG07
+       NYSDOT Highway Design Manual Revision 104
+       U.S. Access Board: DOT's PROWAG adoption
+       Congressional letter to DOJ on PROWAG (Feb 2026)
+       Open Library Developer API overview
+       AACE class ranges, Lawrence Berkeley Lab
+       OSHA small entity silica guide
+       NYC DOB: Local Law 196 summary
+
+
+
+
+                                                          Page 15 of 15
+
