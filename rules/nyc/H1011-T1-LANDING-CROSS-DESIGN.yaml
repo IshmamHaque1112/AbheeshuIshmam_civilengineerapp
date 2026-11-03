@@ -1,0 +1,26 @@
+id: H1011-T1-LANDING-CROSS-DESIGN
+title: 'H-1011 design target: landing cross slope'
+jurisdiction: nyc
+authority_type: agency_standard
+applies_to:
+- corner_ramp_row
+parameter: lnd_cross_slope
+operator: range
+limit:
+  min: 0.5
+  max: 1.5
+unit: percent
+stage: design
+source_document: NYC DOT Standard Details of Construction, Drawing H-1011-1
+edition: Drawing H-1011-1, issued 6/06/2022
+effective_date: Issued 6/06/2022
+section: Table 1
+url: https://www.nycstreetdesign.info/sites/default/files/specs/H-1011-1.pdf
+quote: 'RAMP CROSS SLOPE; LANDING (TURNING SPACE) RUNNING SLOPE AND CROSS SLOPE; ROADWAY
+  GUTTER FLOW SLOPE: 0.5% (1:200) MIN. 1.5% (1:67) MAX. Work acceptance: 2.0% (1:50)
+  MAX.'
+retrieved_on: '2026-11-03'
+status: verified
+reviewed_by: null
+notes: Read by Claude from the PDF in docs/sources on 2026-11-03. Human review is
+  still pending.

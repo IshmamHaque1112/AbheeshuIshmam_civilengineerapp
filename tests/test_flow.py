@@ -323,3 +323,15 @@ def test_rule_review_flags_unreviewed_and_old_checks():
     rules = load_rules()
     assert len(rule_review(rules)["awaiting_human_review"]) == rule_review(rules)["verified"]
     assert rule_review(rules, today=date(2030, 1, 1))["source_check_overdue"]
+
+
+def test_standard_corner_shows_design_targets_without_failing_it():
+    run = run_corner("standard")
+    assert run["status"] == "probably standard"
+    assert not [o for o in run["rule_results"] if o["result"] == "limit exceeded"]
+    assert [o for o in run["design_targets"] if o["result"] == "limit exceeded"]
+    assert "If this corner is rebuilt" in to_markdown(approve(run, "R"))
+
+
+def test_stopped_corner_has_no_design_targets():
+    assert run_corner("missing_or_stale")["design_targets"] == []

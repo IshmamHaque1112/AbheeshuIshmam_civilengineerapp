@@ -1,0 +1,24 @@
+id: H1011-N27-28-CASE-SELECTION
+title: H-1011 ramp case selection
+jurisdiction: nyc
+authority_type: agency_standard
+applies_to:
+- corner_ramp_row
+parameter: null
+operator: reference
+limit: null
+unit: null
+stage: general
+source_document: NYC DOT Standard Details of Construction, Drawing H-1011-1
+edition: Drawing H-1011-1, issued 6/06/2022
+effective_date: Issued 6/06/2022
+section: General Notes 27 and 28
+url: https://www.nycstreetdesign.info/sites/default/files/specs/H-1011-1.pdf
+quote: PEDESTRIAN CIRCULATION PATH IS EIGHT FEET (8') WIDE OR GREATER
+retrieved_on: '2026-11-03'
+status: verified
+reviewed_by: null
+notes: Read by Claude from the PDF in docs/sources on 2026-11-03. Human review is
+  still pending. Paths 8 feet or wider use C1 or C2, and narrower paths use C3. Limited
+  arc length can lead to C5 or C4. The dataset has no sidewalk width, so this needs
+  a site check.

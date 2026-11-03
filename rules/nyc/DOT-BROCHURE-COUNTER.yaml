@@ -21,3 +21,4 @@ reviewed_by: null
 notes: Source text checked by Claude through a web fetch on 2026-11-03. Human review
   is still pending. The brochure lists these as general requirements. It does not
   say whether they are design or acceptance values.
+stage: general

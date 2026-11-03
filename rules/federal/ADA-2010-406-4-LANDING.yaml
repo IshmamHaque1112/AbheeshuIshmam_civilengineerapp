@@ -20,3 +20,4 @@ reviewed_by: null
 notes: Source text checked by Claude through a web fetch on 2026-11-03. Human review
   is still pending. This is a third-party reproduction, so confirm it on ada.gov.
   Section 406.4 has an exception for some alterations.
+stage: general

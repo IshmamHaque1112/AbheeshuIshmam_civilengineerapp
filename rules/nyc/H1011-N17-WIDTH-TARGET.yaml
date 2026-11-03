@@ -1,0 +1,22 @@
+id: H1011-N17-WIDTH-TARGET
+title: 'H-1011 design target: ramp width'
+jurisdiction: nyc
+authority_type: agency_standard
+applies_to:
+- corner_ramp_row
+parameter: ramp_width
+operator: min
+limit: 5
+unit: ft
+stage: design
+source_document: NYC DOT Standard Details of Construction, Drawing H-1011-1
+edition: Drawing H-1011-1, issued 6/06/2022
+effective_date: Issued 6/06/2022
+section: General Note 17
+url: https://www.nycstreetdesign.info/sites/default/files/specs/H-1011-1.pdf
+quote: THE WIDTH OF A PEDESTRIAN RAMP SHOULD NOT BE LESS THAN FIVE FEET (5').
+retrieved_on: '2026-11-03'
+status: verified
+reviewed_by: null
+notes: Read by Claude from the PDF in docs/sources on 2026-11-03. Human review is
+  still pending.

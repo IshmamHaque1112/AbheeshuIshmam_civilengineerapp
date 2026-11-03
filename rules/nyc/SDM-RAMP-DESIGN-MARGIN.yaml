@@ -18,4 +18,6 @@ retrieved_on: '2026-11-03'
 status: verified
 reviewed_by: null
 notes: Source text checked by Claude through a web fetch on 2026-11-03. Human review
-  is still pending. This needs H-1011 values before it can be calculated.
+  is still pending. H-1011 Table 1 now supplies the design limits, which sit below
+  its work acceptance limits.
+stage: general

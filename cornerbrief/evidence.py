@@ -85,6 +85,15 @@ def build_evidence(corner: dict, dictionary: dict) -> list[EvidenceItem]:
                                       unit=spec["unit"], unit_documented=spec["unit_status"] == "documented",
                                       label=label, source=f"Pedestrian Ramp Locations, ramp {ramp}", date=survey,
                                       reason=reason))
+    for row in rows:
+        ramp = str(row.get("rampid"))
+        fields = {e.field: e for e in items if e.ramp_id == ramp}
+        length, slope = fields.get("ramp_length"), fields.get("ramp_running_slope_total")
+        if length and slope and length.label == slope.label == "measured" and length.unit == "ft":
+            rise = abs(float(length.value)) * 12 * abs(float(slope.value)) / 100
+            items.append(EvidenceItem(key=f"{ramp}:ramp_rise", ramp_id=ramp, field="ramp_rise", value=round(rise, 2), unit="in",
+                                      unit_documented=length.unit_documented and slope.unit_documented, label="measured",
+                                      source=f"Calculated from ramp {ramp}'s surveyed length and running slope", date=length.date))
     for field, why in NOT_IN_DATASETS.items():
         items.append(EvidenceItem(key=f"corner:{field}", field=field, label="missing",
                                   source="Not in the three NYC datasets", reason=why))

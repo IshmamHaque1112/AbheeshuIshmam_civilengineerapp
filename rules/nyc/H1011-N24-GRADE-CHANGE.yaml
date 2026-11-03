@@ -1,0 +1,22 @@
+id: H1011-N24-GRADE-CHANGE
+title: H-1011 slope difference at the ramp bottom
+jurisdiction: nyc
+authority_type: agency_standard
+applies_to:
+- corner_ramp_row
+parameter: null
+operator: reference
+limit: null
+unit: null
+stage: general
+source_document: NYC DOT Standard Details of Construction, Drawing H-1011-1
+edition: Drawing H-1011-1, issued 6/06/2022
+effective_date: Issued 6/06/2022
+section: General Note 24
+url: https://www.nycstreetdesign.info/sites/default/files/specs/H-1011-1.pdf
+quote: MUST NOT EXCEED 13.3%.
+retrieved_on: '2026-11-03'
+status: verified
+reviewed_by: null
+notes: Read by Claude from the PDF in docs/sources on 2026-11-03. Human review is
+  still pending. The dataset does not give slope directions, so this is not calculated.

@@ -1,0 +1,23 @@
+id: H1011-N12-6-LANDING-LENGTH
+title: H-1011 landing length, unconstrained
+jurisdiction: nyc
+authority_type: agency_standard
+applies_to:
+- corner_ramp_row
+parameter: lnd_length
+operator: min
+limit: 4
+unit: ft
+stage: general
+source_document: NYC DOT Standard Details of Construction, Drawing H-1011-1
+edition: Drawing H-1011-1, issued 6/06/2022
+effective_date: Issued 6/06/2022
+section: General Note 12.6
+url: https://www.nycstreetdesign.info/sites/default/files/specs/H-1011-1.pdf
+quote: A LANDING THAT IS UNCONSTRAINED MUST HAVE A MINIMUM LENGTH OF FOUR FEET (4').
+retrieved_on: '2026-11-03'
+status: verified
+reviewed_by: null
+notes: Read by Claude from the PDF in docs/sources on 2026-11-03. Human review is
+  still pending. A landing between a ramp and an obstacle needs 5 feet. The dataset
+  does not show where an obstacle sits, so an engineer should confirm which applies.

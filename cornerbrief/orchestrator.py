@@ -3,7 +3,7 @@ import json, time, uuid
 from datetime import date, timedelta
 from .agents import brief_writer, records, site_analyst, skeptic
 from .applicability import resolve
-from .checker import find_conflicts, run_checks
+from .checker import design_targets, find_conflicts, run_checks
 from .data_loader import load_corner, load_dictionary
 from .evidence import build_evidence, data_sufficient, join_report, validate_labels
 from .guards import check_text
@@ -128,6 +128,7 @@ def analyze(corner: dict, client=None, rules=None, rates=None, save=True) -> dic
         outcomes = run_checks(rules, decisions, [])
         outcomes = [o.model_copy(update={"reason": "Not checked, because required data is missing or out of date."}) if o.result == "unknown" and o.parameter else o for o in outcomes]
 
+    targets = design_targets(rules, decisions, evidence) if sufficient else []
     conflicts = find_conflicts(rules, decisions, evidence if sufficient else [])
     status, status_reason = decide_status(sufficient, corner, outcomes)
     planning = run_planning(evidence, rates) if sufficient and status == "probably standard" else None
@@ -140,7 +141,7 @@ def analyze(corner: dict, client=None, rules=None, rates=None, save=True) -> dic
         planning_note = "No model or estimate was made, because required data is missing or out of date."
 
     record = dict(status=status, status_reason=status_reason, problems=problems, evidence=[e.model_dump() for e in evidence],
-                  rule_results=[o.model_dump() for o in outcomes], options=options, constraints=constraints, challenges=challenges,
+                  rule_results=[o.model_dump() for o in outcomes], design_targets=[o.model_dump() for o in targets], options=options, constraints=constraints, challenges=challenges,
                   site_visit=visits, planning_quantities=planning["takeoff"]["items"] if planning else [],
                   planning_cost=({k: planning["cost"][k] for k in ("base", "low", "high")} if planning else None))
     writer_in = {"corner": corner["label"], "record": record, "records_summary": records_summary}
@@ -161,11 +162,11 @@ def analyze(corner: dict, client=None, rules=None, rates=None, save=True) -> dic
                corner=dict(key=corner.get("key"), label=corner["label"], data_kind=corner["data_kind"]),
                context=context, status=status, status_reason=status_reason, sufficient=sufficient, problems=problems, join_notes=joins,
                brief=written.model_dump(), applicability=[d.model_dump() for d in decisions], evidence=[e.model_dump() for e in evidence],
-               rule_results=[o.model_dump() for o in outcomes], conflicts=[c.model_dump() for c in conflicts], options=options,
+               rule_results=[o.model_dump() for o in outcomes], design_targets=[o.model_dump() for o in targets], conflicts=[c.model_dump() for c in conflicts], options=options,
                constraints=constraints, challenges=challenges, site_visit=visits, planning=planning, planning_note=planning_note,
                background=background_reading(), rejections=rejections, retries=retries, retry_limit_hit=retry_limit_hit,
                tokens=dict(input=token_in, output=token_out), approval=None, agent_log=log,
-               records=corner_records(corner), rule_review=rule_review(rules),
+               records=corner_records(corner), rule_review=rule_review(rules), unreviewed_sources=["H-1011-2 to H-1011-9 drawing sheets"],
                rules_needing_sources=[r["id"] for r in rules if r["status"] == "needs_source"])
     if save:
         save_run(run)

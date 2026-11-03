@@ -79,7 +79,8 @@ Regular code handles data checks, rule selection, limit checks, geometry, quanti
 
 These return "unknown" until a person adds the exact text and limit:
 
-- H-1011 ramp slopes, landing limits and flare limits. The current sheet is [H-1011-1](https://www.nycstreetdesign.info/sites/default/files/specs/H-1011-1.pdf), which the build environment couldn't open. Save it as `docs/sources/H-1011-1.pdf` so its values can be added.
 - 2025 NYS Building Code and Residential Code limits. These don't apply to NYC corners.
 
-Rules marked `verified` were checked against linked text through a web fetch on November 3, 2026. No person has reviewed them yet, so `reviewed_by` is empty, and the ADA rules use a third-party reproduction of the text. An engineer should review the rules and precedence decisions before anyone relies on them.
+H-1011 Table 1 and its general notes come from `docs/sources/H-1011-1.pdf`. Surveyed ramps are checked against its work acceptance limits. Its stricter design limits appear only under "If this corner is rebuilt." Sheets H-1011-2 to H-1011-9 haven't been reviewed, so case-specific details aren't checked.
+
+Rules marked `verified` were checked by Claude against the linked or supplied text on November 3, 2026. No person has reviewed them yet, so `reviewed_by` is empty, and the ADA rules use a third-party reproduction of the text. An engineer should review the rules and precedence decisions before anyone relies on them.

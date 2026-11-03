@@ -1,0 +1,22 @@
+id: H1011-N18-RISE
+title: H-1011 maximum ramp rise
+jurisdiction: nyc
+authority_type: agency_standard
+applies_to:
+- corner_ramp_row
+parameter: ramp_rise
+operator: max
+limit: 30
+unit: in
+stage: general
+source_document: NYC DOT Standard Details of Construction, Drawing H-1011-1
+edition: Drawing H-1011-1, issued 6/06/2022
+effective_date: Issued 6/06/2022
+section: General Note 18
+url: https://www.nycstreetdesign.info/sites/default/files/specs/H-1011-1.pdf
+quote: THE MAXIMUM RISE OF ANY RAMP RUN MUST NOT EXCEED 30 INCHES.
+retrieved_on: '2026-11-03'
+status: verified
+reviewed_by: null
+notes: Read by Claude from the PDF in docs/sources on 2026-11-03. Human review is
+  still pending. The rise is calculated from surveyed length and slope.

@@ -19,5 +19,6 @@ retrieved_on: '2026-11-03'
 status: verified
 reviewed_by: null
 notes: Source text checked by Claude through a web fetch on 2026-11-03. Human review
-  is still pending. It points to the latest revision of Standard Detail Drawing H-1011,
-  which has not been obtained.
+  is still pending. It points to the latest H-1011. Sheet H-1011-1 is now in the rule
+  set, but sheets H-1011-2 to H-1011-9 have not been reviewed.
+stage: general

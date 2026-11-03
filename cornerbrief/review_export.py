@@ -43,13 +43,16 @@ def to_markdown(run: dict) -> str:
     L += [f"- Complaint {c['id']} on {c['date']}: temporary repair feasible: {c['repair_feasible']}" for c in rec["complaints"]]
     L += [f"- Join note: {x}" for x in run["join_notes"]] + [""]
     review = run["rule_review"]
-    L += [f"Rule review: {len(review['awaiting_human_review'])} of {review['verified']} checked rules still need human review. {len(run['rules_needing_sources'])} rules still need sources.", ""]
+    L += [f"Rule review: {len(review['awaiting_human_review'])} of {review['verified']} checked rules still need human review. {len(run['rules_needing_sources'])} rules still need sources. Not reviewed yet: {', '.join(run['unreviewed_sources'])}.", ""]
     L += ["## Applicable rules", "", "| Rule | Applies | Why | Decision source |", "| --- | --- | --- | --- |"]
     L += [f"| {d['title']} | {'Yes' if d['applies'] else 'No'} | {d['reason']} | {d['source_section']} {d['url']} |" for d in run["applicability"]]
     L += ["", "## Evidence", "", "| Input | Value | Unit | Label | Source | Note |", "| --- | --- | --- | --- | --- | --- |"]
     L += [f"| {e['key']} | {'' if e['value'] is None else e['value']} | {e['unit'] or ''} | {e['label']} | {e['source']} | {e['reason']} |" for e in run["evidence"]]
     L += ["", "## Rule results", "", "| Rule | Ramp | Limit | Result | Math or reason | Source |", "| --- | --- | --- | --- | --- | --- |"]
     L += [f"| {o['title']} | {o['ramp_id'] or ''} | {o['limit_text']} | {o['result']} | {o['math'] or o['reason']} | {o['section'] or ''} {o['url'] or ''} |" for o in run["rule_results"]]
+    if run["design_targets"]:
+        L += ["", "## If this corner is rebuilt: H-1011 design targets", "", "These apply to new design and field layout, not to the existing ramp.", "", "| Target | Ramp | Limit | Surveyed value | Source |", "| --- | --- | --- | --- | --- |"]
+        L += [f"| {o['title']} | {o['ramp_id'] or ''} | {o['limit_text']} | {o['result']}: {o['math'] or o['reason']} | {o['section']} {o['url']} |" for o in run["design_targets"]]
     L += ["", "## Rule conflicts for engineer review", ""]
     for c in run["conflicts"]:
         L.append(f"- {c['parameter']}: {c['warning']} " + "; ".join(f"{r['section']}: {r['limit']}" for r in c["rules"]) + f". Stricter values: {stricter(c)}. {c['decision']}.")

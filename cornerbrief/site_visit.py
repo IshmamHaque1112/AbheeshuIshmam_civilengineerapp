@@ -18,6 +18,9 @@ ACTIONS = {
 }
 
 
+WHY = {"sidewalk_width": "H-1011 General Notes 27 and 28 use the pedestrian path width to choose the ramp case."}
+
+
 def build_list(evidence: list[EvidenceItem], corner: dict) -> list[dict]:
     items, seen = [], set()
     for e in evidence:
@@ -30,7 +33,7 @@ def build_list(evidence: list[EvidenceItem], corner: dict) -> list[dict]:
         id_ = (where, e.field)
         if id_ not in seen:
             seen.add(id_)
-            items.append({"where": where, "action": action, "why": "This isn't in the three NYC datasets." if e.field in NOT_IN_DATASETS else e.reason})
+            items.append({"where": where, "action": action, "why": WHY.get(e.field, "This isn't in the three NYC datasets.") if e.field in NOT_IN_DATASETS else e.reason})
     for row in corner.get("locations", []):
         for field in ("obstacles_ramp", "obstacles_landing"):
             value = row.get(field)

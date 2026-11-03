@@ -64,16 +64,15 @@ def test_verified_rule_needs_each_source_field(field):
 
 
 def test_needs_source_rule_cannot_hold_limit():
-    bad = copy.deepcopy(BY_ID["H1011-FLARE"])
+    bad = copy.deepcopy(BY_ID["NYS-BCNYS-2025"])
     bad["limit"] = 9.5
     with pytest.raises(RuleError):
         validate_rule(bad)
 
 
 def test_needs_source_rule_returns_unknown():
-    _, ev = evidence("standard")
-    out = run_checks(RULES, resolve(CTX, RULES, PREC), ev)
-    for rule_id in ("H1011-FLARE", "H1011-RAMP-SLOPES", "H1011-LANDING"):
+    out = run_checks(RULES, resolve({**CTX, "inside_nyc": False}, RULES, PREC), [])
+    for rule_id in ("NYS-BCNYS-2025",):
         assert [o.result for o in out if o.rule_id == rule_id] == ["unknown"]
 
 
@@ -168,8 +167,8 @@ def test_state_road_returns_unknown():
 def test_conflicting_tiers_show_both_and_use_stricter():
     conflicts = find_conflicts(RULES, resolve(CTX, RULES, PREC), [])
     c = next(x for x in conflicts if x.parameter == "sidewalk_transverse_slope")
-    assert len(c.rules) == 2 and c.decision == "Engineer decides"
-    assert c.stricter_max == 2.1
+    assert len(c.rules) == 3 and c.decision == "Engineer decides"
+    assert c.stricter_max == 2.0
     assert round(c.stricter_min, 2) == 1.67
 
 
@@ -188,7 +187,7 @@ def test_site_visit_lists_missing_and_stale_items():
 
 def test_city_ada_and_dot_slope_limits_conflict_and_stricter_wins():
     c = next(x for x in find_conflicts(RULES, resolve(CTX, RULES, PREC), []) if x.parameter == "ramp_running_slope_total")
-    assert c.stricter_max == 8 and len(c.rules) == 3
+    assert c.stricter_max == 8 and len(c.rules) == 4
     e = item(field="ramp_running_slope_total", value=8.2)
     c = next(x for x in find_conflicts(RULES, resolve(CTX, RULES, PREC), [e]) if x.parameter == "ramp_running_slope_total")
     assert "outside the stricter" in c.warning
@@ -196,7 +195,7 @@ def test_city_ada_and_dot_slope_limits_conflict_and_stricter_wins():
 
 def test_width_conflict_compares_feet_and_inches():
     c = next(x for x in find_conflicts(RULES, resolve(CTX, RULES, PREC), []) if x.parameter == "ramp_width")
-    assert len(c.rules) == 3 and c.stricter_min == 48 and c.unit == "in"
+    assert len(c.rules) == 4 and c.stricter_min == 48 and c.unit == "in"
 
 
 def test_ada_limits_use_hand_checked_values():
@@ -205,3 +204,51 @@ def test_ada_limits_use_hand_checked_values():
     assert check_value(BY_ID["ADA-2010-406-3-FLARE-LEFT"], item(value=10.5)).result == "limit exceeded"
     assert check_value(BY_ID["ADA-2010-406-4-LANDING"], item(value=35, unit="in")).result == "limit exceeded"
     assert check_value(BY_ID["DOT-BROCHURE-COUNTER"], item(value=5.2)).result == "limit exceeded"
+
+
+# H-1011 Table 1, hand-checked against the drawing
+@pytest.mark.parametrize("rule_id,value,expected", [
+    ("H1011-T1-RAMP-RUNNING-ACCEPT", 8.3, "no conflict found"), ("H1011-T1-RAMP-RUNNING-ACCEPT", 8.4, "limit exceeded"),
+    ("H1011-T1-RAMP-RUNNING-DESIGN", 4.9, "limit exceeded"), ("H1011-T1-RAMP-RUNNING-DESIGN", 7.5, "no conflict found"), ("H1011-T1-RAMP-RUNNING-DESIGN", 7.6, "limit exceeded"),
+    ("H1011-T1-RAMP-CROSS-ACCEPT", 2.0, "no conflict found"), ("H1011-T1-RAMP-CROSS-DESIGN", 1.6, "limit exceeded"),
+    ("H1011-T1-COUNTER-ACCEPT", 5.1, "limit exceeded"), ("H1011-T1-COUNTER-DESIGN", 4.5, "no conflict found"),
+    ("H1011-T1-FLARE-LEFT-ACCEPT", 10.0, "no conflict found"), ("H1011-T1-FLARE-LEFT-DESIGN", 9.6, "limit exceeded"),
+])
+def test_h1011_table_1(rule_id, value, expected):
+    assert check_value(BY_ID[rule_id], item(value=value)).result == expected
+
+
+def test_h1011_dimensions():
+    assert check_value(BY_ID["H1011-N17-WIDTH-MIN"], item(value=47, unit="in")).result == "limit exceeded"
+    assert check_value(BY_ID["H1011-N17-WIDTH-TARGET"], item(value=59, unit="in")).result == "limit exceeded"
+    assert check_value(BY_ID["H1011-N12-6-LANDING-LENGTH"], item(value=48, unit="in")).result == "no conflict found"
+    assert check_value(BY_ID["H1011-N9-LEVEL-CHANGE"], item(value=0.3, unit="in")).result == "limit exceeded"
+
+
+def test_ramp_rise_is_calculated_and_checked():
+    _, ev = evidence("standard")
+    rise = next(e for e in ev if e.key == "8100001:ramp_rise")
+    assert rise.value == round(6.5 * 12 * 6.4 / 100, 2)  # 4.99 inches
+    assert check_value(BY_ID["H1011-N18-RISE"], rise).result == "no conflict found"
+    assert check_value(BY_ID["H1011-N18-RISE"], item(field="ramp_rise", value=31, unit="in")).result == "limit exceeded"
+
+
+def test_existing_ramps_are_not_failed_on_design_targets():
+    _, ev = evidence("standard")
+    decisions = resolve(CTX, RULES, PREC)
+    assert not [o for o in run_checks(RULES, decisions, ev) if BY_ID[o.rule_id]["stage"] == "design"]
+    from cornerbrief.checker import design_targets
+    over = [o for o in design_targets(RULES, decisions, ev) if o.result == "limit exceeded"]
+    assert {o.rule_id for o in over} >= {"H1011-T1-RAMP-CROSS-DESIGN", "H1011-N17-WIDTH-TARGET"}
+
+
+def test_design_targets_are_not_conflicts():
+    conflicts = find_conflicts(RULES, resolve(CTX, RULES, PREC), [])
+    assert not [r for c in conflicts for r in c.rules if r["rule_id"].endswith("DESIGN") or r["rule_id"].endswith("TARGET")]
+
+
+def test_stage_is_required():
+    bad = copy.deepcopy(BY_ID["NYC-ADMIN-19-112-WIDTH"])
+    del bad["stage"]
+    with pytest.raises(RuleError):
+        validate_rule(bad)

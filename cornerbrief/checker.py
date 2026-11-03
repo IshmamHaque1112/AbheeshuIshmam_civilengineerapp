@@ -77,6 +77,8 @@ def run_checks(rules: list[dict], decisions: list[Decision], evidence: list[Evid
         by_field.setdefault(item.field, []).append(item)
     outcomes = []
     for rule in rules:
+        if rule["stage"] == "design":
+            continue  # Surveyed ramps are compared with acceptance limits, not targets for new work
         decision = by_decision[rule["id"]]
         if not decision.applies:
             outcomes.append(RuleOutcome(**_base(rule), result="not applicable", reason=decision.reason))
@@ -94,11 +96,29 @@ def run_checks(rules: list[dict], decisions: list[Decision], evidence: list[Evid
     return outcomes
 
 
+def design_targets(rules: list[dict], decisions: list[Decision], evidence: list[EvidenceItem]) -> list[RuleOutcome]:
+    """Compare surveyed values with limits for new design and field layout. This shows what a rebuild would need."""
+    applying = {d.rule_id: d for d in decisions}
+    out = []
+    for rule in rules:
+        if rule["stage"] != "design" or not applying[rule["id"]].applies:
+            continue
+        items = [e for e in evidence if e.field == rule["parameter"]]
+        if not items:
+            out.append(RuleOutcome(**_base(rule), result="unknown", reason="There is no value for this field."))
+        for item in items:
+            if applying[rule["id"]].forced_unknown:
+                out.append(RuleOutcome(**_base(rule, item.ramp_id), result="unknown", reason=applying[rule["id"]].reason))
+            else:
+                out.append(check_value(rule, item))
+    return out
+
+
 def find_conflicts(rules: list[dict], decisions: list[Decision], evidence: list[EvidenceItem]) -> list[Conflict]:
     applying = {d.rule_id for d in decisions if d.applies}
     groups: dict[str, list[dict]] = {}
     for rule in rules:
-        if rule["id"] in applying and rule["status"] == "verified" and rule["operator"] in ("max", "min", "range"):
+        if rule["id"] in applying and rule["status"] == "verified" and rule["stage"] != "design" and rule["operator"] in ("max", "min", "range"):
             groups.setdefault(rule["parameter"], []).append(rule)
     conflicts = []
     for parameter, group in groups.items():

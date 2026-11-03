@@ -4,9 +4,10 @@ import yaml
 from .paths import RULES, RATES
 
 REQUIRED = ["id", "title", "jurisdiction", "authority_type", "applies_to", "parameter", "operator",
-            "limit", "unit", "source_document", "edition", "effective_date", "section", "url",
+            "limit", "unit", "stage", "source_document", "edition", "effective_date", "section", "url",
             "quote", "retrieved_on", "status", "reviewed_by", "notes"]
 STATUSES = {"verified", "needs_source", "superseded"}
+STAGES = {"general", "design", "work_acceptance"}
 OPERATORS = {"max", "min", "range", "reference", "needs_source"}
 
 
@@ -21,6 +22,8 @@ def validate_rule(rule: dict, name: str = "") -> dict:
         raise RuleError(f"{label}: missing fields {missing}")
     if rule["status"] not in STATUSES:
         raise RuleError(f"{label}: bad status {rule['status']}")
+    if rule["stage"] not in STAGES:
+        raise RuleError(f"{label}: bad stage {rule['stage']}")
     if rule["operator"] not in OPERATORS:
         raise RuleError(f"{label}: bad operator {rule['operator']}")
     if rule["status"] == "verified":

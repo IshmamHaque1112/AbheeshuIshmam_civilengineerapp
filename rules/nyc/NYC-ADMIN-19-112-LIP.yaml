@@ -20,3 +20,4 @@ reviewed_by: null
 notes: Source text checked by Claude through a web fetch on 2026-11-03. Human review
   is still pending. This limit applies where a common level with the roadway is not
   possible.
+stage: general
