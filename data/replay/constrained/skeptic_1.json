@@ -2,13 +2,13 @@
  "verdict": "pass",
  "challenges": [
   {
-   "claim": "C3 parallel",
-   "issue": "The vault's exact location isn't recorded, so this option depends on a site check.",
+   "claim": "Vault location",
+   "issue": "The vault's exact location isn't recorded, so any layout depends on a site check.",
    "severity": "note"
   },
   {
-   "claim": "C5 blended transition",
-   "issue": "Legal grade is missing from the record, so this option is less certain.",
+   "claim": "Legal grade",
+   "issue": "Legal grade is missing from the record, so a layout that depends on the street grade is less certain.",
    "severity": "note"
   }
  ]

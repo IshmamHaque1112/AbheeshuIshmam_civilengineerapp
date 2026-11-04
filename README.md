@@ -28,16 +28,26 @@ python -m cornerbrief
 
 ## Run the demo
 
-No API key is needed. The sample corners use made-up records and saved agent responses.
+No API key is needed. The sample corners use made-up records and saved agent responses. Every corner ends in one of two states:
 
-1. **Sample corner A, Queens:** Provisionally standard, with the rule math, a concept view and quantities.
-2. **Sample corner B, Brooklyn:** Probably custom because of a utility vault, with one Skeptic rework.
-3. **Real test corner:** Appears only after you save one. It runs offline, and limits stay "unknown."
-4. **Sample corner C, Bronx:** Stops because of stale and placeholder data, then produces a site visit list.
+1. **Sample corner A, Queens:** Checks the evidence supports, with the source and math for each calculation.
+2. **Sample corner B, Brooklyn:** Checks the evidence supports, with a utility vault and catch basin to review and one Skeptic rework.
+3. **Real test corner:** Appears only after you save one. It runs offline and stops until its units and road owner are confirmed.
+4. **Sample corner C, Bronx:** Stop: evidence still needed, because it was rebuilt after its survey and has a placeholder value.
 
-Enter a name and select **Release brief** to turn on the download. Releasing a brief doesn't approve a design.
+Enter a name and select **Release packet** to turn on the download. Releasing is not approval.
 
 To print the results without the browser, run `python scripts/run_demo.py`.
+
+## Add site measurements and rerun
+
+Under **Add site measurements**, enter who measured, the date and any values you have, with an optional photo for each. **Rerun the check** then shows what changed. Each value is labeled as measured on site. A value measured before the corner's latest construction stays stale.
+
+Each rerun creates a new packet that needs its own release. Choosing a corner again starts from its original records. Without an API key, a rerun still runs every Python check, but the Skeptic review doesn't run, because the saved responses describe the original records. No label or plan can appear until a review finishes.
+
+## Labels and concept plans
+
+"Probably standard," "probably custom," likely ramp types and concept plans are off by default. Set `SHOW_LABELS_AND_PLANS=true` only after the adversarial suite in `tests/test_v3.py` passes and you've decided to turn them on. Even then, they appear only with complete evidence, a finished review, verified rules and no exceeded limit.
 
 ## Why results say "unknown"
 
@@ -47,7 +57,7 @@ A rule counts as verified only after a named person checks it against its source
 python scripts/review_rule.py NYC-ADMIN-19-112-SLOPE --reviewer "Full Name"
 ```
 
-That rule can then return "limit exceeded" or "no conflict found."
+That rule can then return "limit exceeded" or "no conflict found." A calculated value above a limit stops the check unless the record shows a constraint that explains it.
 
 ## Add a real test corner
 
@@ -62,7 +72,7 @@ The first command writes `docs/candidates.md`. The saved corner is added to the 
 ## Connect live agents or email later
 
 - **Live agents:** Copy `.env.example` to `.env`, add your API key, set `DEMO_MODE=false` and run `pip install anthropic`.
-- **Email:** Create the address and an email service account, then fill in `EMAIL_ALLOWLIST`, `EMAIL_FROM`, `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER` and `SMTP_PASSWORD` in `.env`. Set `EMAIL_ENABLED=true` to send. A person must release each brief, and every recipient must be on the allowlist. The email form stays hidden until `EMAIL_ALLOWLIST` is set.
+- **Email:** Create the address and an email service account, then fill in `EMAIL_ALLOWLIST`, `EMAIL_FROM`, `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER` and `SMTP_PASSWORD` in `.env`. Set `EMAIL_ENABLED=true` to send. A person must release each packet, and every recipient must be on the allowlist. The email form stays hidden until `EMAIL_ALLOWLIST` is set.
 - **Dollar figures:** They are hidden by default for the city demo. Set `SHOW_DOLLARS=true` to show them.
 
 ## How it's organized

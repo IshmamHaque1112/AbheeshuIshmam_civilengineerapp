@@ -33,21 +33,18 @@ class ReplayClient:
 
 
 class OfflineClient:
-    """Runs a real corner with no API key. It writes no analysis, so only checked results appear."""
+    """Runs with no API key when no saved responses fit the inputs. It writes no analysis, so only checked results appear."""
     mode = "offline, no agents"
+    runs_review = False
 
     def call(self, agent, attempt, system, payload, schema, tier="main"):
         usage = {"input_tokens": 0, "output_tokens": 0, "offline": True}
         if agent == "records":
             labels = [{"key": e["key"], "label": e["label"], "note": ""} for e in payload["evidence"]]
             return schema(summary="Loaded from saved NYC Open Data records. No agent analysis was run.", labels=labels), usage
-        if agent == "site_analyst":
-            return schema(constraints=[], options=[]), usage
-        if agent == "skeptic":
-            return schema(verdict="pass", challenges=[]), usage
-        return schema(summary="No agent analysis was run for this real test corner.",
+        return schema(summary="No agent analysis was run for this version of the packet.",
                       findings_narrative="The records are shown with their labels. See the sections below for what is unknown.",
-                      engineer_note="Confirm the measurement units and road owner before relying on any calculation."), usage
+                      engineer_note="Use the site visit list to see what still needs to be measured or confirmed."), usage
 
 
 class LiveClient:
@@ -82,10 +79,11 @@ class LiveClient:
         return parse_output(text, schema), usage
 
 
-def get_client(corner: dict):
+def get_client(corner: dict, inputs_changed: bool = False):
+    """Saved responses describe a corner's original records, so they aren't reused once its inputs change."""
     demo = os.environ.get("DEMO_MODE", "").lower() == "true" or not os.environ.get("ANTHROPIC_API_KEY")
     if not demo:
         return LiveClient()
-    if corner.get("data_kind") != "SAMPLE DATA":
+    if inputs_changed or corner.get("data_kind") != "SAMPLE DATA":
         return OfflineClient()
     return ReplayClient(corner["key"])

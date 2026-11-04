@@ -2,8 +2,8 @@
  "verdict": "pass",
  "challenges": [
   {
-   "claim": "C1 perpendicular",
-   "issue": "The record doesn't state the ramp type, so this is an inference from the geometry. Confirm it on site.",
+   "claim": "Ramp type",
+   "issue": "The record doesn't state the ramp type, so it can only be inferred from the geometry. Confirm it on site.",
    "severity": "note"
   }
  ]

@@ -158,11 +158,19 @@ Releasing the packet
 
 ## 5. Where the code stands (Nov 4)
 
-PR #2 applied PRD v2: named reviewers, the real test corner path, borough and street filters, "allowed" in the blocked words, stricter status and skeptic handling, and dollars, email and reading hidden in the city demo. Against R28:
+The code now follows this version:
 
-- Already handled: exceeded limit without obstacles returns "unknown"; an unfinished review returns "unknown" for standard corners; unreviewed rules return "unknown"; undocumented units return "unknown."
-- Still to change: `decide_status` returns "probably custom" from complexity or obstacles before it checks whether the review finished, and the standard/custom label still shows by default (R4 v3). Cases 1–3, 9 and 10 need explicit tests.
-- `docs/RUN-CHECK.md` (Nov 3) failed on Apple's Python 3.9; the app needs Python 3.10 or newer. A rerun with Homebrew Python 3.12 is in progress.
+- **R4:** Every corner ends in "checks the evidence supports" or "stop: evidence still needed." Labels, likely ramp types and concept plans are off by default behind `SHOW_LABELS_AND_PLANS`.
+- **R6:** A malformed Skeptic reply or exhausted retries ends in "stop," including on complex corners.
+- **R28:** All 10 adversarial cases have automated tests in `tests/test_v3.py`, and they pass.
+- **R30 and R31:** A person can enter site measurements and photos, rerun the check and see what changed. A rerun needs its own release.
+
+Still open:
+
+- With no API key, a rerun has no Skeptic review, because the saved responses describe the original records. It can reach "checks the evidence supports," but it says the review wasn't reused, and it can't show a label or plan.
+- No named person has reviewed the rules, so every limit result stays "unknown."
+- The real corner near Thomson Ave hasn't been fetched, and R29 and the timing metrics need people.
+- `docs/RUN-CHECK.md` (Nov 3) failed on Apple's Python 3.9. The app needs Python 3.10 or newer, and the README has Mac setup steps.
 
 ## 6. Demo plan (Nov 12)
 

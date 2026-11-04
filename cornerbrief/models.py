@@ -4,7 +4,6 @@ from pydantic import BaseModel, ConfigDict, Field
 
 RuleResult = Literal["limit exceeded", "no conflict found", "unknown", "not applicable"]
 Label = Literal["measured", "assumed", "missing", "stale"]
-Status = Literal["probably standard", "probably custom", "unknown"]
 
 
 class Strict(BaseModel):
@@ -22,6 +21,8 @@ class EvidenceItem(BaseModel):
     source: str
     date: Optional[str] = None
     reason: str = ""
+    on_site: bool = False
+    photo: Optional[str] = None
 
 
 class RuleOutcome(BaseModel):

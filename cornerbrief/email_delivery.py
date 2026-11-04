@@ -43,7 +43,7 @@ def allowlist() -> set[str]:
 
 def send_brief(run: dict, to: str, body: str, provider=None) -> str:
     if not run.get("approval"):
-        raise EmailBlocked("A person must approve this brief before it can be emailed.")
+        raise EmailBlocked("A person must release this packet before it can be emailed.")
     if to.strip().lower() not in allowlist():
         raise EmailBlocked("This address isn't on the test allowlist. Add it to EMAIL_ALLOWLIST.")
     if provider is None:

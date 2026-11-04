@@ -1,4 +1,4 @@
-"""Approval gate and plain-text export."""
+"""Release gate and plain-text export."""
 import time
 from .cost import dollars_shown, hide_dollars
 from .orchestrator import save_run
@@ -11,9 +11,9 @@ class NotApproved(Exception):
 def approve(run: dict, reviewer: str) -> dict:
     reviewer = (reviewer or "").strip()
     if not reviewer:
-        raise ValueError("Enter the reviewer's name.")
+        raise ValueError("Enter your name to release this packet.")
     run["approval"] = {"reviewer": reviewer, "at": time.strftime("%Y-%m-%d %H:%M:%S"),
-                       "meaning": "Reviewed for release as a pre-design brief. This does not approve a design."}
+                       "meaning": "Released as a pre-design packet. Releasing is not approval."}
     save_run(run)
     return run
 
@@ -22,6 +22,8 @@ def presented(run: dict) -> dict:
     """Apply the demo's display rules, so the page and the download match."""
     if run.get("planning") and not dollars_shown():
         run = {**run, "planning": {**run["planning"], "cost": hide_dollars(run["planning"]["cost"])}}
+    if not run.get("label"):
+        run = {**run, "options": []}  # A likely ramp type reads as a label, so it needs the same evidence
     return run
 
 
@@ -37,14 +39,23 @@ def stricter(c: dict) -> str:
 
 def to_markdown(run: dict) -> str:
     if not run.get("approval"):
-        raise NotApproved("A person must approve this brief before it can be downloaded.")
+        raise NotApproved("A person must release this packet before it can be downloaded.")
     run = presented(run)
-    L = [f"# CornerBrief: {run['corner']['label']}", "", f"**{run['notice']}**", "",
+    L = [f"# CornerBrief packet: {run['corner']['label']}", "", f"**{run['notice']}**", "",
          f"Data: {run['corner']['data_kind']}. Agent mode: {run['mode']}.",
          f"Released by {run['approval']['reviewer']} on {run['approval']['at']}. {run['approval']['meaning']}", "",
-         f"## Status: {run['status']}", run["status_reason"], "", run["brief"]["summary"], "", run["brief"]["findings_narrative"], "", run["brief"]["engineer_note"], ""]
+         f"## State: {run['state']}", run["state_reason"], ""] + ([f"Label: {run['label']}. {run['label_reason']}", ""] if run["label"] else []) + [run["brief"]["summary"], "", run["brief"]["findings_narrative"], "", run["brief"]["engineer_note"], ""]
     if run["problems"]:
-        L += ["## Why no design is proposed", ""] + [f"- {x}" for x in run["problems"]] + [""]
+        L += ["## Evidence still needed", ""] + [f"- {x}" for x in run["problems"]] + [""]
+    if run["changes"]:
+        c = run["changes"]
+        L += ["## What changed in this rerun", "", f"State: {c['state_before']} to {c['state_after']}.", ""]
+        L += [f"- Input {i['key']}: {i['before_label']} {'' if i['before_value'] is None else i['before_value']} to {i['after_label']} {i['after_value']} {i['unit'] or ''}".rstrip() for i in c["inputs"]]
+        L += [f"- Result, {r['title']}{', ramp ' + r['ramp_id'] if r['ramp_id'] else ''}: {r['before']} to {r['after']}{' (unreviewed calculation)' if r['unreviewed'] else ''}. {r['math']}" for r in c["results"]]
+        L += [f"- Site visit item done: {x}" for x in c["site_visit_done"]] + [""]
+    if run["field_measurements"]:
+        L += ["## Measured on site", "", "| Input | Value | Unit | Date | Measured by | Photo |", "| --- | --- | --- | --- | --- | --- |"]
+        L += [f"| {e['key']} | {e['value']} | {e['unit'] or ''} | {e['date']} | {e['by']} | {e['photo'] or ''} |" for e in run["field_measurements"]] + [""]
     rec = run["records"]
     L += ["## Corner records", ""]
     L += [f"- Program status: {p['status']}; type: {p['construction_type'] or 'not listed'}; completed: {p['completed'] or 'not listed'}" for p in rec["program"]]
@@ -58,9 +69,9 @@ def to_markdown(run: dict) -> str:
     L += ["## Applicable rules", "", "| Rule | Applies | Why | Decision source |", "| --- | --- | --- | --- |"]
     L += [f"| {d['title']} | {'Yes' if d['applies'] else 'No'} | {d['reason']} | {d['source_section']} {d['url']} |" for d in run["applicability"]]
     L += ["", "## Evidence", "", "| Input | Value | Unit | Label | Source | Date | Note |", "| --- | --- | --- | --- | --- | --- | --- |"]
-    L += [f"| {e['key']} | {'' if e['value'] is None else e['value']} | {e['unit'] or ''} | {e['label']} | {e['source']} | {e['date'] or ''} | {e['reason']} |" for e in run["evidence"]]
-    L += ["", "## Rule results", "", "| Rule | Ramp | Limit | Result | Math or reason | Source |", "| --- | --- | --- | --- | --- | --- |"]
-    L += [f"| {o['title']} | {o['ramp_id'] or ''} | {o['limit_text']} | {o['result']} | {o['math'] or o['reason']} | {o['section'] or ''} {o['url'] or ''} |" for o in run["rule_results"]]
+    L += [f"| {e['key']} | {'' if e['value'] is None else e['value']} | {e['unit'] or ''} | {'measured on site' if e.get('on_site') and e['label'] == 'measured' else e['label']} | {e['source']} | {e['date'] or ''} | {e['reason']} |" for e in run["evidence"]]
+    L += ["", "## Rule results", "", "| Rule | Ramp | Limit | Result | Math or reason | Source | Quote |", "| --- | --- | --- | --- | --- | --- | --- |"]
+    L += [f"| {o['title']} | {o['ramp_id'] or ''} | {o['limit_text']} | {o['result']} | {o['math'] or o['reason']} | {o['section'] or ''} {o['url'] or ''} | {o['quote'] or ''} |" for o in run["rule_results"]]
     if run["design_targets"]:
         L += ["", "## If this corner is rebuilt: H-1011 design targets", "", "These apply to new design and field layout, not to the existing ramp.", "", "| Target | Ramp | Limit | Surveyed value | Source |", "| --- | --- | --- | --- | --- |"]
         L += [f"| {o['title']} | {o['ramp_id'] or ''} | {o['limit_text']} | {o['result']}: {o['math'] or o['reason']} | {o['section']} {o['url']} |" for o in run["design_targets"]]
@@ -96,8 +107,6 @@ def to_markdown(run: dict) -> str:
         L += ["", "### Assumptions", ""] + [f"- {a['basis']}" for a in p["takeoff"]["assumptions"]]
         L += ["", "Excluded: " + "; ".join(p["takeoff"]["exclusions"]) + ".", "", "### Questions for a safety professional", ""]
         L += [f"- {q['topic']}: {q['question']}{' Source: ' + q['url'] if q['url'] else ''}" for q in p["safety_questions"]]
-    elif run["planning_note"]:
-        L += ["", "## Concept plan", "", run["planning_note"]]
     if run["rejections"]:
         L += ["", "## Rejected agent output", ""] + [f"- {x}" for x in run["rejections"]]
     L += ["", f"Agent tokens used: {run['tokens']['input'] + run['tokens']['output']}."]

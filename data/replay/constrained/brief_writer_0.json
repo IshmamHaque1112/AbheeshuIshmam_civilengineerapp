@@ -1,5 +1,5 @@
 {
- "summary": "This corner probably needs a custom design because of its complex program status and recorded obstacles.",
- "findings_narrative": "Unreviewed calculations show several surveyed values above their limits. Parallel and blended options are possible, but both depend on a site check of the vault, catch basin and grades. If full conformance isn't possible, H-1011 requires technical infeasibility documentation and approval.",
+ "summary": "This sample corner's records show a complex program status and recorded obstacles, so an engineer should review its layout constraints.",
+ "findings_narrative": "Unreviewed calculations show several surveyed values above their limits. Any layout depends on a site check of the vault, catch basin and grades. If full conformance isn't possible, H-1011 requires technical infeasibility documentation and approval.",
  "engineer_note": "Review the drainage and obstacle locations before choosing a layout."
 }

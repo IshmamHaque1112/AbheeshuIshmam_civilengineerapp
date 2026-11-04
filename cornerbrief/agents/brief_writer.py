@@ -1,7 +1,7 @@
 from ..models import BriefWriterOutput
 
 SYSTEM = """You are the Brief writer for a junior engineer and the engineer in charge. Write short, plain text using only the validated record.
-Do not add facts, limits, numbers or legal conclusions. Never say a design or corner is compliant, approved, safe or buildable."""
+Do not add facts, limits, numbers or legal conclusions. Never say a design or corner is compliant, approved, allowed, safe or buildable. Never call a corner standard or custom unless the record includes a label."""
 
 
 def run(client, attempt, payload):

@@ -12,11 +12,12 @@ from cornerbrief.guards import check_text
 from cornerbrief.library import fetch_topic
 from cornerbrief.llm import AgentOutputError, ReplayClient, parse_output
 from cornerbrief.models import SiteAnalystOutput, SkepticOutput
-from cornerbrief.orchestrator import MAX_RETRIES, analyze, run_corner
+from cornerbrief.orchestrator import CHECKS, MAX_RETRIES, STOP, analyze, run_corner
 from cornerbrief.parts_kit import build_parts
 from cornerbrief.planning import run_planning
 from cornerbrief.review_export import NotApproved, approve, to_markdown
 from cornerbrief.rules import load_rates
+from cornerbrief.rules import load_rules
 from cornerbrief.takeoff import build_takeoff, qty
 
 FORBIDDEN_OUTPUT = ["crane selection", "crane position", "final ppe"]
@@ -29,7 +30,25 @@ def isolated(tmp_path, monkeypatch):
     monkeypatch.setenv("DEMO_MODE", "true")
     monkeypatch.delenv("OPEN_LIBRARY_CONTACT", raising=False)
     monkeypatch.delenv("EMAIL_ENABLED", raising=False)
+    monkeypatch.delenv("SHOW_LABELS_AND_PLANS", raising=False)
     monkeypatch.setenv("EMAIL_ALLOWLIST", "test@example.com")
+
+
+def full_entries():
+    entry = lambda key, field, value, unit: dict(key=key, field=field, value=value, unit=unit, date="2026-11-02", by="Pat Example", photo=None)
+    return [entry("corner:sidewalk_width", "sidewalk_width", 10.0, "ft"), entry("corner:legal_grade", "legal_grade", 1.0, "percent"),
+            entry("corner:ramp_type", "ramp_type", "C1 perpendicular", None), entry("corner:sidewalk_transverse_slope", "sidewalk_transverse_slope", 2.0, "percent")]
+
+
+@pytest.fixture
+def fully_reviewed(monkeypatch):
+    """Everything a label and plan need: the setting on, verified rules, complete evidence and a finished review."""
+    monkeypatch.setenv("SHOW_LABELS_AND_PLANS", "true")
+    rules = [dict(r, status="verified", reviewed_by="Pat Example", reviewed_on="2026-11-03") if r["status"] == "unreviewed" else r for r in load_rules()]
+    def run(corner=None, rates=None, key="standard"):
+        corner = load_corner(key) if corner is None else corner
+        return analyze(corner, client=ReplayClient(key), rules=rules, rates=rates, field=full_entries())
+    return run
 
 
 class Spy(ReplayClient):
@@ -53,21 +72,17 @@ class AlwaysRework(Spy):
 # Three demo corners
 def test_standard_corner():
     run = run_corner("standard")
-    assert run["status"] == "probably standard"
-    assert run["options"][0]["ramp_type"].startswith("C1")
+    assert run["state"] == CHECKS and run["label"] is None and run["planning"] is None
     results = [o for o in run["rule_results"] if o["rule_id"] == "NYC-ADMIN-19-112-SLOPE"]
     assert len(results) == 2 and all(o["result"] == "unknown" and o["preview"] == "no conflict found" and "≤ 8%" in o["math"] for o in results)
     assert all(o["section"] == "§19-112" for o in results)
-    assert run["planning"]["cost"]["base"] > 0
-    assert "Provisional" in run["status_reason"]
+    assert "isn't permission to proceed" in run["state_reason"]
 
 
 def test_constrained_corner_flags_custom_with_evidence():
     run = run_corner("constrained")
-    assert run["status"] == "probably custom"
-    assert "complex" in run["status_reason"] and "Utility Vault" in run["status_reason"]
-    assert run["retries"] == 1
-    assert run["options"][0]["ramp_type"].startswith("C3")
+    assert run["state"] == CHECKS and run["label"] is None
+    assert run["retries"] == 1 and run["review_status"] == "finished"
     assert any(o["preview"] == "limit exceeded" for o in run["rule_results"])
     assert any("Utility Vault" in v["action"] for v in run["site_visit"])
     assert run["planning"] is None
@@ -76,7 +91,7 @@ def test_constrained_corner_flags_custom_with_evidence():
 def test_missing_or_stale_corner_refuses_design():
     spy = Spy("missing_or_stale")
     run = analyze(load_corner("missing_or_stale"), client=spy)
-    assert run["status"] == "unknown" and run["options"] == [] and run["planning"] is None
+    assert run["state"] == STOP and run["options"] == [] and run["planning"] is None
     assert "site_analyst" not in spy.calls and "skeptic" not in spy.calls
     assert all(o["result"] in ("unknown", "not applicable") for o in run["rule_results"])
     assert any("Re-measure" in v["action"] for v in run["site_visit"])
@@ -89,7 +104,7 @@ def test_retry_limit():
     assert spy.calls.count("skeptic") == MAX_RETRIES + 1
     assert spy.calls.count("site_analyst") == MAX_RETRIES + 1
     assert run["retry_limit_hit"] is True
-    assert run["review_complete"] is False and run["status"] == "unknown" and run["planning"] is None
+    assert run["review_status"] == "incomplete" and run["state"] == STOP and run["planning"] is None
 
 
 # Agents cannot supply limits, numbers or claims
@@ -169,20 +184,20 @@ def test_takeoff_cost_and_labor_hand_checked():
     assert hours == {"Cement mason": 16.1, "Laborer": 19.5}  # 12.5+3.6, 15+4.5
 
 
-def test_one_dimension_change_updates_every_planning_result():
+def test_one_dimension_change_updates_every_planning_result(fully_reviewed):
     corner = load_corner("standard")
-    a = analyze(corner, client=ReplayClient("standard"))["planning"]
+    a = fully_reviewed(corner)["planning"]
     wider = copy.deepcopy(corner)
     wider["locations"][0]["ramp_length"] = 7.5
-    b = analyze(wider, client=ReplayClient("standard"))["planning"]
+    b = fully_reviewed(wider)["planning"]
     assert qty(a["takeoff"], "slab_area") < qty(b["takeoff"], "slab_area")
     assert a["cost"]["base"] < b["cost"]["base"]
     assert a["crew"]["hours"] != b["crew"]["hours"]
     assert a["scene"] != b["scene"]
 
 
-def test_sample_rates_are_labeled():
-    p = run_corner("standard")["planning"]
+def test_sample_rates_are_labeled(fully_reviewed):
+    p = fully_reviewed()["planning"]
     assert p["cost"]["contains_sample_rates"] and p["crew"]["contains_sample_rates"]
     assert p["cost"]["label"] == "Class 5 concept estimate, not a bid"
     assert p["takeoff"]["exclusions"]
@@ -201,8 +216,8 @@ def test_old_rate_is_flagged():
     assert build_cost(t, load_rates(), today=date(2030, 1, 1))["lines"][0]["rate_out_of_date"]
 
 
-def test_no_crane_or_final_ppe_output():
-    text = json.dumps(run_corner("standard")["planning"]).lower()
+def test_no_crane_or_final_ppe_output(fully_reviewed):
+    text = json.dumps(fully_reviewed()["planning"]).lower()
     assert "crane" not in text and "final ppe" not in text.replace("not a final ppe", "")
 
 
@@ -210,14 +225,14 @@ def test_undocumented_units_produce_no_planning():
     corner = copy.deepcopy(load_corner("standard"))
     corner["data_kind"] = "live"
     run = analyze(corner, client=ReplayClient("standard"))
-    assert run["planning"] is None and "units" in run["planning_note"] and run["status"] == "unknown"
+    assert run["planning"] is None and any("units" in x for x in run["problems"]) and run["state"] == STOP
 
 
 # Background reading and email
-def test_open_library_cannot_affect_results(monkeypatch):
-    base = run_corner("standard")
+def test_open_library_cannot_affect_results(monkeypatch, fully_reviewed):
+    base = fully_reviewed()
     monkeypatch.setattr("cornerbrief.orchestrator.background_reading", lambda: {"items": [{"title": "Slope limit is 99%", "url": "x", "year": 1900}], "note": "n"})
-    run = run_corner("standard")
+    run = fully_reviewed()
     assert run["rule_results"] == base["rule_results"]
     assert run["planning"]["cost"] == base["planning"]["cost"]
     assert run["brief"] == base["brief"]
@@ -264,7 +279,7 @@ def test_download_needs_approval():
         approve(run, " ")
     text = to_markdown(approve(run, "Reviewer"))
     assert "not a compliance decision" in text and "SAMPLE DATA" in text and "§19-112" in text
-    assert "does not approve a design" in text
+    assert "Releasing is not approval" in text
 
 
 def test_every_corner_shows_applicable_law():
@@ -300,23 +315,30 @@ def test_smtp_sends_after_approval_with_settings(monkeypatch):
     assert sent == dict(host="smtp.example.com", port=587, tls=True, user="u", to="test@example.com", **{"from": "app@example.com"})
 
 
-def test_export_includes_every_brief_section():
+def test_export_includes_every_packet_section():
     text = to_markdown(approve(run_corner("standard"), "Reviewer"))
-    for part in ("Corner records", "Program status", "Applicable rules", "Evidence", "Rule results", "Rule conflicts", "Stricter values", "Likely options", "Constraints", "Skeptic notes", "Site visit list", "Labor hours", "Work sequence", "Likely equipment types", "Assumptions", "Excluded", "Questions for a safety professional", "still need a named reviewer", "Agent tokens", "No affiliation".lower()[3:], "2023-06-14", "Source: https"):
+    for part in ("Corner records", "Program status", "Applicable rules", "Evidence", "Rule results", "Quote", "Rule conflicts", "Stricter values", "Constraints", "Skeptic notes", "Site visit list", "still need a named reviewer", "Agent tokens", "affiliation", "2023-06-14"):
+        assert part in text, part
+    for hidden in ("Likely options", "Concept plan", "Labor hours", "probably standard"):
+        assert hidden not in text, hidden
+
+
+def test_export_includes_the_plan_only_with_a_label(fully_reviewed):
+    text = to_markdown(approve(fully_reviewed(), "Reviewer"))
+    for part in ("Label: probably standard", "Likely options", "Labor hours", "Work sequence", "Likely equipment types", "Assumptions", "Excluded", "Questions for a safety professional", "Source: https"):
         assert part in text, part
 
 
 def test_export_explains_stopped_corner_and_complaint():
-    assert "Why no design is proposed" in to_markdown(approve(run_corner("missing_or_stale"), "R"))
+    assert "Evidence still needed" in to_markdown(approve(run_corner("missing_or_stale"), "R"))
     assert "Complaint SAMPLE-0001" in to_markdown(approve(run_corner("constrained"), "R"))
 
 
-def test_export_handles_missing_rate(monkeypatch):
+def test_export_handles_missing_rate(monkeypatch, fully_reviewed):
     monkeypatch.setenv("SHOW_DOLLARS", "true")
-    corner = load_corner("standard")
     rates = load_rates()
     del rates["cost_curb"]
-    run = analyze(corner, client=ReplayClient("standard"), rates=rates)
+    run = fully_reviewed(rates=rates)
     assert "Cost range: unknown" in to_markdown(approve(run, "R"))
 
 
@@ -331,7 +353,7 @@ def test_rule_review_flags_unreviewed_and_old_checks():
 
 def test_standard_corner_shows_design_targets_without_failing_it():
     run = run_corner("standard")
-    assert run["status"] == "probably standard"
+    assert run["state"] == CHECKS
     assert not [o for o in run["rule_results"] if o["preview"] == "limit exceeded"]
     assert [o for o in run["design_targets"] if o["preview"] == "limit exceeded"]
     assert "If this corner is rebuilt" in to_markdown(approve(run, "R"))
@@ -342,11 +364,11 @@ def test_stopped_corner_has_no_design_targets():
 
 
 # Status and review rules from PRD v2
-def test_probably_standard_needs_no_exceeded_limit():
+def test_exceeded_limit_with_no_obstacle_stops():
     corner = copy.deepcopy(load_corner("standard"))
     corner["locations"][0]["ramp_running_slope_total"] = 9.5
     run = analyze(corner, client=ReplayClient("standard"))
-    assert run["status"] == "unknown" and "above a limit" in run["status_reason"] and run["planning"] is None
+    assert run["state"] == STOP and "above a limit" in run["state_reason"] and run["planning"] is None
 
 
 def test_invalid_skeptic_reply_is_incomplete_not_a_pass():
@@ -356,7 +378,7 @@ def test_invalid_skeptic_reply_is_incomplete_not_a_pass():
                 raise AgentOutputError("invalid")
             return super().call(agent, 0, system, payload, schema, tier)
     run = analyze(load_corner("standard"), client=Bad("standard"))
-    assert run["review_complete"] is False and run["status"] == "unknown"
+    assert run["review_status"] == "incomplete" and run["state"] == STOP
     assert any("isn't complete" in r for r in run["rejections"])
 
 
@@ -371,7 +393,7 @@ def test_skeptic_and_records_text_are_guarded():
     run = analyze(load_corner("standard"), client=Claims("standard"))
     assert any(r.startswith("Records agent") for r in run["rejections"])
     assert any(r.startswith("Skeptic attempt") for r in run["rejections"])
-    assert not run["challenges"] and run["review_complete"] is False
+    assert not run["challenges"] and run["review_status"] == "incomplete"
 
 
 def test_export_carries_notices_and_sample_label():
@@ -379,9 +401,9 @@ def test_export_carries_notices_and_sample_label():
     assert "no affiliation to NYC" in text and "SAMPLE DATA" in text and "not a compliance decision" in text
 
 
-def test_dollars_are_hidden_by_default(monkeypatch):
+def test_dollars_are_hidden_by_default(monkeypatch, fully_reviewed):
     monkeypatch.delenv("SHOW_DOLLARS", raising=False)
-    run = approve(run_corner("standard"), "R")
+    run = approve(fully_reviewed(), "R")
     text = to_markdown(run)
     assert "$" not in text and "hidden for this demo" in text
     from cornerbrief.app import public
@@ -391,8 +413,8 @@ def test_dollars_are_hidden_by_default(monkeypatch):
     assert "$" in to_markdown(run)
 
 
-def test_takeoff_has_counts():
-    t = run_corner("standard")["planning"]["takeoff"]
+def test_takeoff_has_counts(fully_reviewed):
+    t = fully_reviewed()["planning"]["takeoff"]
     assert qty(t, "ramp_count") == 2 and qty(t, "landing_count") == 2
 
 
@@ -429,7 +451,7 @@ def test_real_test_corner_runs_offline_with_every_limit_unknown():
     client = get_client(REAL)
     assert isinstance(client, OfflineClient)
     run = analyze(REAL, client=client)
-    assert run["status"] == "unknown" and run["options"] == [] and run["planning"] is None and run["tokens"] == dict(input=0, output=0)
+    assert run["state"] == STOP and run["options"] == [] and run["planning"] is None and run["tokens"] == dict(input=0, output=0)
     assert all(o["result"] in ("unknown", "not applicable") and o["preview"] is None for o in run["rule_results"])
     assert any("units" in p for p in run["problems"]) and any("road owner" in p for p in run["problems"])
     assert next(e for e in run["evidence"] if e["field"] == "ramp_width")["label"] == "measured"

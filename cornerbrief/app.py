@@ -2,13 +2,14 @@
 from pathlib import Path
 from starlette.applications import Starlette
 from starlette.requests import Request
-from starlette.responses import JSONResponse, PlainTextResponse
+from starlette.responses import FileResponse, JSONResponse, PlainTextResponse
 from starlette.routing import Mount, Route
 from starlette.staticfiles import StaticFiles
-from .config import load_env
+from .config import labels_enabled, load_env
 from .data_loader import list_corners
 from .email_delivery import EmailBlocked, allowlist, send_brief
-from .orchestrator import load_run, run_corner
+from .field import PHOTOS
+from .orchestrator import load_run, rerun_with_field, run_corner
 from .review_export import NotApproved, approve, presented, to_markdown
 
 load_env()
@@ -16,7 +17,7 @@ load_env()
 
 def public(run: dict) -> dict:
     shown = {k: v for k, v in presented(run).items() if k != "agent_log"}
-    shown["features"] = {"email": bool(allowlist())}
+    shown["features"] = {"email": bool(allowlist()), "labels_and_plans": labels_enabled()}
     return shown
 
 
@@ -51,6 +52,26 @@ async def approve_run(request: Request):
         return error(str(exc), 400)
 
 
+async def add_field(request: Request):
+    if int(request.headers.get("content-length") or 0) > 60 * 1024 * 1024:
+        return error("That upload is too large. Send fewer photos at once.", 413)
+    body = await request.json()
+    try:
+        return JSONResponse(public(rerun_with_field(_run(request), body.get("entries"), body.get("date"), body.get("by"))))
+    except FileNotFoundError:
+        return error("That run wasn't found.", 404)
+    except ValueError as exc:
+        return error(str(exc), 400)
+
+
+async def photo(request: Request):
+    name = request.path_params["name"]
+    path = PHOTOS / name
+    if not name.replace(".", "").isalnum() or not path.is_file():
+        return error("That photo wasn't found.", 404)
+    return FileResponse(path)
+
+
 async def download(request: Request):
     try:
         current = _run(request)
@@ -67,7 +88,7 @@ async def email(request: Request):
     try:
         current = _run(request)
         if not current.get("approval"):
-            raise EmailBlocked("A person must approve this brief before it can be emailed.")
+            raise EmailBlocked("A person must release this packet before it can be emailed.")
         return JSONResponse({"message": send_brief(current, body.get("to", ""), to_markdown(current))})
     except FileNotFoundError:
         return error("That run wasn't found.", 404)
@@ -79,6 +100,8 @@ routes = [
     Route("/api/corners", corners),
     Route("/api/corners/{key}/run", run, methods=["POST"]),
     Route("/api/runs/{run_id}/approve", approve_run, methods=["POST"]),
+    Route("/api/runs/{run_id}/field", add_field, methods=["POST"]),
+    Route("/api/photos/{name}", photo),
     Route("/api/runs/{run_id}/download", download),
     Route("/api/runs/{run_id}/email", email, methods=["POST"]),
     Mount("/", StaticFiles(directory=Path(__file__).parent / "static", html=True)),

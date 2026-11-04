@@ -1,5 +1,5 @@
 {
- "summary": "This sample corner is provisionally a standard layout, and a perpendicular ramp is the likely type if a site check confirms the path width.",
+ "summary": "This sample corner's records are in one packet, and its current measurements support the calculations below.",
  "findings_narrative": "Unreviewed calculations show no surveyed value above the acceptance limits. Some fall outside H-1011's design targets, so a rebuild would need to change them.",
  "engineer_note": "Confirm the ramp type, sidewalk width, legal grade and road ownership on site. H-1011 uses the path width to choose the ramp case."
 }

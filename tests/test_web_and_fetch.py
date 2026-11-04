@@ -120,3 +120,17 @@ def test_fetch_caches_api_responses(tmp_path, monkeypatch):
     monkeypatch.setitem(fetch.REFRESH, "on", True)
     fetch.get("https://example.test/a")
     assert len(calls) == 2
+
+
+def test_site_measurement_rerun_over_http(server):
+    status, body = call(server + "/api/corners/missing_or_stale/run", {})
+    first = json.loads(body)
+    assert status == 200 and first["state"].startswith("stop") and first["field_inputs"]
+    key = next(f["key"] for f in first["field_inputs"] if f["field"] == "sidewalk_width")
+    status, body = call(f"{server}/api/runs/{first['id']}/field", {"entries": [{"key": key, "value": "9"}], "date": "2099-01-01", "by": "A B"})
+    assert status == 400 and b"future" in body
+    status, body = call(f"{server}/api/runs/{first['id']}/field", {"entries": [{"key": key, "value": "9"}], "date": "2026-11-02", "by": "A B"})
+    second = json.loads(body)
+    assert status == 200 and second["changes"]["inputs"] and second["previous_run_id"] == first["id"] and second["features"]["labels_and_plans"] is False
+    assert call(f"{server}/api/runs/{second['id']}/download")[0] == 409
+    assert call(f"{server}/api/photos/..%2Fsecret")[0] == 404

@@ -11,3 +11,8 @@ def load_env():
         if line and not line.startswith("#") and "=" in line:
             key, value = line.split("=", 1)
             os.environ.setdefault(key.strip(), value.strip())
+
+
+def labels_enabled() -> bool:
+    """Standard or custom labels and concept plans stay off until the adversarial suite passes and a person turns them on."""
+    return os.environ.get("SHOW_LABELS_AND_PLANS", "false").lower() == "true"
