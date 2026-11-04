@@ -1,8 +1,15 @@
 # CornerBrief
 
-CornerBrief prepares a NYC street corner for an engineer's review. It shows what is known, what is missing and what to check on site. It is a demo for pre-design investigation. It does not decide compliance, approve a design or represent NYC.
+CornerBrief assembles a traceable investigation packet for a NYC street corner, shows which checks the evidence supports, and tells an engineer exactly what evidence is still needed. It is a demo for pre-design investigation. It does not decide compliance, approve a design or represent NYC.
 
 The current product requirements are in [`docs/PRD.md`](docs/PRD.md). The demo is on November 12, 2026.
+
+## User stories
+
+1. As a DDC junior engineer preparing a corner, I need to see every record for that corner in one place, labeled measured, assumed or missing, so that I don't spend time cross-checking three datasets by hand.
+2. As a DDC junior engineer, I need a list of exactly what is missing or out of date before I leave the desk, so that I make one site visit instead of finding the gaps on site.
+3. As a DDC junior engineer back from the field, I need to add what I measured and rerun the check, so that the brief reflects the corner as it is today.
+4. As an Engineer-In-Charge reviewing a brief, I need every supported check tied to its rule, section and source, and a clear "stop" wherever evidence is incomplete, so that I never sign off on a result I can't trace.
 
 ## Run it on Windows
 
