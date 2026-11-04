@@ -2,6 +2,8 @@
 
 CornerBrief prepares a NYC street corner for an engineer's review. It shows what is known, what is missing and what to check on site. It is a demo for pre-design investigation. It does not decide compliance, approve a design or represent NYC.
 
+The current product requirements are in [`docs/PRD.md`](docs/PRD.md). The demo is on November 12, 2026.
+
 ## Run it on Windows
 
 Open PowerShell in this folder, then run:
@@ -16,7 +18,9 @@ python -m cornerbrief
 
 Open http://127.0.0.1:8000 in your browser. If PowerShell blocks the activate script, run `Set-ExecutionPolicy -Scope Process RemoteSigned` and try again.
 
-On a Mac, use Python 3.10 or newer. For example, if Homebrew installed Python 3.12, run:
+## Run it on a Mac
+
+Use Python 3.10 or newer, because Apple's Python 3.9 won't run the app. For example, if Homebrew installed Python 3.12, run:
 
 ```bash
 python3.12 -m venv .venv
@@ -26,9 +30,11 @@ python -m pytest -q
 python -m cornerbrief
 ```
 
+Then open http://127.0.0.1:8000 in your browser.
+
 ## Run the demo
 
-No API key is needed. The sample corners use made-up records and saved agent responses. Every corner ends in one of two states:
+No API key is needed, and the demo stays in this mode while `DEMO_MODE=true`. The sample corners use made-up records and saved agent responses. Every corner ends in one of two states:
 
 1. **Sample corner A, Queens:** Checks the evidence supports, with the source and math for each calculation.
 2. **Sample corner B, Brooklyn:** Checks the evidence supports, with a utility vault and catch basin to review and one Skeptic rework.
@@ -43,7 +49,7 @@ To print the results without the browser, run `python scripts/run_demo.py`.
 
 Under **Add site measurements**, enter who measured, the date and any values you have, with an optional photo for each. **Rerun the check** then shows what changed. Each value is labeled as measured on site. A value measured before the corner's latest construction stays stale.
 
-Each rerun creates a new packet that needs its own release. Choosing a corner again starts from its original records. Without an API key, a rerun still runs every Python check, but the Skeptic review doesn't run, because the saved responses describe the original records. No label or plan can appear until a review finishes.
+Each rerun creates a new packet that needs its own release. Choosing a corner again starts from its original records. In demo mode, a rerun still runs every Python check, but the Skeptic review doesn't run, because the saved responses describe the original records. No label or plan can appear until a review finishes.
 
 ## Labels and concept plans
 
@@ -69,11 +75,19 @@ python scripts/fetch_corners.py --save real_test CORNER_ID
 
 The first command writes `docs/candidates.md`. The saved corner is added to the demo list, and the sample corners don't change. Limits stay "unknown" until its measurement units are documented in `data/data_dictionary.yaml` and its road owner is confirmed.
 
-## Connect live agents or email later
+## Settings
 
-- **Live agents:** Copy `.env.example` to `.env`, add your API key, set `DEMO_MODE=false` and run `pip install anthropic`.
-- **Email:** Create the address and an email service account, then fill in `EMAIL_ALLOWLIST`, `EMAIL_FROM`, `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER` and `SMTP_PASSWORD` in `.env`. Set `EMAIL_ENABLED=true` to send. A person must release each packet, and every recipient must be on the allowlist. The email form stays hidden until `EMAIL_ALLOWLIST` is set.
-- **Dollar figures:** They are hidden by default for the city demo. Set `SHOW_DOLLARS=true` to show them.
+Each person keeps their own `.env` file in the project folder. Git ignores it, so never add it to a commit or put a key in any other file. To create it, copy `.env.example` to `.env`.
+
+| To do this | Change these settings |
+| --- | --- |
+| Use live agents | Add `ANTHROPIC_API_KEY`, set `DEMO_MODE=false` and run `pip install anthropic` |
+| Send email | Fill in `EMAIL_ALLOWLIST`, `EMAIL_FROM`, `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER` and `SMTP_PASSWORD`, then set `EMAIL_ENABLED=true` |
+| Show cited background reading | Set `OPEN_LIBRARY_CONTACT` to a shared team address |
+| Show dollar figures | Set `SHOW_DOLLARS=true`, but keep it off for the city demo |
+| Show labels and concept plans | Set `SHOW_LABELS_AND_PLANS=true`, subject to the conditions above |
+
+A person must release each packet before it can be emailed, and every recipient must be on the allowlist. The email form stays hidden until `EMAIL_ALLOWLIST` is set.
 
 ## How it's organized
 
@@ -84,23 +98,29 @@ The first command writes `docs/candidates.md`. The saved corner is added to the 
 | Cost and labor rates | `rates` |
 | Sample corners and saved agent responses | `data/corners`, `data/replay` |
 | Saved real corners | `data/live` |
+| Site measurement logic | `cornerbrief/field.py` |
+| Tests, including the adversarial suite | `tests`, with the suite in `tests/test_v3.py` |
+| Product requirements and reviews | `docs` |
 | Run logs, including token use | `runs` (created when you run it) |
+| Site photos | `runs/photos` (created when you add one) |
 | Email dry runs | `outbox` (created when you use it) |
 
-Regular code handles data checks, rule selection, limit checks, geometry, quantities, cost and labor hours. Agents only organize records, propose options, challenge claims and write text. Their output must match a strict format, and checks reject unsupported numbers and claims such as "compliant."
+Regular code handles data checks, rule selection, limit checks, geometry, quantities, cost and labor hours. Agents only organize records, note constraints, propose options, challenge claims and write text. Their output must match a strict format, and checks reject unsupported numbers and claims such as "compliant."
 
 ## Known limits
 
 - **Sample data:** The included corners are made up. They are not real NYC locations.
-- **Rule review:** No named person has reviewed any rule or which-rule-applies decision yet.
+- **Rule review:** No named person has reviewed any of the 44 sourced rules or the which-rule-applies decisions yet.
+- **User testing:** No junior engineer or reviewer has tried the app yet, and the manual timing baseline hasn't been recorded.
 - **Live agents:** The live API path hasn't been run with a real key. Tests use saved or scripted responses.
-- **Real data fetch:** `scripts/fetch_corners.py` hasn't run against the NYC portal, because the build environment blocks it. Its filter and sorting logic are tested.
+- **Real data fetch:** `scripts/fetch_corners.py` hasn't run against the NYC portal, because the build environment blocks it. Its filter and sorting logic are tested, and no real corner has been saved yet.
+- **Site entries:** Choosing a corner again starts from its original records, so site entries don't carry over on screen. Earlier versions stay saved in `runs`.
 - **Ramp data age:** The ramp measurement dataset was last updated in October 2021.
 - **Open Library:** It hasn't been called live, and it's hidden until `OPEN_LIBRARY_CONTACT` is set. It stores citation details only and sends no book text to a model.
 - **Email:** It defaults to a dry run that saves messages to `outbox`. Sending through SMTP is built and tested against a fake server, but it has never sent a real message. Inbound email isn't supported.
 - **Cost and labor:** All rates are placeholders, not market prices.
 - **Stack changes:** The app uses Starlette (FastAPI's foundation) and a small built-in 3D renderer instead of FastAPI and three.js, because those packages weren't available during the build.
-- **Python version:** Tests ran on Python 3.13. Use Python 3.10 or newer.
+- **Python version:** Tests ran on Python 3.13, and the app hasn't been run on a Mac since it was updated for Python 3.10 or newer.
 
 ## Rules that still need sources
 
