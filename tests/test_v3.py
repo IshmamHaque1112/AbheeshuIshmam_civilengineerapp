@@ -29,9 +29,20 @@ def verified_rules():
 
 
 def assert_safe(run):
-    """A safe failure has no label, no plan and no final limit result from an unreviewed rule."""
+    """A safe ending has no label or plan on the page, in the saved run or in the download."""
+    from cornerbrief.app import public
     assert run["label"] is None and run["planning"] is None
     assert "probably" not in json.dumps(run["brief"]).lower()
+    shown = public(run)
+    assert shown["label"] is None and shown["planning"] is None and shown["options"] == []
+    text = to_markdown({**run, "approval": dict(reviewer="R", at="now", meaning="m")}).lower()
+    assert "probably" not in text and "concept plan" not in text
+
+
+@pytest.fixture(params=[False, True], ids=["labels off", "labels on"])
+def label_setting(request, monkeypatch):
+    if request.param:
+        monkeypatch.setenv("SHOW_LABELS_AND_PLANS", "true")
 
 
 class Scripted(ReplayClient):
@@ -83,6 +94,7 @@ def test_supported_results_show_the_quote():
 
 
 # R28 adversarial suite
+@pytest.mark.usefixtures("label_setting")
 def test_r28_1_missing_survey_or_construction_dates():
     no_survey = corner()
     no_survey["locations"][0]["geocyclora"] = None
@@ -93,6 +105,7 @@ def test_r28_1_missing_survey_or_construction_dates():
         assert_safe(run)
 
 
+@pytest.mark.usefixtures("label_setting")
 @pytest.mark.parametrize("road", ["not_recorded", "state", None])
 def test_r28_2_unknown_road_owner(road):
     c = corner()
@@ -106,12 +119,14 @@ def test_r28_2_unknown_road_owner(road):
     dict(progress=[dict(cornerid=123, construc_2="Constructed", construc_1="2021/01/01")]),
     dict(complaints=[dict(cmt_corner_id=123, complaint_id="X", complaint_date="2025-01-01")]),
 ])
+@pytest.mark.usefixtures("label_setting")
 def test_r28_3_unmatched_corner_ids(change):
     run = analyze(corner(**change), client=ReplayClient("standard"))
     assert run["state"] == STOP
     assert_safe(run)
 
 
+@pytest.mark.usefixtures("label_setting")
 def test_r28_4_undocumented_units():
     run = analyze(corner(data_kind="NYC Open Data"), client=ReplayClient("standard"))
     assert run["state"] == STOP and any("units" in p for p in run["problems"])
@@ -119,6 +134,7 @@ def test_r28_4_undocumented_units():
     assert_safe(run)
 
 
+@pytest.mark.usefixtures("label_setting")
 def test_r28_5_exceeded_limit_with_no_obstacle():
     c = corner()
     c["locations"][0]["ramp_running_slope_total"] = 9.5
@@ -127,6 +143,7 @@ def test_r28_5_exceeded_limit_with_no_obstacle():
     assert_safe(run)
 
 
+@pytest.mark.usefixtures("label_setting")
 def test_r28_6_malformed_skeptic_output():
     def bad(schema):
         raise AgentOutputError("invalid")
@@ -136,12 +153,14 @@ def test_r28_6_malformed_skeptic_output():
         assert_safe(run)
 
 
+@pytest.mark.usefixtures("label_setting")
 def test_r28_7_exhausted_retries():
     run = analyze(load_corner("constrained"), client=Scripted("constrained", lambda schema: (SkepticOutput(verdict="rework", challenges=[]))))
     assert run["retry_limit_hit"] and run["state"] == STOP
     assert_safe(run)
 
 
+@pytest.mark.usefixtures("label_setting")
 def test_r28_8_unreviewed_rules(monkeypatch):
     monkeypatch.setenv("SHOW_LABELS_AND_PLANS", "true")
     run = run_corner("standard")
@@ -150,6 +169,7 @@ def test_r28_8_unreviewed_rules(monkeypatch):
     assert_safe(run)
 
 
+@pytest.mark.usefixtures("label_setting")
 def test_r28_9_conflicting_evidence():
     base = load_corner("standard")
     two_statuses = corner(progress=base["progress"] + [dict(base["progress"][0], construc_2="Complex Planned Construction", construc_1=None)])
@@ -161,6 +181,7 @@ def test_r28_9_conflicting_evidence():
         assert_safe(run)
 
 
+@pytest.mark.usefixtures("label_setting")
 def test_r28_10_switching_between_corners_leaks_no_state():
     expected = {k: run_corner(k) for k in ("standard", "constrained", "missing_or_stale")}
     keys = list(expected) * 8
@@ -169,9 +190,11 @@ def test_r28_10_switching_between_corners_leaks_no_state():
     for key, run in zip(keys, runs):
         want = expected[key]
         assert run["corner"]["key"] == key and run["state"] == want["state"] and run["brief"] == want["brief"]
+        assert_safe(run)
         assert run["rule_results"] == want["rule_results"] and run["site_visit"] == want["site_visit"]
 
 
+@pytest.mark.usefixtures("label_setting")
 def test_r28_10_site_measurements_stay_with_their_corner():
     first = run_corner("standard")
     rerun_with_field(first, [dict(key="corner:sidewalk_width", value=10)], "2026-11-02", "Pat Example")

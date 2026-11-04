@@ -1,5 +1,5 @@
 """Run the required flow. Python decides data sufficiency, applicability, limits and status."""
-import json, time, uuid
+import json, os, time, uuid
 from collections import Counter
 from datetime import date, timedelta
 from .agents import brief_writer, records, site_analyst, skeptic
@@ -33,7 +33,7 @@ def recorded_reasons(corner: dict) -> list[str]:
     program = "the sample program record" if corner.get("data_kind") == "SAMPLE DATA" else "the city's program record"
     if any("Complex" in str(r.get("construc_2")) for r in corner.get("progress", [])):
         reasons.append(f"{program} lists this corner as complex")
-    obstacles = [row[f] for row in corner.get("locations", []) for f in ("obstacles_ramp", "obstacles_landing") if row.get(f) not in (None, "None")]
+    obstacles = [str(row[f]).strip() for row in corner.get("locations", []) for f in ("obstacles_ramp", "obstacles_landing") if str(row.get(f) or "").strip().lower() not in ("", "none")]
     if obstacles:
         reasons.append("the record shows these obstacles: " + ", ".join(dict.fromkeys(obstacles)))
     return reasons
@@ -57,11 +57,15 @@ def decide_state(sufficient, corner, outcomes, review_status) -> tuple[str, str]
     return CHECKS, f"The evidence supports the checks below. An engineer still decides what they mean, so this isn't permission to proceed.{note}"
 
 
-def provisional_label(state, corner, outcomes, evidence, review_status) -> tuple[str | None, str]:
-    """Return a label only when it's turned on and the evidence, review and rules are all complete."""
+def provisional_label(state, corner, outcomes, evidence, review_status, decisions, rules, precedence) -> tuple[str | None, str]:
+    """Return a label only when it's turned on and the evidence, review, rules and which-rule decisions are all complete."""
     complete = state == CHECKS and review_status == "finished" and all(e.label == "measured" for e in evidence)
-    verified = not any(o.preview for o in outcomes) and any(o.result == "no conflict found" for o in outcomes)
-    if not (labels_enabled() and complete and verified) or _exceeded(outcomes):
+    by_id = {r["id"]: r for r in rules}
+    applicable = [d for d in decisions if d.applies]
+    rules_reviewed = all(d.status == "verified" and not d.forced_unknown for d in applicable) and all(precedence[d.precedence_id].get("reviewed_by") for d in decisions)
+    checks_resolved = not any(o.preview for o in outcomes) and not any(o.result == "unknown" and by_id[o.rule_id]["operator"] != "reference" for o in outcomes)
+    has_result = any(o.result == "no conflict found" for o in outcomes)
+    if not (labels_enabled() and complete and rules_reviewed and checks_resolved and has_result) or _exceeded(outcomes):
         return None, ""
     reasons = recorded_reasons(corner)
     if reasons:
@@ -110,7 +114,7 @@ def analyze(corner: dict, client=None, rules=None, rates=None, save=True, field=
         out, usage = records.run(client, 0, payload)
         _log(log, "records", 0, payload, out, usage)
         rejections += validate_labels(out, evidence)
-        issues = check_text(out.summary, payload, labels_off)
+        issues = check_text(out.summary, payload, labels_off=True)
         if issues:
             rejections += [f"Records agent: {i}" for i in issues]
         else:
@@ -139,7 +143,7 @@ def analyze(corner: dict, client=None, rules=None, rates=None, save=True, field=
             try:
                 analyst, usage = site_analyst.run(client, attempt, analyst_in)
                 text = " ".join([c.text for c in analyst.constraints] + [o.rationale for o in analyst.options])
-                issues = check_text(text, analyst_in) + check_text(" ".join(c.text for c in analyst.constraints), analyst_in, labels_off)
+                issues = check_text(text, analyst_in) + check_text(" ".join(c.text for c in analyst.constraints), analyst_in, labels_off=True)
                 bad_keys = sorted({k for x in analyst.constraints + analyst.options for k in x.evidence_keys} - keys)
                 if bad_keys:
                     issues.append(f"Cites evidence that doesn't exist: {bad_keys}.")
@@ -161,7 +165,9 @@ def analyze(corner: dict, client=None, rules=None, rates=None, save=True, field=
                     _log(log, "skeptic", attempt, skeptic_in, review, usage)
                     challenges = [c.model_dump() for c in review.challenges]
                     feedback, verdict = challenges, review.verdict
-                    text_issues = check_text(" ".join(c.claim + " " + c.issue for c in review.challenges), skeptic_in, labels_off)
+                    if any(c.severity == "rework" for c in review.challenges):
+                        verdict = "rework"  # A pass can't leave a rework challenge open
+                    text_issues = check_text(" ".join(c.claim + " " + c.issue for c in review.challenges), skeptic_in, labels_off=True)
                     if text_issues:
                         challenges, feedback, verdict = [], [{"claim": "Your previous review", "issue": i, "severity": "rework"} for i in text_issues], "rework"
                         rejections += [f"Skeptic attempt {attempt + 1}: {i}" for i in text_issues]
@@ -181,12 +187,12 @@ def analyze(corner: dict, client=None, rules=None, rates=None, save=True, field=
             outcomes = run_checks(rules, decisions, evidence)
     else:
         outcomes = run_checks(rules, decisions, [])
-        outcomes = [o.model_copy(update={"reason": "Not checked, because required data is missing or out of date."}) if o.result == "unknown" and o.parameter else o for o in outcomes]
+        outcomes = [o.model_copy(update={"reason": "Not checked, because required data is missing or out of date."}) if o.reason == "There is no value for this field." else o for o in outcomes]
 
     targets = design_targets(rules, decisions, evidence) if sufficient else []
     conflicts = find_conflicts(rules, decisions, evidence if sufficient else [])
     state, state_reason = decide_state(sufficient, corner, outcomes, review_status)
-    label, label_reason = provisional_label(state, corner, outcomes, evidence, review_status)
+    label, label_reason = provisional_label(state, corner, outcomes, evidence, review_status, decisions, rules, precedence)
     planning = run_planning(evidence, rates) if label == "probably standard" else None
     planning_note = None
     if labels_off:
@@ -199,7 +205,7 @@ def analyze(corner: dict, client=None, rules=None, rates=None, save=True, field=
     writer_in = {"corner": corner["label"], "record": record, "records_summary": records_summary}
     try:
         written, usage = brief_writer.run(client, 0, writer_in)
-        issues = check_text(" ".join([written.summary, written.findings_narrative, written.engineer_note]), writer_in, labels_off)
+        issues = check_text(" ".join([written.summary, written.findings_narrative, written.engineer_note]), writer_in, labels_off=label is None)
         _log(log, "brief_writer", 0, writer_in, written, usage, "; ".join(issues) or None)
     except AgentOutputError as exc:
         written, issues = None, [str(exc)]
@@ -228,14 +234,31 @@ def analyze(corner: dict, client=None, rules=None, rates=None, save=True, field=
 
 
 def save_run(run: dict):
-    RUNS.mkdir(exist_ok=True)
-    (RUNS / f"{run['id']}.json").write_text(json.dumps(run, indent=1, default=str), encoding="utf-8")
+    """Write to a temporary file first, so a reader never sees a half-written run."""
+    RUNS.mkdir(parents=True, exist_ok=True)
+    temporary = RUNS / f"{run['id']}.{uuid.uuid4().hex[:6]}.tmp"
+    temporary.write_text(json.dumps(run, indent=1, default=str), encoding="utf-8")
+    for attempt in range(5):
+        try:
+            os.replace(temporary, RUNS / f"{run['id']}.json")
+            return
+        except PermissionError:  # Windows refuses while another request is reading the file
+            if attempt == 4:
+                temporary.unlink(missing_ok=True)
+                raise
+            time.sleep(0.05)
 
 
 def load_run(run_id: str) -> dict:
     if not run_id.isalnum():
         raise FileNotFoundError(run_id)
-    return json.loads((RUNS / f"{run_id}.json").read_text(encoding="utf-8"))
+    try:
+        run = json.loads((RUNS / f"{run_id}.json").read_text(encoding="utf-8"))
+    except ValueError as exc:
+        raise FileNotFoundError(run_id) from exc
+    if not isinstance(run, dict) or not {"state", "evidence_counts", "field_inputs"} <= set(run):
+        raise FileNotFoundError(run_id)  # Saved by an older version of the app
+    return run
 
 
 def rerun_with_field(previous: dict, raw: list[dict], measured_on: str, by: str, client=None) -> dict:

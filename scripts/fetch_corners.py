@@ -54,8 +54,18 @@ def num(rows):
     for row in rows:
         for k in ("cornerid", "cmt_corner_id", "rampid"):
             if k in row:
-                row[k] = int(float(row[k]))
+                try:
+                    row[k] = int(float(row[k]))
+                except (TypeError, ValueError):
+                    row[k] = None  # The app stops on a missing ID instead of guessing
     return rows
+
+
+def _placeholder(value):
+    try:
+        return float(value) in PLACEHOLDER
+    except (TypeError, ValueError):
+        return True
 
 
 def parse(value):
@@ -70,8 +80,8 @@ def classify(locations, progress):
     built = [parse(r.get("construc_1")) for r in progress]
     built = max([d for d in built if d], default=None)
     survey = max([d for d in (parse(r.get("geocyclora")) for r in locations) if d], default=None)
-    placeholder = any(r.get(f) in (None, "") or float(r.get(f)) in PLACEHOLDER for r in locations for f in REQUIRED)
-    obstacle = any(r.get(f) not in (None, "None") for r in locations for f in ("obstacles_ramp", "obstacles_landing"))
+    placeholder = any(_placeholder(r.get(f)) for r in locations for f in REQUIRED)
+    obstacle = any(str(r.get(f) or "").strip().lower() not in ("", "none") for r in locations for f in ("obstacles_ramp", "obstacles_landing"))
     complex_ = any("Complex" in str(r.get("construc_2")) for r in progress)
     if placeholder or (built and survey and built > survey):
         return "missing_or_stale"
@@ -98,13 +108,15 @@ def list_candidates(limit, borough=None, street=None):
     rows = num(query(LOC, limit=limit, order="cornerid", where=build_where(borough, street)))
     corners = {}
     for r in rows:
-        corners.setdefault(r["cornerid"], []).append(r)
+        if r["cornerid"] is not None:
+            corners.setdefault(r["cornerid"], []).append(r)
     ids = list(corners)
     progress = {}
     for i in range(0, len(ids), 100):
         where = "cornerid in(" + ",".join(map(str, ids[i:i + 100])) + ")"
         for r in num(query(PROG, where=where, limit=500)):
-            progress.setdefault(r["cornerid"], []).append(r)
+            if r.get("cornerid") is not None:
+                progress.setdefault(r["cornerid"], []).append(r)
     found = {"standard": [], "constrained": [], "missing_or_stale": []}
     for cid, locs in corners.items():
         if cid in progress:

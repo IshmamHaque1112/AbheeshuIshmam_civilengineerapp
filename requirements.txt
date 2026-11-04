@@ -6,3 +6,4 @@ pytest>=8.0
 # Optional packages:
 # anthropic   needed for live agents
 # truststore  helps Python use the Windows certificate store for NYC data
+# playwright  runs the browser tests in tests/test_browser.py, which skip without it

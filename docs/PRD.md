@@ -165,8 +165,11 @@ The code now follows this version:
 - **R28:** All 10 adversarial cases have automated tests in `tests/test_v3.py`, and they pass.
 - **R30 and R31:** A person can enter site measurements and photos, rerun the check and see what changed. A rerun needs its own release.
 
+- **R28 follow-up:** Most cases from `docs/P0-REVIEW.md` now have fixes and tests, including the label gate, permission language, unit validation and browser races. Cases run with labels off and on.
+
 Still open:
 
+- Queens and Brooklyn reach "checks the evidence supports" with four corner inputs missing, and each affected check shows its own stop. `docs/P0-REVIEW.md` reads the stop wording more strictly, so the team should decide which it wants.
 - With no API key, a rerun has no Skeptic review, because the saved responses describe the original records. It can reach "checks the evidence supports," but it says the review wasn't reused, and it can't show a label or plan.
 - No named person has reviewed the rules, so every limit result stays "unknown."
 - The real corner near Thomson Ave hasn't been fetched, and R29 and the timing metrics need people.

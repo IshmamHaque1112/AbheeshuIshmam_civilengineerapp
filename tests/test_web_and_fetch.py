@@ -137,3 +137,63 @@ def test_site_measurement_rerun_over_http(server):
     assert status == 200 and json.loads(body)["id"] == second["id"] and "agent_log" not in json.loads(body)
     assert call(f"{server}/api/runs/nothere")[0] == 404
     assert call(f"{server}/api/photos/..%2Fsecret")[0] == 404
+
+
+def _raw(url, body):
+    req = urllib.request.Request(url, data=body, headers={"Content-Type": "application/json"})
+    try:
+        with urllib.request.urlopen(req, timeout=10) as r:
+            return r.status, r.read()
+    except urllib.error.HTTPError as e:
+        return e.code, e.read()
+
+
+@pytest.mark.parametrize("path", ["approve", "field", "email"])
+@pytest.mark.parametrize("body", [b"not json", b"[1, 2]", b'"text"'])
+def test_bad_request_bodies_get_a_clear_error(server, path, body):
+    run = json.loads(call(server + "/api/corners/standard/run", {})[1])
+    status, out = _raw(f"{server}/api/runs/{run['id']}/{path}", body)
+    assert status == 400 and "error" in json.loads(out)
+
+
+@pytest.mark.parametrize("path,data", [("approve", {"reviewer": 5}), ("approve", {"reviewer": None}), ("email", {"to": None}), ("email", {"to": 5}), ("field", {"entries": "x", "date": "2026-11-02", "by": "A B"}), ("field", {"entries": [{"key": "corner:sidewalk_width", "value": 9}], "date": "2026-11-02", "by": 5})])
+def test_wrong_value_types_get_a_clear_error(server, path, data):
+    run = json.loads(call(server + "/api/corners/standard/run", {})[1])
+    status, out = call(f"{server}/api/runs/{run['id']}/{path}", data)
+    assert status in (400, 409) and "error" in json.loads(out)
+
+
+def test_run_from_an_older_version_is_treated_as_missing(server):
+    import cornerbrief.orchestrator as orch
+    (orch.RUNS / "oldrun1.json").write_text(json.dumps(dict(id="oldrun1", status="unknown", corner=dict(key="standard"))), encoding="utf-8")
+    assert call(server + "/api/runs/oldrun1")[0] == 404
+    assert call(server + "/api/runs/oldrun1/field", {"entries": [], "date": "2026-11-02", "by": "A B"})[0] == 404
+
+
+def test_email_failure_gets_a_clear_error(server, monkeypatch):
+    run = json.loads(call(server + "/api/corners/standard/run", {})[1])
+    call(f"{server}/api/runs/{run['id']}/approve", {"reviewer": "R"})
+    def fail(*a, **k):
+        raise OSError("no route")
+    monkeypatch.setattr("smtplib.SMTP", fail)
+    for k, v in dict(EMAIL_ALLOWLIST="t@example.com", EMAIL_ENABLED="true", EMAIL_FROM="a@example.com", SMTP_HOST="h", SMTP_USER="u", SMTP_PASSWORD="p").items():
+        monkeypatch.setenv(k, v)
+    status, out = call(f"{server}/api/runs/{run['id']}/email", {"to": "t@example.com"})
+    assert status == 502 and "error" in json.loads(out) and "p" != json.loads(out)["error"]
+
+
+def test_smtp_verifies_the_server_certificate(monkeypatch):
+    from cornerbrief.email_delivery import SmtpProvider
+    seen = {}
+    class FakeSMTP:
+        def __init__(self, host, port, timeout=0): pass
+        def __enter__(self): return self
+        def __exit__(self, *a): return False
+        def starttls(self, context=None): seen["context"] = context
+        def login(self, user, password): pass
+        def send_message(self, mail): pass
+    monkeypatch.setattr("smtplib.SMTP", FakeSMTP)
+    for k, v in dict(EMAIL_FROM="a@example.com", SMTP_HOST="h", SMTP_USER="u", SMTP_PASSWORD="p").items():
+        monkeypatch.setenv(k, v)
+    SmtpProvider().send(dict(to="t@example.com", subject="s", body="b"))
+    assert seen["context"] is not None and seen["context"].check_hostname

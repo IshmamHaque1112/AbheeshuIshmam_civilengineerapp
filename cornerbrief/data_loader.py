@@ -24,8 +24,12 @@ def list_corners() -> list[dict]:
     order = ["standard", "constrained"] + ([REAL_KEY] if (DATA / "live" / f"{REAL_KEY}.json").exists() else []) + ["missing_or_stale"]
     out = []
     for key in order:
-        c = load_corner(key)
-        out.append({"key": key, "label": c["label"], "data_kind": c["data_kind"]})
+        try:
+            c = load_corner(key)
+            out.append({"key": key, "label": c["label"], "data_kind": c["data_kind"]})
+        except (KeyError, ValueError):
+            if key != REAL_KEY:  # A damaged real corner file shouldn't stop the sample corners
+                raise
     return out
 
 

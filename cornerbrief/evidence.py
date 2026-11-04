@@ -44,8 +44,12 @@ def currency_problem(corner: dict, row: dict) -> str:
     if not matches:
         return "No Program Progress record matches this corner."
     for r in matches:
+        if not str(r.get("construc_2") or "").strip():
+            return "The Program Progress record has no status."
         if "Constructed" in str(r.get("construc_2")) and not parse_date(r.get("construc_1")):
             return "The corner is listed as constructed, but its completion date is missing or unreadable."
+        if str(r.get("construc_1") or "").strip() and not parse_date(r.get("construc_1")):
+            return "The Program Progress completion date is unreadable."
     return ""
 
 
@@ -54,12 +58,15 @@ def join_report(corner: dict) -> list[str]:
     notes = []
     if not ids:
         notes.append("No ramp measurements were found for this corner.")
+    if None in ids:
+        notes.append("A ramp record has no corner ID, so it did not match a corner.")
+        ids = ids - {None}
     if not corner.get("progress"):
         notes.append("No Program Progress record joined to this corner.")
     else:
         unmatched = {r.get("cornerid") for r in corner["progress"]} - ids
         if ids and unmatched:
-            notes.append(f"Program Progress corner IDs did not match: {sorted(unmatched)}.")
+            notes.append(f"Program Progress corner IDs did not match: {sorted(unmatched, key=str)}.")
     for row in corner.get("complaints", []):
         if ids and row.get("cmt_corner_id") not in ids:
             notes.append(f"Complaint {row.get('complaint_id')} did not match this corner.")
@@ -135,6 +142,8 @@ def build_evidence(corner: dict, dictionary: dict, field: list[dict] | None = No
 def record_conflicts(corner: dict) -> list[str]:
     """Find records that disagree. A person has to settle these, because the tool can't tell which record is right."""
     problems = []
+    if len({r.get("cornerid") for r in corner.get("locations", [])} - {None}) > 1:
+        problems.append("The ramp records come from more than one corner.")
     by_corner: dict = {}
     for row in corner.get("progress", []):
         by_corner.setdefault(row.get("cornerid"), []).append(row)

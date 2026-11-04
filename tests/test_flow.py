@@ -17,7 +17,7 @@ from cornerbrief.parts_kit import build_parts
 from cornerbrief.planning import run_planning
 from cornerbrief.review_export import NotApproved, approve, to_markdown
 from cornerbrief.rules import load_rates
-from cornerbrief.rules import load_rules
+from cornerbrief.rules import load_precedence, load_rules
 from cornerbrief.takeoff import build_takeoff, qty
 
 FORBIDDEN_OUTPUT = ["crane selection", "crane position", "final ppe"]
@@ -44,7 +44,9 @@ def full_entries():
 def fully_reviewed(monkeypatch):
     """Everything a label and plan need: the setting on, verified rules, complete evidence and a finished review."""
     monkeypatch.setenv("SHOW_LABELS_AND_PLANS", "true")
-    rules = [dict(r, status="verified", reviewed_by="Pat Example", reviewed_on="2026-11-03") if r["status"] == "unreviewed" else r for r in load_rules()]
+    rules = [dict(r, status="verified", reviewed_by="Pat Example", reviewed_on="2026-11-03") for r in load_rules() if r["status"] == "unreviewed"]
+    decisions = {k: dict(v, reviewed_by="Pat Example") for k, v in load_precedence().items()}
+    monkeypatch.setattr("cornerbrief.orchestrator.load_precedence", lambda: decisions)
     def run(corner=None, rates=None, key="standard"):
         corner = load_corner(key) if corner is None else corner
         return analyze(corner, client=ReplayClient(key), rules=rules, rates=rates, field=full_entries())
@@ -143,7 +145,7 @@ def test_brief_writer_claim_falls_back_to_checked_results():
             return super().call(agent, attempt, system, payload, schema, tier)
     run = analyze(load_corner("standard"), client=Claiming("standard"))
     assert "compliant" not in run["brief"]["summary"]
-    assert any("banned claim" in r for r in run["rejections"])
+    assert any("banned approval or permission word" in r for r in run["rejections"])
 
 
 def test_fake_evidence_key_is_rejected():
@@ -304,7 +306,7 @@ def test_smtp_sends_after_approval_with_settings(monkeypatch):
         def __init__(self, host, port, timeout=0): sent.update(host=host, port=port)
         def __enter__(self): return self
         def __exit__(self, *a): return False
-        def starttls(self): sent["tls"] = True
+        def starttls(self, context=None): sent["tls"] = True
         def login(self, user, password): sent["user"] = user
         def send_message(self, mail): sent["to"], sent["from"] = mail["To"], mail["From"]
     monkeypatch.setattr("smtplib.SMTP", FakeSMTP)
@@ -344,7 +346,7 @@ def test_export_handles_missing_rate(monkeypatch, fully_reviewed):
 
 def test_rule_review_flags_unreviewed_and_old_checks():
     from cornerbrief.orchestrator import rule_review
-    from cornerbrief.rules import load_rules
+    from cornerbrief.rules import load_precedence, load_rules
     rules = load_rules()
     assert rule_review(rules)["verified"] == 0 and rule_review(rules)["awaiting_human_review"]
     assert rule_review(rules, today=date(2030, 1, 1))["source_check_overdue"]

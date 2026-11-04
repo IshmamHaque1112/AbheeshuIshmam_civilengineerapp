@@ -39,6 +39,15 @@ python -m cornerbrief
 
 Then open http://127.0.0.1:8000 in your browser.
 
+## Run the tests
+
+`python -m pytest -q` runs every test. Tests ignore your `.env`, so they never call a live service. The browser checks in `tests/test_browser.py` skip unless Playwright and Chromium are installed:
+
+```bash
+pip install playwright
+python -m playwright install chromium
+```
+
 ## Run the demo
 
 No API key is needed, and the demo stays in this mode while `DEMO_MODE=true`. The sample corners use made-up records and saved agent responses. Every corner ends in one of two states:
@@ -60,7 +69,7 @@ Each rerun creates a new packet that needs its own release. The tab keeps showin
 
 ## Labels and concept plans
 
-"Probably standard," "probably custom," likely ramp types and concept plans are off by default. Set `SHOW_LABELS_AND_PLANS=true` only after the adversarial suite in `tests/test_v3.py` passes and you've decided to turn them on. Even then, they appear only with complete evidence, a finished review, verified rules and no exceeded limit.
+"Probably standard," "probably custom," likely ramp types and concept plans are off by default. Set `SHOW_LABELS_AND_PLANS=true` only after the adversarial suite in `tests/test_v3.py` passes and you've decided to turn them on. Even then, they appear only with complete evidence, a finished review, every applicable rule and which-rule-applies decision reviewed by a named person, and no exceeded limit. Turning the setting off also hides them on runs saved earlier.
 
 ## Why results say "unknown"
 

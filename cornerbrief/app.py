@@ -1,6 +1,7 @@
 """Web API and static UI."""
 from pathlib import Path
 from starlette.applications import Starlette
+from starlette.concurrency import run_in_threadpool
 from starlette.requests import Request
 from starlette.responses import FileResponse, JSONResponse, PlainTextResponse
 from starlette.routing import Mount, Route
@@ -8,11 +9,12 @@ from starlette.staticfiles import StaticFiles
 from .config import labels_enabled, load_env
 from .data_loader import list_corners
 from .email_delivery import EmailBlocked, allowlist, send_brief
-from .field import PHOTOS
+from . import field as field_module
 from .orchestrator import load_run, rerun_with_field, run_corner
 from .review_export import NotApproved, approve, presented, to_markdown
 
 load_env()
+MAX_UPLOAD = 60 * 1024 * 1024
 
 
 def public(run: dict) -> dict:
@@ -25,13 +27,23 @@ def error(message: str, status: int) -> JSONResponse:
     return JSONResponse({"error": message}, status_code=status)
 
 
+async def _body(request: Request) -> dict:
+    try:
+        body = await request.json()
+    except ValueError as exc:
+        raise ValueError("The request wasn't valid JSON.") from exc
+    if not isinstance(body, dict):
+        raise ValueError("The request must be a JSON object.")
+    return body
+
+
 async def corners(request: Request):
-    return JSONResponse(list_corners())
+    return JSONResponse(await run_in_threadpool(list_corners))
 
 
 async def run(request: Request):
     try:
-        return JSONResponse(public(run_corner(request.path_params["key"])))
+        return JSONResponse(public(await run_in_threadpool(run_corner, request.path_params["key"])))
     except KeyError:
         return error("That corner isn't in the demo list.", 404)
     except RuntimeError as exc:
@@ -50,9 +62,9 @@ async def get_run(request: Request):
 
 
 async def approve_run(request: Request):
-    body = await request.json()
     try:
-        return JSONResponse(public(approve(_run(request), body.get("reviewer", ""))))
+        body = await _body(request)
+        return JSONResponse(public(await run_in_threadpool(approve, _run(request), body.get("reviewer"))))
     except FileNotFoundError:
         return error("That run wasn't found.", 404)
     except ValueError as exc:
@@ -60,20 +72,22 @@ async def approve_run(request: Request):
 
 
 async def add_field(request: Request):
-    if int(request.headers.get("content-length") or 0) > 60 * 1024 * 1024:
-        return error("That upload is too large. Send fewer photos at once.", 413)
-    body = await request.json()
     try:
-        return JSONResponse(public(rerun_with_field(_run(request), body.get("entries"), body.get("date"), body.get("by"))))
-    except FileNotFoundError:
-        return error("That run wasn't found.", 404)
+        if int(request.headers.get("content-length") or 0) > MAX_UPLOAD:
+            return error("That upload is too large. Send fewer photos at once.", 413)
+        body = await _body(request)
+        return JSONResponse(public(await run_in_threadpool(rerun_with_field, _run(request), body.get("entries"), body.get("date"), body.get("by"))))
+    except (FileNotFoundError, KeyError):
+        return error("That run or corner wasn't found.", 404)
+    except RuntimeError as exc:
+        return error(str(exc), 400)
     except ValueError as exc:
         return error(str(exc), 400)
 
 
 async def photo(request: Request):
     name = request.path_params["name"]
-    path = PHOTOS / name
+    path = field_module.PHOTOS / name
     if not name.replace(".", "").isalnum() or not path.is_file():
         return error("That photo wasn't found.", 404)
     return FileResponse(path)
@@ -91,16 +105,24 @@ async def download(request: Request):
 
 
 async def email(request: Request):
-    body = await request.json()
     try:
+        body = await _body(request)
         current = _run(request)
         if not current.get("approval"):
             raise EmailBlocked("A person must release this packet before it can be emailed.")
-        return JSONResponse({"message": send_brief(current, body.get("to", ""), to_markdown(current))})
+        return JSONResponse({"message": await run_in_threadpool(send_brief, current, body.get("to"), to_markdown(current))})
     except FileNotFoundError:
         return error("That run wasn't found.", 404)
     except EmailBlocked as exc:
         return error(str(exc), 409)
+    except OSError:
+        return error("The email couldn't be sent. Check the SMTP settings in .env.", 502)
+    except ValueError as exc:
+        return error(str(exc), 400)
+
+
+async def server_error(request: Request, exc: Exception):
+    return error("Something went wrong on the server. Check the terminal for details.", 500)
 
 
 routes = [
@@ -114,4 +136,4 @@ routes = [
     Route("/api/runs/{run_id}/email", email, methods=["POST"]),
     Mount("/", StaticFiles(directory=Path(__file__).parent / "static", html=True)),
 ]
-app = Starlette(routes=routes)
+app = Starlette(routes=routes, exception_handlers={Exception: server_error})

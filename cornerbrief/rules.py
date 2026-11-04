@@ -9,10 +9,30 @@ REQUIRED = ["id", "title", "jurisdiction", "authority_type", "applies_to", "para
 STATUSES = {"verified", "unreviewed", "needs_source", "superseded"}
 STAGES = {"general", "design", "work_acceptance"}
 OPERATORS = {"max", "min", "range", "reference", "needs_source"}
+UNITS = {"percent", "in", "ft", "in_per_5ft"}
 
 
 class RuleError(ValueError):
     pass
+
+
+def _number(value) -> bool:
+    return isinstance(value, (int, float)) and not isinstance(value, bool)
+
+
+def _check_limit(rule: dict, label: str):
+    limit = rule.get("limit")
+    if limit is None:
+        raise RuleError(f"{label}: a numeric rule needs a limit")
+    if rule.get("unit") not in UNITS:
+        raise RuleError(f"{label}: a numeric rule needs a supported unit, not {rule.get('unit')}")
+    if rule["operator"] == "range":
+        if not (isinstance(limit, dict) and _number(limit.get("min")) and _number(limit.get("max")) and limit["min"] <= limit["max"]):
+            raise RuleError(f"{label}: a range needs numeric min and max values")
+    elif not _number(limit):
+        raise RuleError(f"{label}: this limit must be a number")
+    if rule["unit"] == "in_per_5ft" and rule["operator"] != "range":
+        raise RuleError(f"{label}: inches per 5 feet is supported only as a range")
 
 
 def validate_rule(rule: dict, name: str = "") -> dict:
@@ -30,8 +50,8 @@ def validate_rule(rule: dict, name: str = "") -> dict:
         for key in ("section", "url", "quote", "edition"):
             if not rule.get(key):
                 raise RuleError(f"{label}: this rule needs an exact {key}")
-        if rule["operator"] in ("max", "min", "range") and rule.get("limit") is None:
-            raise RuleError(f"{label}: a numeric rule needs a limit")
+        if rule["operator"] in ("max", "min", "range"):
+            _check_limit(rule, label)
     if rule["status"] == "verified" and not (str(rule.get("reviewed_by") or "").strip() and rule.get("reviewed_on")):
         raise RuleError(f"{label}: a verified rule needs a named reviewer and review date")
     if rule["status"] == "needs_source" and rule.get("limit") is not None:

@@ -9,7 +9,7 @@ SEARCH = os.environ.get("CB_OPEN_LIBRARY", "https://openlibrary.org")
 def fetch_topic(topic: str, contact: str, base: str = SEARCH) -> list[dict]:
     q = urllib.parse.urlencode({"q": topic, "limit": 3, "fields": "title,author_name,first_publish_year,key"})
     req = urllib.request.Request(f"{base}/search.json?{q}", headers={"User-Agent": f"CornerBriefDemo/0.1 ({contact})"})
-    with urllib.request.urlopen(req, timeout=20) as resp:
+    with urllib.request.urlopen(req, timeout=8) as resp:
         docs = json.load(resp).get("docs", [])
     return [dict(title=d.get("title", "Untitled"), authors=d.get("author_name", [])[:3], year=d.get("first_publish_year"),
                  url=f"{base}{d['key']}", topic=topic) for d in docs if d.get("key")]

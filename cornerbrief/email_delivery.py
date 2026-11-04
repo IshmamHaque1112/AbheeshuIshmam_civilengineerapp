@@ -1,5 +1,5 @@
 """Send-only delivery. No inbound mail. Dry run saves the message locally."""
-import json, os, re, smtplib, time
+import json, os, re, smtplib, ssl, time
 from email.message import EmailMessage
 from .paths import OUTBOX
 
@@ -31,7 +31,7 @@ class SmtpProvider:
         mail["From"], mail["To"], mail["Subject"] = os.environ["EMAIL_FROM"], message["to"], message["subject"]
         mail.set_content(message["body"])
         with smtplib.SMTP(os.environ["SMTP_HOST"], int(os.environ.get("SMTP_PORT", "587")), timeout=30) as server:
-            server.starttls()
+            server.starttls(context=ssl.create_default_context())
             server.login(os.environ["SMTP_USER"], os.environ["SMTP_PASSWORD"])
             server.send_message(mail)
         return f"Sent to {message['to']}."
@@ -44,7 +44,7 @@ def allowlist() -> set[str]:
 def send_brief(run: dict, to: str, body: str, provider=None) -> str:
     if not run.get("approval"):
         raise EmailBlocked("A person must release this packet before it can be emailed.")
-    if to.strip().lower() not in allowlist():
+    if not isinstance(to, str) or to.strip().lower() not in allowlist():
         raise EmailBlocked("This address isn't on the test allowlist. Add it to EMAIL_ALLOWLIST.")
     if provider is None:
         enabled = os.environ.get("EMAIL_ENABLED", "false").lower() == "true"

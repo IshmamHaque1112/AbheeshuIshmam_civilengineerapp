@@ -22,7 +22,8 @@ def build_scene(ramps: list[dict], curb_extra_ft: float = 4) -> dict:
         lx0 = cursor + (w - lw) / 2
         lx1 = lx0 + lw
         faces.append({"p": [[x0, 0, 0], [x1, 0, 0], [x1, l, rise], [x0, l, rise]], "c": COLORS["ramp"]})
-        faces.append({"p": [[x0, 0, 0], [x1, 0, 0], [x1, 2, rise * 2 / l], [x0, 2, rise * 2 / l]], "c": COLORS["dws"]})
+        dws = min(2, l)
+        faces.append({"p": [[x0, 0, 0], [x1, 0, 0], [x1, dws, rise * dws / l], [x0, dws, rise * dws / l]], "c": COLORS["dws"]})
         faces += _box(lx0, lx1, l, l + ll, 0, rise, COLORS["landing"], COLORS["side"])
         faces += _box(x0 - side, x0, -0.5, 0, 0, curb_h, COLORS["curb"], COLORS["curb"])
         faces += _box(x1, x1 + side, -0.5, 0, 0, curb_h, COLORS["curb"], COLORS["curb"])

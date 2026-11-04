@@ -28,6 +28,8 @@ class ReplayClient:
         path = self.dir / f"{agent}_{attempt}.json"
         if not path.exists():
             path = self.dir / f"{agent}_0.json"
+        if not path.exists():
+            raise AgentOutputError(f"No saved response for the {agent} agent.")
         text = path.read_text(encoding="utf-8")
         return parse_output(text, schema), {"input_tokens": 0, "output_tokens": 0, "replayed": True}
 
@@ -41,7 +43,7 @@ class OfflineClient:
         usage = {"input_tokens": 0, "output_tokens": 0, "offline": True}
         if agent == "records":
             labels = [{"key": e["key"], "label": e["label"], "note": ""} for e in payload["evidence"]]
-            return schema(summary="Loaded from saved NYC Open Data records. No agent analysis was run.", labels=labels), usage
+            return schema(summary="Loaded from saved records. No agent analysis was run.", labels=labels), usage
         return schema(summary="No agent analysis was run for this version of the packet.",
                       findings_narrative="The records are shown with their labels. See the sections below for what is unknown.",
                       engineer_note="Use the site visit list to see what still needs to be measured or confirmed."), usage
@@ -68,20 +70,23 @@ class LiveClient:
             saved = json.loads(path.read_text(encoding="utf-8"))
             return parse_output(saved["text"], schema), {"input_tokens": 0, "output_tokens": 0, "cached": True}
         schema_text = json.dumps(schema.model_json_schema())
-        response = self.client.messages.create(
-            model=model, max_tokens=2000,
-            system=f"{system}\nReturn only JSON matching this schema, with no other fields:\n{schema_text}",
-            messages=[{"role": "user", "content": content}])
+        try:
+            response = self.client.messages.create(
+                model=model, max_tokens=4000,
+                system=f"{system}\nReturn only JSON matching this schema, with no other fields:\n{schema_text}",
+                messages=[{"role": "user", "content": content}])
+        except Exception as exc:  # A failed call counts as an unfinished review, not a crash
+            raise AgentOutputError(f"The call to the {agent} agent failed ({type(exc).__name__}).") from exc
         text = "".join(b.text for b in response.content if b.type == "text")
+        output = parse_output(text, schema)  # Only valid output is saved, so a bad reply can be retried
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(json.dumps({"text": text}), encoding="utf-8")
-        usage = {"input_tokens": response.usage.input_tokens, "output_tokens": response.usage.output_tokens}
-        return parse_output(text, schema), usage
+        return output, {"input_tokens": response.usage.input_tokens, "output_tokens": response.usage.output_tokens}
 
 
 def get_client(corner: dict, inputs_changed: bool = False):
     """Saved responses describe a corner's original records, so they aren't reused once its inputs change."""
-    demo = os.environ.get("DEMO_MODE", "").lower() == "true" or not os.environ.get("ANTHROPIC_API_KEY")
+    demo = os.environ.get("DEMO_MODE", "true").lower() != "false" or not os.environ.get("ANTHROPIC_API_KEY")
     if not demo:
         return LiveClient()
     if inputs_changed or corner.get("data_kind") != "SAMPLE DATA":
