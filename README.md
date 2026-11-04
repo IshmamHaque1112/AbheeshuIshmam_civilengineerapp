@@ -56,7 +56,7 @@ To print the results without the browser, run `python scripts/run_demo.py`.
 
 Under **Add site measurements**, enter who measured, the date and any values you have, with an optional photo for each. **Rerun the check** then shows what changed. Each value is labeled as measured on site. A value measured before the corner's latest construction stays stale.
 
-Each rerun creates a new packet that needs its own release. Choosing a corner again starts from its original records. In demo mode, a rerun still runs every Python check, but the Skeptic review doesn't run, because the saved responses describe the original records. No label or plan can appear until a review finishes.
+Each rerun creates a new packet that needs its own release. The tab keeps showing the newest version when you switch corners or reload, and **Start over from the original records** clears it. A new tab starts from the original records. In demo mode, a rerun still runs every Python check, but the Skeptic review doesn't run, because the saved responses describe the original records. No label or plan can appear until a review finishes.
 
 ## Labels and concept plans
 
@@ -121,7 +121,7 @@ Regular code handles data checks, rule selection, limit checks, geometry, quanti
 - **User testing:** No junior engineer or reviewer has tried the app yet, and the manual timing baseline hasn't been recorded.
 - **Live agents:** The live API path hasn't been run with a real key. Tests use saved or scripted responses.
 - **Real data fetch:** `scripts/fetch_corners.py` hasn't run against the NYC portal, because the build environment blocks it. Its filter and sorting logic are tested, and no real corner has been saved yet.
-- **Site entries:** Choosing a corner again starts from its original records, so site entries don't carry over on screen. Earlier versions stay saved in `runs`.
+- **Site entries:** The newest version is remembered only in the browser tab where you entered it. Every version stays saved in `runs`.
 - **Ramp data age:** The ramp measurement dataset was last updated in October 2021.
 - **Open Library:** It hasn't been called live, and it's hidden until `OPEN_LIBRARY_CONTACT` is set. It stores citation details only and sends no book text to a model.
 - **Email:** It defaults to a dry run that saves messages to `outbox`. Sending through SMTP is built and tested against a fake server, but it has never sent a real message. Inbound email isn't supported.

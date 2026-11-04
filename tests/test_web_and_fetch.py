@@ -133,4 +133,7 @@ def test_site_measurement_rerun_over_http(server):
     second = json.loads(body)
     assert status == 200 and second["changes"]["inputs"] and second["previous_run_id"] == first["id"] and second["features"]["labels_and_plans"] is False
     assert call(f"{server}/api/runs/{second['id']}/download")[0] == 409
+    status, body = call(f"{server}/api/runs/{second['id']}")
+    assert status == 200 and json.loads(body)["id"] == second["id"] and "agent_log" not in json.loads(body)
+    assert call(f"{server}/api/runs/nothere")[0] == 404
     assert call(f"{server}/api/photos/..%2Fsecret")[0] == 404

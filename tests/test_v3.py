@@ -282,3 +282,34 @@ def test_photo_is_saved_and_attached(tmp_path):
     assert item["photo"].endswith(".png") and (tmp_path / "photos" / item["photo"]).exists()
     kept = rerun_with_field(run, [dict(key="corner:sidewalk_width", value=11)], "2026-11-02", "A B")
     assert next(e for e in kept["evidence"] if e["field"] == "sidewalk_width")["photo"] == item["photo"]
+
+
+# README user stories
+def test_story_1_records_show_label_counts():
+    run = run_corner("standard")
+    assert run["evidence_counts"] == dict(__import__("collections").Counter(e["label"] for e in run["evidence"]))
+    assert "Input labels:" in to_markdown(approve(run, "R"))
+
+
+def test_story_4_every_calculated_check_traces_to_its_source():
+    for key in ("standard", "constrained"):
+        calculated = [o for o in run_corner(key)["rule_results"] if o["preview"] or o["math"]]
+        assert calculated and all(o["title"] and o["section"] and o["url"] and o["quote"] for o in calculated)
+
+
+def test_story_4_missing_evidence_stops_that_check_even_when_the_corner_continues():
+    run = run_corner("standard")
+    assert run["state"] == CHECKS
+    stopped = [o for o in run["rule_results"] if o["evidence_stop"]]
+    assert stopped and all(o["result"] == "unknown" and not o["preview"] for o in stopped)
+    assert not any(o["evidence_stop"] for o in run["rule_results"] if o["preview"])
+    assert "stop: evidence still needed" in to_markdown(approve(run, "R"))
+    assert all(o["evidence_stop"] for o in run_corner("missing_or_stale")["rule_results"] if o["parameter"] and o["result"] == "unknown" and o["section"] and "source text" not in o["reason"] and "no numeric" not in o["reason"])
+
+
+def test_story_3_a_measurement_removes_its_stop():
+    first = run_corner("standard")
+    assert any(o["parameter"] == "sidewalk_transverse_slope" and o["evidence_stop"] for o in first["rule_results"])
+    run = rerun_with_field(first, [dict(key="corner:sidewalk_transverse_slope", value=2)], "2026-11-02", "A B")
+    assert not any(o["parameter"] == "sidewalk_transverse_slope" and o["evidence_stop"] for o in run["rule_results"])
+    assert any(r["after"] == "no conflict found" for r in run["changes"]["results"])

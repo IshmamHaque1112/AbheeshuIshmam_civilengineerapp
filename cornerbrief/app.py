@@ -42,6 +42,13 @@ def _run(request: Request):
     return load_run(request.path_params["run_id"])
 
 
+async def get_run(request: Request):
+    try:
+        return JSONResponse(public(_run(request)))
+    except FileNotFoundError:
+        return error("That run wasn't found.", 404)
+
+
 async def approve_run(request: Request):
     body = await request.json()
     try:
@@ -99,6 +106,7 @@ async def email(request: Request):
 routes = [
     Route("/api/corners", corners),
     Route("/api/corners/{key}/run", run, methods=["POST"]),
+    Route("/api/runs/{run_id}", get_run),
     Route("/api/runs/{run_id}/approve", approve_run, methods=["POST"]),
     Route("/api/runs/{run_id}/field", add_field, methods=["POST"]),
     Route("/api/photos/{name}", photo),

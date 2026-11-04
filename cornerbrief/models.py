@@ -35,6 +35,7 @@ class RuleOutcome(BaseModel):
     limit_text: str = ""
     result: RuleResult
     preview: Optional[RuleResult] = None
+    evidence_stop: bool = False
     math: str = ""
     reason: str = ""
     authority_type: str = ""

@@ -39,9 +39,9 @@ def check_value(rule: dict, item: EvidenceItem) -> RuleOutcome:
     base = _base(rule, item.ramp_id)
     base.update(value=item.value, value_unit=item.unit)
     if item.label != "measured":
-        return RuleOutcome(**base, result="unknown", reason=f"The value is {item.label}. {item.reason}".strip())
+        return RuleOutcome(**base, result="unknown", evidence_stop=True, reason=f"The value is {item.label}. {item.reason}".strip())
     if not item.unit_documented:
-        return RuleOutcome(**base, result="unknown",
+        return RuleOutcome(**base, result="unknown", evidence_stop=True,
                            reason=f"The unit is not documented, so no limit was checked. Unconfirmed reading: {item.value} {item.unit}.")
     value = abs(float(item.value))
     if rule["unit"] == "in_per_5ft":
@@ -91,7 +91,7 @@ def run_checks(rules: list[dict], decisions: list[Decision], evidence: list[Evid
         if not decision.applies:
             outcomes.append(RuleOutcome(**_base(rule), result="not applicable", reason=decision.reason))
         elif decision.forced_unknown:
-            outcomes.append(RuleOutcome(**_base(rule), result="unknown", reason=decision.reason))
+            outcomes.append(RuleOutcome(**_base(rule), result="unknown", evidence_stop=True, reason=decision.reason))
         elif rule["status"] in ("needs_source", "superseded"):
             outcomes.append(RuleOutcome(**_base(rule), result="unknown", reason="The exact source text is still needed. No limit was checked."))
         elif rule["operator"] == "reference":
@@ -99,7 +99,7 @@ def run_checks(rules: list[dict], decisions: list[Decision], evidence: list[Evid
         else:
             items = by_field.get(rule["parameter"], [])
             if not items:
-                outcomes.append(RuleOutcome(**_base(rule), result="unknown", reason="There is no value for this field."))
+                outcomes.append(RuleOutcome(**_base(rule), result="unknown", evidence_stop=True, reason="There is no value for this field."))
             outcomes.extend(_gate(rule, check_value(rule, item)) for item in items)
     return outcomes
 

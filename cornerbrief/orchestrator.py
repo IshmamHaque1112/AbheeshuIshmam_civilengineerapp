@@ -1,5 +1,6 @@
 """Run the required flow. Python decides data sufficiency, applicability, limits and status."""
 import json, time, uuid
+from collections import Counter
 from datetime import date, timedelta
 from .agents import brief_writer, records, site_analyst, skeptic
 from .applicability import resolve
@@ -217,7 +218,7 @@ def analyze(corner: dict, client=None, rules=None, rates=None, save=True, field=
                constraints=constraints, challenges=challenges, site_visit=visits, planning=planning, planning_note=planning_note,
                background=background_reading(), rejections=rejections, retries=retries, retry_limit_hit=retry_limit_hit, review_status=review_status,
                field_measurements=field, field_inputs=field_inputs([e.model_dump() for e in evidence]), changes=None, previous_run_id=None,
-               dataset_note=corner.get("dataset_note"),
+               dataset_note=corner.get("dataset_note"), evidence_counts=dict(Counter(e.label for e in evidence)),
                tokens=dict(input=token_in, output=token_out), approval=None, agent_log=log,
                records=corner_records(corner), rule_review=rule_review(rules, precedence),
                rules_needing_sources=[r["id"] for r in rules if r["status"] == "needs_source"])

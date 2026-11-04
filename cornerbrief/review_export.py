@@ -66,12 +66,14 @@ def to_markdown(run: dict) -> str:
     L += [f"Rule review: {len(review['awaiting_human_review'])} of {review['verified'] + len(review['awaiting_human_review'])} sourced rules still need a named reviewer. {len(run['rules_needing_sources'])} rules still need sources. {len(review['precedence_awaiting_review'])} which-rule-applies decisions still need review.", ""]
     if run.get("dataset_note"):
         L += [run["dataset_note"], ""]
+    counts = run["evidence_counts"]
+    L += ["Input labels: " + ", ".join(f"{counts[k]} {k}" for k in ("measured", "assumed", "stale", "missing") if counts.get(k)) + ".", ""]
     L += ["## Applicable rules", "", "| Rule | Applies | Why | Decision source |", "| --- | --- | --- | --- |"]
     L += [f"| {d['title']} | {'Yes' if d['applies'] else 'No'} | {d['reason']} | {d['source_section']} {d['url']} |" for d in run["applicability"]]
     L += ["", "## Evidence", "", "| Input | Value | Unit | Label | Source | Date | Note |", "| --- | --- | --- | --- | --- | --- | --- |"]
     L += [f"| {e['key']} | {'' if e['value'] is None else e['value']} | {e['unit'] or ''} | {'measured on site' if e.get('on_site') and e['label'] == 'measured' else e['label']} | {e['source']} | {e['date'] or ''} | {e['reason']} |" for e in run["evidence"]]
     L += ["", "## Rule results", "", "| Rule | Ramp | Limit | Result | Math or reason | Source | Quote |", "| --- | --- | --- | --- | --- | --- | --- |"]
-    L += [f"| {o['title']} | {o['ramp_id'] or ''} | {o['limit_text']} | {o['result']} | {o['math'] or o['reason']} | {o['section'] or ''} {o['url'] or ''} | {o['quote'] or ''} |" for o in run["rule_results"]]
+    L += [f"| {o['title']} | {o['ramp_id'] or ''} | {o['limit_text']} | {o['result']}{' (stop: evidence still needed)' if o['evidence_stop'] else ''} | {o['math'] or o['reason']} | {o['section'] or ''} {o['url'] or ''} | {o['quote'] or ''} |" for o in run["rule_results"]]
     if run["design_targets"]:
         L += ["", "## If this corner is rebuilt: H-1011 design targets", "", "These apply to new design and field layout, not to the existing ramp.", "", "| Target | Ramp | Limit | Surveyed value | Source |", "| --- | --- | --- | --- | --- |"]
         L += [f"| {o['title']} | {o['ramp_id'] or ''} | {o['limit_text']} | {o['result']}: {o['math'] or o['reason']} | {o['section']} {o['url']} |" for o in run["design_targets"]]
