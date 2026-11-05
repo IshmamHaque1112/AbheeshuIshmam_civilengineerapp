@@ -49,7 +49,7 @@ def test_off_without_a_contact_and_makes_no_request(monkeypatch, requests):
 def test_search_identifies_the_app_and_keeps_citations_only(requests):
     result = library.search_books("  architecture   of  streets ")
     req = requests[0]
-    assert "q=architecture+of+streets" in req.full_url and "limit=8" in req.full_url and "fields=title" in req.full_url
+    assert "q=architecture+of+streets" in req.full_url and "limit=24" in req.full_url and "fields=title" in req.full_url
     assert "team@example.com" in req.get_header("User-agent")
     assert set(result["items"][0]) == {"title", "authors", "year", "url", "topic"}
 
@@ -161,3 +161,20 @@ def test_reading_route(server, monkeypatch):
     assert run["features"]["reading"] is True
     monkeypatch.delenv("OPEN_LIBRARY_CONTACT")
     assert json.loads(call(server + "/api/reading?q=architecture")[1])["enabled"] is False
+
+
+def test_editions_of_one_book_appear_once(monkeypatch):
+    docs = [book("Accessible rights-of-way", "/works/OL1W"), book("Accessible Rights of Way!", "/works/OL2W"), book("Great streets", "/works/OL3W")]
+    monkeypatch.setattr("urllib.request.urlopen", lambda req, timeout=0: io.BytesIO(json.dumps(dict(docs=docs)).encode()))
+    assert [b["title"] for b in library.fetch_topic("x", "team@example.com", limit=3)] == ["Accessible rights-of-way", "Great streets"]
+
+
+def test_books_repeated_across_topics_appear_once(monkeypatch):
+    monkeypatch.setattr("urllib.request.urlopen", lambda req, timeout=0: io.BytesIO(json.dumps(dict(docs=[book("Urban design", "/works/OL9W")])).encode()))
+    assert [b["title"] for b in library.search_books()["items"]] == ["Urban design"]
+
+
+def test_book_with_no_author_or_year_is_kept(monkeypatch):
+    monkeypatch.setattr("urllib.request.urlopen", lambda req, timeout=0: io.BytesIO(json.dumps(dict(docs=[dict(title="Shell pavement design manual", key="/works/OL15743199W")])).encode()))
+    item = library.search_books("pavement design")["items"][0]
+    assert item["authors"] == [] and item["year"] is None and item["url"].endswith("/works/OL15743199W")

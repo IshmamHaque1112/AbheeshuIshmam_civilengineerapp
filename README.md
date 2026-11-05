@@ -136,7 +136,7 @@ Regular code handles data checks, rule selection, limit checks, geometry, quanti
 - **Real data fetch:** `scripts/fetch_corners.py` hasn't run against the NYC portal, because the build environment blocks it. Its filter and sorting logic are tested, and no real corner has been saved yet.
 - **Site entries:** The newest version is remembered only in the browser tab where you entered it. Every version stays saved in `runs`.
 - **Ramp data age:** The ramp measurement dataset was last updated in October 2021.
-- **Open Library:** It hasn't been called live, and it's hidden until `OPEN_LIBRARY_CONTACT` is set. Its suggested topics haven't been checked for how useful their results are. It stores citation details only, and no book text or corner details are used.
+- **Open Library:** It's hidden until `OPEN_LIBRARY_CONTACT` is set. Its API and suggested topics were checked from a browser on November 5, 2026, but the app's own connection hasn't been confirmed. It stores citation details only, and no book text or corner details are used.
 - **Email:** It defaults to a dry run that saves messages to `outbox`. Sending through SMTP is built and tested against a fake server, but it has never sent a real message. Inbound email isn't supported.
 - **Cost and labor:** All rates are placeholders, not market prices.
 - **Stack changes:** The app uses Starlette (FastAPI's foundation) and a small built-in 3D renderer instead of FastAPI and three.js, because those packages weren't available during the build.

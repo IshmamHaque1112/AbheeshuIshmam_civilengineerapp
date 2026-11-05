@@ -2,10 +2,11 @@
 
 This never reaches the checks, rates or agents. Default topics are fixed, so no corner details are sent.
 """
-import hashlib, json, logging, os, threading, time, urllib.parse, urllib.request
+import hashlib, json, logging, os, re, threading, time, urllib.parse, urllib.request
 from .paths import CACHE
 
-TOPICS = ["architecture and street design", "accessible design architecture", "pedestrian accessibility design", "street pavement design", "urban drainage design"]
+# Checked against live results on November 5, 2026. "Accessible design architecture" returned computer architecture books, for example.
+TOPICS = ["architecture and street design", "street design", "pedestrian facilities design", "pedestrian accessibility design", "street pavement design", "urban drainage design"]
 SEARCH = os.environ.get("CB_OPEN_LIBRARY", "https://openlibrary.org")
 BACKGROUND_NOTE = "Background only. These books do not affect any rule, rate or design value."
 MAX_AGE = 30 * 24 * 3600
@@ -27,14 +28,24 @@ def clean_query(query) -> str:
     return text
 
 
+def _same_book(title: str) -> str:
+    return re.sub(r"[^a-z0-9]+", " ", title.casefold()).strip()
+
+
 def fetch_topic(topic: str, contact: str, base: str | None = None, limit: int = 3) -> list[dict]:
     base = base or SEARCH
-    q = urllib.parse.urlencode({"q": topic, "limit": limit, "fields": "title,author_name,first_publish_year,key"})
+    # Editions of one book come back separately, so ask for extra results and keep one of each.
+    q = urllib.parse.urlencode({"q": topic, "limit": limit * 3, "fields": "title,author_name,first_publish_year,key"})
     req = urllib.request.Request(f"{base}/search.json?{q}", headers={"User-Agent": f"CornerBriefDemo/0.1 ({contact})"})
     with urllib.request.urlopen(req, timeout=8) as resp:
         docs = json.load(resp).get("docs", [])
-    return [dict(title=d.get("title", "Untitled"), authors=d.get("author_name", [])[:3], year=d.get("first_publish_year"),
-                 url=f"{base}{d['key']}", topic=topic) for d in docs if d.get("key")]
+    items, seen = [], set()
+    for d in docs:
+        title = d.get("title", "Untitled")
+        if d.get("key") and _same_book(title) not in seen:
+            seen.add(_same_book(title))
+            items.append(dict(title=title, authors=d.get("author_name", [])[:3], year=d.get("first_publish_year"), url=f"{base}{d['key']}", topic=topic))
+    return items[:limit]
 
 
 def _path(query: str, limit: int):
@@ -94,8 +105,8 @@ def search_books(query=None) -> dict:
         rows, failed = _get(topic, contact, limit)
         problem = problem or failed
         for row in rows:
-            if row["url"] not in seen:
-                seen.add(row["url"])
+            if _same_book(row["title"]) not in seen:
+                seen.add(_same_book(row["title"]))
                 items.append(row)
     if problem and not items:
         note = "Open Library couldn't be reached. The packet isn't affected, so try again shortly."
@@ -115,7 +126,7 @@ def background_reading() -> dict:
     items, seen = [], set()
     for topic in TOPICS:
         for row in _saved(topic, 3, fresh_only=False) or []:
-            if row["url"] not in seen:
-                seen.add(row["url"])
+            if _same_book(row["title"]) not in seen:
+                seen.add(_same_book(row["title"]))
                 items.append(row)
     return {"items": items, "note": BACKGROUND_NOTE}
