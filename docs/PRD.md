@@ -167,6 +167,8 @@ The code now follows this version:
 
 - **R28 follow-up:** Most cases from `docs/P0-REVIEW.md` now have fixes and tests, including the label gate, permission language, unit validation and browser races. Cases run with labels off and on.
 
+- **R13:** Open Library search and suggested books are built, off by default and separate from the checks. It remains a P2 non-goal for the demo unless the team changes that.
+
 Still open:
 
 - Queens and Brooklyn reach "checks the evidence supports" with four corner inputs missing, and each affected check shows its own stop. `docs/P0-REVIEW.md` reads the stop wording more strictly, so the team should decide which it wants.

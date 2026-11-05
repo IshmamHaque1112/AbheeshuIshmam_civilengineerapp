@@ -2,6 +2,7 @@
 import time
 from .config import labels_enabled
 from .evidence import input_name
+from .library import background_reading
 from .trace import redact
 from .cost import hide_dollars
 from .orchestrator import save_run
@@ -17,6 +18,9 @@ def approve(run: dict, reviewer: str) -> dict:
         raise ValueError("Enter your name to release this packet.")
     run["approval"] = {"reviewer": reviewer, "at": time.strftime("%Y-%m-%d %H:%M:%S"),
                        "meaning": "Released as a pre-design packet. Releasing is not approval."}
+    reading = background_reading()  # Citations saved since the run started. Reading never changes a result.
+    if reading["items"]:
+        run["background"] = reading
     save_run(run)
     return run
 
@@ -127,5 +131,5 @@ def to_markdown(run: dict) -> str:
     L += ["", f"Agent tokens used: {run['tokens']['input'] + run['tokens']['output']}."]
     if run["background"]["items"]:
         L += ["", "## Background reading", "", run["background"]["note"]]
-        L += [f"- {b['title']} ({b.get('year') or 'year unknown'}): {b['url']}" for b in run["background"]["items"]]
+        L += [f"- {b['title']}{' by ' + ', '.join(b['authors']) if b.get('authors') else ''} ({b.get('year') or 'year unknown'}): {b['url']}" for b in run["background"]["items"]]
     return "\n".join(" ".join(line.splitlines()) for line in L) + "\n"

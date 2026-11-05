@@ -78,6 +78,8 @@ ul.plain li { margin:0 0 5px; }
 @media (max-width:980px) { .sheet { grid-template-columns:minmax(0,1fr); padding:16px; } .side { position:static; } .picker { padding:0 16px; } .top,.status,.alert { padding-left:16px; padding-right:16px; } .status strong { font-size:36px; } }
 @media (max-width:620px) { .picker { grid-auto-flow:row; gap:0; } .picker button { border-radius:0; } }
 
+.readingrow { display:flex; gap:8px; align-items:stretch; }
+.readingrow .button { margin:0; white-space:nowrap; }
 .search { margin:12px 24px 0; padding:12px 14px; }
 .search h2 { margin:0 0 6px; font-size:18px; }
 .search form { display:grid; grid-template-columns:200px minmax(0,1fr) auto; gap:12px; align-items:end; }
@@ -215,6 +217,30 @@ async function pullReal(id) {
     current = out; render();
   } catch (err) { if (mine === requestId) $("#main").innerHTML = `<p class="empty error" role="alert">${esc(err.message)}</p>`; }
 }
+function readingSection() {
+  return `<section id="reading"><h2>Background reading</h2><p>Books from Open Library, for background only. They never change a rule, rate or result, and no corner details are sent.</p>
+    <form id="reading-form"><label for="reading-q">Search Open Library</label><div class="readingrow"><input id="reading-q" maxlength="80" placeholder="e.g. architecture of public spaces"><button class="button alt" type="submit">Search books</button></div></form>
+    <p id="reading-note" role="status">Loading suggested books…</p><ul class="plain" id="reading-list"></ul></section>`;
+}
+let readingId = 0;
+async function loadReading(query) {
+  const mine = ++readingId, note = $("#reading-note"), list = $("#reading-list");
+  if (!note) return;
+  note.textContent = query ? "Searching Open Library…" : "Loading suggested books…";
+  list.innerHTML = "";
+  try {
+    const out = await api(`/api/reading${query ? `?${new URLSearchParams({ q: query })}` : ""}`);
+    if (mine !== readingId || !$("#reading-note")) return;
+    $("#reading-note").textContent = out.note;
+    $("#reading-list").innerHTML = out.items.map((b) => `<li>${link(b.title, b.url)}${b.authors && b.authors.length ? ` by ${esc(b.authors.join(", "))}` : ""}${b.year ? `, ${esc(b.year)}` : ""}</li>`).join("");
+  } catch (err) { if (mine === readingId && $("#reading-note")) $("#reading-note").textContent = err.message; }
+}
+function wireReading() {
+  const form = $("#reading-form");
+  if (!form) return;
+  form.addEventListener("submit", (event) => { event.preventDefault(); loadReading($("#reading-q").value.trim()); });
+  loadReading();
+}
 function traceSection(r) {
   const trace = r.trace || [];
   return `<section><h2>Agent trace</h2><p>Saved replay and deterministic offline steps make no provider call. Raw agent text is diagnostic, may have been rejected, and is not an engineering finding or permission to proceed. Secrets and dollar figures are redacted.</p>${trace.length ? trace.map(t => `<details><summary>${esc(t.agent)} · attempt ${Number(t.attempt) + 1} · ${esc(t.origin)} · input tokens ${esc(t.tokens.input ?? "unavailable")}, output tokens ${esc(t.tokens.output ?? "unavailable")}</summary><p>${esc(t.usage_note)}</p><p>${esc(t.validation_note)}</p>${t.error ? `<p class="error">${esc(t.error)}</p>` : ""}<h3>Request</h3><pre>${esc(JSON.stringify(t.request, null, 2))}</pre><h3>Response</h3><pre>${esc(JSON.stringify(t.response, null, 2))}</pre></details>`).join("") : "<p>No agent trace was captured for this run.</p>"}</section>`;
@@ -348,7 +374,7 @@ function render() {
       ${r.design_targets.length ? `<section><h2>If this corner is rebuilt</h2><p>H-1011 sets stricter targets for new design and field layout than for accepting finished work. These don't apply to the existing ramp.</p><details><summary>${r.design_targets.filter((o) => (o.preview || o.result) === "limit exceeded").length} of ${r.design_targets.length} design target calculations are outside the target</summary>${rulesTable(r.design_targets)}</details></section>` : ""}
       ${r.conflicts.length ? `<section><h2>Rule conflicts for engineer review</h2>${r.conflicts.map((c) => `<p><strong>${esc(fieldNames[c.parameter] || c.parameter)}:</strong> ${esc(c.warning)}</p><ul class="plain">${c.rules.map((x) => `<li>${link(x.section, x.url)}: ${esc(x.limit)}</li>`).join("")}</ul><p class="hint">Warning uses the stricter value${c.stricter_min != null ? `: minimum ${+c.stricter_min.toFixed(2)}${c.unit === "percent" ? "%" : " in"}` : ""}${c.stricter_max != null ? `${c.stricter_min != null ? " and" : ":"} maximum ${+c.stricter_max.toFixed(2)}${c.unit === "percent" ? "%" : " in"}` : ""}. An engineer decides which rule controls.</p>`).join("")}</section>` : ""}
       ${r.planning ? plan(r.planning) : ""}
-      ${r.background.items.length ? `<section><h2>Background reading</h2><p>${esc(r.background.note)}</p><ul class="plain">${r.background.items.map((b) => `<li>${link(b.title, b.url)}${b.year ? `, ${esc(b.year)}` : ""}</li>`).join("")}</ul></section>` : ""}
+      ${r.features.reading ? readingSection() : ""}
       ${traceSection(r)}
       ${r.rejections.length ? `<section><h2>Rejected agent output</h2><ul class="plain">${r.rejections.map((x) => `<li>${esc(x)}</li>`).join("")}</ul></section>` : ""}
     </div>
@@ -358,6 +384,7 @@ function render() {
     </aside></div>`;
   wireRelease();
   wireField();
+  wireReading();
   if (r.planning) drawModel(r.planning.scene);
 }
 

@@ -67,6 +67,10 @@ Under **Add site measurements**, enter who measured, the date and any values you
 
 Each rerun creates a new packet that needs its own release. The tab keeps showing the newest version when you switch corners or reload, and **Start over from the original records** clears it. A new tab starts from the original records. In demo mode, a rerun still runs every Python check, but the Skeptic review doesn't run, because the saved responses describe the original records. No label or plan can appear until a review finishes.
 
+## Background reading
+
+Set `OPEN_LIBRARY_CONTACT` in `.env` to a shared team address, then restart the app. Each packet then shows suggested books on architecture, accessibility, streets and drainage, plus a search box. Results are saved in `cache/open_library` for 30 days to stay within Open Library's limits. Reading can't change a rule, rate or result, and a released packet lists the suggested books already saved. To test the connection, open `http://127.0.0.1:8000/api/reading?q=architecture` while the app is running.
+
 ## Labels and concept plans
 
 "Probably standard," "probably custom," likely ramp types and concept plans are off by default. After the adversarial suite passes and you decide to enable them, set `SHOW_LABELS_AND_PLANS=true`, as described in [P1 implementation](docs/P1-IMPLEMENTATION.md). Even then, they appear only with complete evidence, a finished review, every applicable rule and which-rule-applies decision reviewed by a named person, and no exceeded limit. Turning the setting off also hides them on runs saved earlier.
@@ -132,7 +136,7 @@ Regular code handles data checks, rule selection, limit checks, geometry, quanti
 - **Real data fetch:** `scripts/fetch_corners.py` hasn't run against the NYC portal, because the build environment blocks it. Its filter and sorting logic are tested, and no real corner has been saved yet.
 - **Site entries:** The newest version is remembered only in the browser tab where you entered it. Every version stays saved in `runs`.
 - **Ramp data age:** The ramp measurement dataset was last updated in October 2021.
-- **Open Library:** It hasn't been called live, and it's hidden until `OPEN_LIBRARY_CONTACT` is set. It stores citation details only and sends no book text to a model.
+- **Open Library:** It hasn't been called live, and it's hidden until `OPEN_LIBRARY_CONTACT` is set. Its suggested topics haven't been checked for how useful their results are. It stores citation details only, and no book text or corner details are used.
 - **Email:** It defaults to a dry run that saves messages to `outbox`. Sending through SMTP is built and tested against a fake server, but it has never sent a real message. Inbound email isn't supported.
 - **Cost and labor:** All rates are placeholders, not market prices.
 - **Stack changes:** The app uses Starlette (FastAPI's foundation) and a small built-in 3D renderer instead of FastAPI and three.js, because those packages weren't available during the build.

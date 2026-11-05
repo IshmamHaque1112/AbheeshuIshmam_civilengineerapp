@@ -13,6 +13,7 @@ from .config import labels_enabled, load_env
 from .data_loader import list_corners
 from .email_delivery import EmailBlocked, allowlist, send_brief
 from . import field as field_module
+from . import library
 from . import search as search_module
 from .trace import public_trace, redact
 from .cost import hide_dollars
@@ -29,7 +30,7 @@ def public(run: dict) -> dict:
     if shown.get("planning"):
         shown["planning"] = {**shown["planning"], "cost": hide_dollars(shown["planning"]["cost"])}
     shown["trace"] = public_trace(run)
-    shown["features"] = {"email": bool(allowlist()), "labels_and_plans": labels_enabled()}
+    shown["features"] = {"email": bool(allowlist()), "labels_and_plans": labels_enabled(), "reading": library.enabled()}
     return redact(shown, hide_cost=True)
 
 
@@ -66,6 +67,13 @@ async def search_corners(request: Request):
     except Exception:
         logging.getLogger("uvicorn.error").exception("NYC search failed")
         return error("NYC Open Data could not be reached or returned invalid data. Retry, narrow your search, or use the offline samples. The terminal has details.", 502)
+
+
+async def reading(request: Request):
+    try:
+        return JSONResponse(await run_in_threadpool(library.search_books, request.query_params.get("q")))
+    except ValueError as exc:
+        return error(str(exc), 400)
 
 
 async def pull_corner(request: Request):
@@ -166,6 +174,7 @@ async def server_error(request: Request, exc: Exception):
 routes = [
     Route("/api/corners", corners),
     Route("/api/search", search_corners),
+    Route("/api/reading", reading),
     Route("/api/real/{corner_id}/run", pull_corner, methods=["POST"]),
     Route("/api/corners/{key}/run", run, methods=["POST"]),
     Route("/api/runs/{run_id}", get_run),

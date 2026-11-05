@@ -72,6 +72,8 @@ ul.plain li { margin:0 0 5px; }
 @media (max-width:980px) { .sheet { grid-template-columns:minmax(0,1fr); padding:16px; } .side { position:static; } .picker { padding:0 16px; } .top,.status,.alert { padding-left:16px; padding-right:16px; } .status strong { font-size:36px; } }
 @media (max-width:620px) { .picker { grid-auto-flow:row; gap:0; } .picker button { border-radius:0; } }
 
+.readingrow { display:flex; gap:8px; align-items:stretch; }
+.readingrow .button { margin:0; white-space:nowrap; }
 .search { margin:12px 24px 0; padding:12px 14px; }
 .search h2 { margin:0 0 6px; font-size:18px; }
 .search form { display:grid; grid-template-columns:200px minmax(0,1fr) auto; gap:12px; align-items:end; }

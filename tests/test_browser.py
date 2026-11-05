@@ -296,3 +296,36 @@ def test_saved_real_snapshot_renders_on_desktop_and_phone(browser, base):
         assert pg.evaluate("document.documentElement.scrollWidth > innerWidth") is False
         assert errors == []
         context.close()
+
+
+READING = '{"enabled":true,"items":[{"title":"<b>Streets</b> for People","authors":["A One"],"year":1961,"url":"https://openlibrary.org/works/OL1W","topic":"x"}],"note":"Background only. These books do not affect any rule, rate or design value."}'
+
+
+def test_reading_is_hidden_unless_turned_on(page):
+    assert page.locator("#reading").count() == 0
+
+
+def test_reading_loads_after_the_packet_and_searches(browser, base, monkeypatch):
+    monkeypatch.setenv("OPEN_LIBRARY_CONTACT", "team@example.com")
+    context = browser.new_context()
+    pg = context.new_page()
+    urls = []
+    def answer(route):
+        urls.append(route.request.url)
+        route.fulfill(status=200, content_type="application/json", body=READING)
+    pg.route("**/api/reading**", answer)
+    pg.goto(base + "/")
+    pg.wait_for_selector("#reading-list a")
+    item = pg.inner_text("#reading-list li")
+    assert "<b>Streets</b> for People" in item and "A One" in item and "1961" in item
+    pg.fill("#reading-q", "architecture of streets")
+    pg.click("#reading-form button")
+    pg.wait_for_function("document.querySelector('#reading-note').innerText.includes('Background only')")
+    assert any("q=architecture" in u for u in urls)
+    pg.unroute("**/api/reading**")
+    pg.route("**/api/reading**", lambda r: r.fulfill(status=400, content_type="application/json", body='{"error":"Enter 2 to 80 characters to search Open Library."}'))
+    pg.fill("#reading-q", "a")
+    pg.click("#reading-form button")
+    pg.wait_for_function("document.querySelector('#reading-note').innerText.includes('Enter 2 to 80')")
+    assert pg.locator(".status").count() == 1
+    context.close()
