@@ -19,7 +19,7 @@ except ImportError:
 ROOT = Path(__file__).resolve().parent.parent
 PORTAL = os.environ.get("CB_PORTAL", "https://data.cityofnewyork.us")
 LOC, PROG, COMP = "ufzp-rrqu", "e7gc-ub6z", "jagj-gttd"
-CENTERLINE, PERMITS, OLD_PERMITS = "inkn-q76z", "tqtj-sjs8", "c9sj-fmsg"
+CENTERLINE, PERMITS, OLD_PERMITS, SIDEWALK = "inkn-q76z", "tqtj-sjs8", "c9sj-fmsg", "52n9-sdep"
 DOT_SURVEY = "https://services.arcgis.com/wmZOI9vyUBq1zTZx/arcgis/rest/services/CMT_SURVEY_COMPLIANCY_TOLERANCE_PROD/FeatureServer/0/query"
 DOT_SURVEY_FIELDS = "RAMPID,RAMP_TYPE,COMPLIANCY_STATUS,RAMP_LENGTH,RAMP_LEFT_FLARE,SDW_APP_WIDTH1,SDW_APP_WIDTH2,OBSTACLES_OTHER,DEFECTIVE_CURB,DEFECTIVE_SIDEWALK"
 ROAD_INVENTORY = "https://gisportalny.dot.ny.gov/hostingny/rest/services/Roadways/RoadwayData/MapServer/0/query"
@@ -176,6 +176,15 @@ def centerline_where(locations):
     return f"within_circle(the_geom,{point[1]},{point[0]},{NEARBY_METERS})" if point else None
 
 
+def sidewalk_where(locations):
+    """Find sidewalk shapes that touch a box around the first ramp with a location."""
+    point = ramp_point(locations)
+    if not point:
+        return None
+    lon, lat, dx, dy = point[0], point[1], 0.0006, 0.00045
+    return f"sub_code='380000' AND intersects(the_geom,'POLYGON(({lon-dx} {lat-dy},{lon+dx} {lat-dy},{lon+dx} {lat+dy},{lon-dx} {lat+dy},{lon-dx} {lat-dy}))')"
+
+
 def survey_params(locations):
     """Find NYC DOT's survey map records by ramp ID. IDs must be whole numbers."""
     ids = sorted({int(r["rampid"]) for r in locations if str(r.get("rampid") or "").isdigit()})
@@ -214,8 +223,10 @@ def assemble_corner(locations, progress, complaints, retrieved=None, provenance=
     if provenance is not None:
         corner["source_provenance"] = provenance
     corner.update(nearby or {})
-    from cornerbrief.evidence import road_owner
+    from cornerbrief.evidence import road_owner, road_owner_assumed
     corner["context"]["road_control"] = road_owner(corner) or "not_recorded"
+    if road_owner_assumed(corner):
+        corner["context"]["road_control_basis"] = "assumed"
     return corner
 
 

@@ -35,7 +35,7 @@ def build_list(evidence: list[EvidenceItem], corner: dict) -> list[dict]:
         id_ = (where, e.field)
         if id_ not in seen:
             seen.add(id_)
-            items.append({"where": where, "action": action, "why": WHY.get(e.field, "This isn't in the NYC datasets used here.") if e.field in NOT_IN_DATASETS else e.reason})
+            items.append({"where": where, "action": action, "why": WHY.get(e.field, "This isn't in the NYC datasets used here.") if e.field in NOT_IN_DATASETS and e.label != "assumed" else e.reason})
     for row in corner.get("locations", []):
         for field in ("obstacles_ramp", "obstacles_landing"):
             value = row.get(field)
@@ -51,6 +51,8 @@ def build_list(evidence: list[EvidenceItem], corner: dict) -> list[dict]:
                       "why": f"{len(later)} permit{'' if len(later) == 1 else 's'} {'has' if len(later) == 1 else 'have'} work ending after the survey, including: {kinds}."})
     if any(e.unit is not None and e.label == "measured" and not e.unit_documented for e in evidence):
         items.append({"where": "Dataset", "action": "Confirm the measurement units in the ramp dataset's documentation.", "why": "Limit checks stay unknown until the units are documented."})
-    if corner.get("context", {}).get("road_control") != "city":
+    if corner.get("context", {}).get("road_control_basis") == "assumed":
+        items.append({"where": "Corner", "action": "Confirm that the city controls the road.", "why": "It's assumed by default, and state control would change which rules can be used."})
+    elif corner.get("context", {}).get("road_control") != "city":
         items.append({"where": "Corner", "action": "Confirm whether the city or state controls the road.", "why": "State control would change which rules can be used."})
     return items

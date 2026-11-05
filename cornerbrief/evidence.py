@@ -76,18 +76,42 @@ def _plain_street(name) -> str:
     return " ".join(words)
 
 
-def road_owner(corner: dict):
-    """Use NYSDOT's inventory only when it names the corner's streets. A street it doesn't list stays unconfirmed."""
+def _road_records(corner: dict) -> tuple[set, list]:
     streets = {_plain_street(r.get(f)) for r in corner.get("locations", []) for f in ("stname1", "stname2") if r.get(f)}
-    listed: dict = {}
-    for row in corner.get("road_inventory") or []:
-        listed.setdefault(_plain_street(row.get("Roadway_Name")), []).append(row)
-    found = [row for street in streets for row in listed.get(street, [])]
-    if any(str(r.get(f) or "").startswith("01-") for r in found for f in ("Owning_Jurisdiction", "Maintenance_Jurisdiction")):
+    found = [r for r in corner.get("road_inventory") or [] if _plain_street(r.get("Roadway_Name")) in streets]
+    return streets, found
+
+
+def road_owner(corner: dict):
+    """Read the owner from NYSDOT's inventory. A street it doesn't list is assumed city-owned, as the team chose."""
+    if corner.get("road_inventory") is None:
+        return None
+    streets, found = _road_records(corner)
+    codes = [str(r.get(f) or "") for r in found for f in ("Owning_Jurisdiction", "Maintenance_Jurisdiction")]
+    if any(c.startswith("01-") for c in codes):
         return "state"
-    if streets and streets <= set(listed) and all(str(r.get(f) or "").startswith("04-") for r in found for f in ("Owning_Jurisdiction", "Maintenance_Jurisdiction")):
-        return "city"
-    return None
+    return "city" if streets and all(c.startswith("04-") for c in codes) else None
+
+
+def road_owner_assumed(corner: dict) -> bool:
+    streets, found = _road_records(corner)
+    return road_owner(corner) == "city" and streets != {_plain_street(r.get("Roadway_Name")) for r in found}
+
+
+def approach_width_in(corner: dict):
+    """Return DOT's narrowest believable sidewalk approach width. 999 is a placeholder, and values outside 2 to 50 ft are ignored."""
+    widths = [float(w) for d in corner.get("dot_survey") or [] for w in (d.get("SDW_APP_WIDTH1"), d.get("SDW_APP_WIDTH2")) if isinstance(w, (int, float)) and 24 <= w <= 600]
+    return min(widths) if widths else None
+
+
+def _sidewalk_item(corner: dict):
+    width = approach_width_in(corner)
+    if width is None:
+        return None
+    estimate = (corner.get("sidewalk_map") or {}).get("max_width_ft")
+    check = f" NYC's Planimetric map shows up to about {estimate} ft of paved sidewalk nearby." if estimate else ""
+    return EvidenceItem(key="corner:sidewalk_width", field="sidewalk_width", value=round(width / 12, 2), unit="ft", label="assumed", source="NYC DOT survey map",
+                        reason=f"DOT's record gives {width:g} with no documented unit. It's read as inches because DOT's other lengths use inches.{check} Confirm this on site.")
 
 
 def _inventory_notes(corner: dict) -> list[str]:
@@ -99,8 +123,10 @@ def _inventory_notes(corner: dict) -> list[str]:
     listed = {_plain_street(r.get("Roadway_Name")) for r in rows}
     absent = sorted({str(r.get(f)).strip() for r in corner.get("locations", []) for f in ("stname1", "stname2") if r.get(f) and _plain_street(r.get(f)) not in listed})
     notes = [f"NYSDOT's Roadway Inventory shows within 100 m: {shown}."]
-    if absent:
-        notes.append(f"It doesn't list {', '.join(absent)}, so the road owner for those streets stays unconfirmed.")
+    if absent and road_owner_assumed(corner):
+        notes.append(f"It doesn't list {', '.join(absent)}, so those streets are assumed city-owned by default. Confirm this.")
+    elif absent:
+        notes.append(f"It doesn't list {', '.join(absent)}.")
     return notes
 
 
@@ -140,7 +166,7 @@ def survey_lines(corner: dict) -> list[str]:
         parts = [f"status {dot.get('COMPLIANCY_STATUS') or 'not listed'}", f"type {dot.get('RAMP_TYPE') or 'not listed'}", f"defective curb: {dot.get('DEFECTIVE_CURB') or 'not listed'}",
                  f"defective sidewalk: {dot.get('DEFECTIVE_SIDEWALK') or 'not listed'}", f"other obstacles: {dot.get('OBSTACLES_OTHER') or 'none listed'}"]
         if widths:
-            parts.append(f"sidewalk approach width {', '.join(widths)}, unit not documented")
+            parts.append(f"sidewalk approach width {', '.join(widths)}, no unit documented")
         lines.append(f"Ramp {dot.get('RAMPID')}: " + "; ".join(parts) + ".")
     return lines
 
@@ -284,8 +310,12 @@ def build_evidence(corner: dict, dictionary: dict, field: list[dict] | None = No
                                       reason="Calculated, not directly measured."))
     for field, why in NOT_IN_DATASETS.items():
         item = EvidenceItem(key=f"corner:{field}", field=field, label="missing", source="Not in the NYC datasets used here", reason=why)
+        item = (field == "sidewalk_width" and _sidewalk_item(corner)) or item
         items.append(_on_site(item, entries[item.key], built) if item.key in entries else item)
-    if "corner:road_control" in entries or corner.get("context", {}).get("road_control") != "city":
+    if corner.get("context", {}).get("road_control_basis") == "assumed" and "corner:road_control" not in entries:
+        items.append(EvidenceItem(key="corner:road_control", field="road_control", value="city", label="assumed", source="Default for a street NYSDOT's inventory doesn't list",
+                                  reason="Assumed city-owned by default. No record confirms this."))
+    elif "corner:road_control" in entries or corner.get("context", {}).get("road_control") != "city":
         item = EvidenceItem(key="corner:road_control", field="road_control", label="missing",
                             source="Not in the NYC datasets used here", reason="The road owner isn't confirmed.")
         items.append(_on_site(item, entries[item.key], built) if item.key in entries else item)

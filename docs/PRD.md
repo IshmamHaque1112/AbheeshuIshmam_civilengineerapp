@@ -170,7 +170,7 @@ The code now follows this version:
 - **Synthetic 3D preview (from issue #7):** A separate page has editable dimensions, orbit, zoom, pan and provisional quantities. It reads and saves no corner data and can't turn on labels or plans, so the concept plans in the non-goals stay off. This is an optional preview, not a change to the demo's promise.
 - **R13:** Open Library search and suggested books are built, off by default and separate from the checks. It remains a P2 non-goal for the demo unless the team changes that.
 
-- **NYC data (Nov 5):** Units now come from the official ramp data dictionary. Real corners also pull Street Centerline, both permit datasets, NYC DOT's survey map record and NYSDOT's Roadway Inventory. Open Data's ramp length and left flare columns are swapped, so the app corrects them. All 300 ramps sampled against DOT's survey map support this. DOT's status is shown as its own record, never as this tool's result.
+- **NYC data (Nov 5):** Units now come from the official ramp data dictionary. Real corners also pull Street Centerline, Planimetric Sidewalk, both permit datasets, NYC DOT's survey map record and NYSDOT's Roadway Inventory. Open Data's ramp length and left flare columns are swapped, so the app corrects them. All 300 ramps sampled against DOT's survey map support this. DOT's status is shown as its own record, never as this tool's result.
 
 Still open:
 
@@ -195,7 +195,8 @@ Still open:
 | --- | --- |
 | Which real corner near Thomson Ave? | Ishmam (filter), then both |
 | Should we tell NYC DOT that the Open Data ramp length and left flare columns are swapped? | Abheeshu |
-| Who confirms the road owner when NYSDOT's inventory doesn't list a street? | Abheeshu |
+| Who confirms the road owner when NYSDOT's inventory doesn't list a street? The app assumes city ownership and labels it assumed. | Abheeshu |
+| Queens section map for legal grade (718-286-2930) | Ishmam |
 | Should the packet show DOT's survey status? It is labeled as DOT's own record. | Both |
 | Which civil engineer reviews the rules and packets before Nov 12? | Abheeshu |
 | H-1011 sheets 2–9 and ADA sections on ada.gov | Ishmam |

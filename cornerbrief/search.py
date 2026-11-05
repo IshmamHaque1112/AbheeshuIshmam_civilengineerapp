@@ -8,6 +8,7 @@ import uuid
 from datetime import datetime, timezone
 from scripts import fetch_corners as fetch
 from .paths import DATA
+from .sidewalk import max_width_ft
 
 MAX_SEARCH = 100
 CAPS = {fetch.LOC: 20, fetch.PROG: 20, fetch.COMP: 50}
@@ -73,6 +74,17 @@ def nearby_records(locations):
     if "permits" in found:
         unique = {str(p.get("permitnumber")): p for p in found["permits"]}
         found["permits"] = sorted(unique.values(), key=lambda p: str(p.get("issuedworkenddate") or ""), reverse=True)
+    try:
+        where = fetch.sidewalk_where(locations)
+        if not where:
+            raise ValueError("The record can't support this lookup.")
+        shapes, source = rows(fetch.SIDEWALK, 11, where, order="source_id", select="the_geom,source_id,status,sub_code")
+        lon, lat = fetch.ramp_point(locations)
+        # Shapes are large, so the snapshot keeps the estimate and its source, not the geometry.
+        found["sidewalk_map"] = dict(max_width_ft=max_width_ft(shapes[:10], lon, lat), shapes=len(shapes[:10]))
+        sources.append(source)
+    except Exception:
+        failed.append("NYC Planimetric Sidewalk")
     maps = (("dot_survey", "NYC DOT survey map", fetch.DOT_SURVEY, fetch.survey_params(locations)),
             ("road_inventory", "NYSDOT Roadway Inventory", fetch.ROAD_INVENTORY, fetch.inventory_params(locations)))
     for key, name, url, params in maps:

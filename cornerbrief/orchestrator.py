@@ -103,7 +103,8 @@ def analyze(corner: dict, client=None, rules=None, rates=None, save=True, field=
     client = TracingClient(client or get_client(corner, inputs_changed=bool(field)))
     road = next((e["value"] for e in field if e["key"] == "corner:road_control"), None)
     if road:
-        corner = {**corner, "context": {**corner.get("context", {}), "road_control": road}}
+        context = {k: v for k, v in corner.get("context", {}).items() if k != "road_control_basis"}
+        corner = {**corner, "context": {**context, "road_control": road}}
     labels_off = not labels_enabled()
     log, rejections = [], []
     evidence = build_evidence(corner, load_dictionary(corner), field)

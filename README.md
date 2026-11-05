@@ -54,7 +54,7 @@ No API key is needed, and the demo stays in this mode while `DEMO_MODE=true`. Th
 
 1. **Sample corner A, Queens:** Checks the evidence supports, with the source and math for each calculation.
 2. **Sample corner B, Brooklyn:** Checks the evidence supports, with a utility vault and catch basin to review and one Skeptic rework.
-3. **Real test corner:** Corner 1024569, Van Dam Street and Thomson Avenue, from NYC Open Data. It uses saved records, so it works offline. It stops because the 2018 survey predates four pedestrian ramp permits on the block and the road owner is unconfirmed.
+3. **Real test corner:** Corner 1024569, Van Dam Street and Thomson Avenue, from NYC Open Data. It uses saved records, so it works offline. It stops because the 2018 survey predates four pedestrian ramp permits on the block. Its road owner is assumed, not confirmed.
 4. **Sample corner C, Bronx:** Stop: evidence still needed, because it was rebuilt after its survey and has a placeholder value.
 
 Enter a name and select **Release packet** to turn on the download. Releasing is not approval. **Download site visit list** needs no release, because it lists only what to measure or confirm and contains no limit results.
@@ -97,7 +97,7 @@ python scripts/fetch_corners.py --borough QUEENS --street THOMSON
 python scripts/fetch_corners.py --save real_test CORNER_ID
 ```
 
-The first command writes `docs/candidates.md`. The saved corner is added to the demo list, and the sample corners don't change. Limits stay "unknown" until a named person reviews the rules, and the corner stops until its road owner is confirmed.
+The first command writes `docs/candidates.md`. The saved corner is added to the demo list, and the sample corners don't change. Limits stay "unknown" until a named person reviews the rules.
 
 ## NYC data
 
@@ -109,7 +109,8 @@ The first command writes `docs/candidates.md`. The saved corner is added to the 
 | [Street Centerline](https://data.cityofnewyork.us/d/inkn-q76z) | Streets within 100 m of the ramp and their paved width | Can't confirm the road owner, because its documentation doesn't explain the jurisdiction field |
 | [Street Construction Permits](https://data.cityofnewyork.us/d/tqtj-sjs8) and [2013–2021 permits](https://data.cityofnewyork.us/d/c9sj-fmsg) | Permits for the block with work ending after the survey | Shows work was allowed, not that it happened or touched this corner |
 | [NYC DOT survey map](https://www.nycpedramps.info/survey) | DOT's status, existing ramp category, defects and obstacles for each ramp | DOT's own record, last edited in December 2020. It stays out of agent inputs and isn't a result from this tool. |
-| [NYSDOT Roadway Inventory](https://www.dot.ny.gov/gisapps/roadway-inventory-system-viewer) | Who owns and maintains a road | Lists only some streets. The app accepts it only when it lists every street on the ramp record. |
+| [NYSDOT Roadway Inventory](https://www.dot.ny.gov/gisapps/roadway-inventory-system-viewer) | Who owns and maintains a road | Lists only some streets. A listed state road stops the corner. A street it doesn't list is assumed city-owned, labeled assumed and added to the site visit. |
+| [Planimetric Sidewalk](https://data.cityofnewyork.us/d/52n9-sdep) | Rough paved width near the ramp, from map shapes | A cross-check, not a measurement. Only the estimate is saved. |
 
 The official data dictionary gives lengths in inches and slopes and flares in percent, as recorded in `data/data_dictionary.yaml`.
 
@@ -117,7 +118,7 @@ The official data dictionary gives lengths in inches and slopes and flares in pe
 
 A pedestrian ramp permit after the survey labels that ramp's measurements assumed. Other permits add a site-visit item. Permit holder names aren't saved. If a lookup fails, the packet says that dataset wasn't checked.
 
-Sidewalk width, legal grade and H-1011 ramp type still come from a person. DOT's survey map has a sidewalk approach width, but no document gives its unit, so the app shows it without using it.
+Legal grade and H-1011 ramp type still come from a person. Sidewalk width starts from DOT's approach width, read as inches and labeled assumed, because no document gives its unit. A site measurement replaces it.
 
 ## Settings
 

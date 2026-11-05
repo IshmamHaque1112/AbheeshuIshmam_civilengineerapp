@@ -22,6 +22,10 @@ Sheets 2 to 9 aren't saved or transcribed yet. To save them, run this in PowerSh
 2..9 | ForEach-Object { Invoke-WebRequest "https://www.nycstreetdesign.info/sites/default/files/specs/H-1011-$_.pdf" -OutFile "docs\sources\H-1011-$_.pdf" }
 ```
 
+## Queens section maps
+
+Legal grades come from the Borough President's section maps. On November 5, 2026, the [Queens Topography page](https://www.queensbp.nyc.gov/topography/) offered no online maps or request process. It lists the Director of Topography at 718-286-2930.
+
 ## 2010 ADA Standards
 
 The ADA rules quote [ada.gov's 2010 Standards page](https://www.ada.gov/law-and-regs/design-standards/2010-stds/), read on November 5, 2026.
