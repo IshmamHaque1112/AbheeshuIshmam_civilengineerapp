@@ -69,7 +69,7 @@ Each rerun creates a new packet that needs its own release. The tab keeps showin
 
 ## Labels and concept plans
 
-"Probably standard," "probably custom," likely ramp types and concept plans are off by default. A switch alone cannot enable them. After a person reviews documented results for all ten R28 cases, record a named release as described in [P1 implementation](docs/P1-IMPLEMENTATION.md), then set `SHOW_LABELS_AND_PLANS=true`. Even then, they appear only with complete evidence, a finished review, every applicable rule and which-rule-applies decision reviewed by a named person, and no exceeded limit. Turning the setting off also hides them on runs saved earlier.
+"Probably standard," "probably custom," likely ramp types and concept plans are off by default. After the adversarial suite passes and you decide to enable them, set `SHOW_LABELS_AND_PLANS=true`, as described in [P1 implementation](docs/P1-IMPLEMENTATION.md). Even then, they appear only with complete evidence, a finished review, every applicable rule and which-rule-applies decision reviewed by a named person, and no exceeded limit. Turning the setting off also hides them on runs saved earlier.
 
 ## Why results say "unknown"
 

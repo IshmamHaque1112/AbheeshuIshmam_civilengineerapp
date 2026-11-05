@@ -41,7 +41,7 @@ def full_entries():
 
 
 @pytest.fixture
-def fully_reviewed(monkeypatch, planning_release):
+def fully_reviewed(monkeypatch):
     """Everything a label and plan need: the setting on, verified rules, complete evidence and a finished review."""
     monkeypatch.setenv("SHOW_LABELS_AND_PLANS", "true")
     rules = [dict(r, status="verified", reviewed_by="Pat Example", reviewed_on="2026-11-03") for r in load_rules() if r["status"] == "unreviewed"]

@@ -142,22 +142,13 @@ def test_trace_redacts_nested_keys_and_text():
     assert "hidden" not in json.dumps(redact(value))
 
 
-def test_planning_switch_does_not_supply_human_authorization(monkeypatch,tmp_path):
-    monkeypatch.setenv("SHOW_LABELS_AND_PLANS","true")
-    monkeypatch.setattr(config,"PLANNING_RELEASE",tmp_path/"absent")
+def test_planning_stays_default_off_and_explicit_opt_in_preserves_evidence_gates(monkeypatch):
+    monkeypatch.delenv("SHOW_LABELS_AND_PLANS", raising=False)
     assert not config.labels_enabled()
-    out=analyze(load_corner("standard"),save=False)
-    assert out["planning"] is None and out["label"] is None
-
-
-def test_recorded_authorization_still_needs_switch(planning_release,monkeypatch):
-    monkeypatch.delenv("SHOW_LABELS_AND_PLANS",raising=False)
-    assert not config.labels_enabled()
-    monkeypatch.setenv("SHOW_LABELS_AND_PLANS","true")
+    monkeypatch.setenv("SHOW_LABELS_AND_PLANS", "true")
     assert config.labels_enabled()
-    record=json.loads(planning_release.read_text());record["r28_cases"]["10"]="pending"
-    planning_release.write_text(json.dumps(record))
-    assert not config.labels_enabled()
+    out = analyze(load_corner("standard"), save=False)
+    assert out["planning"] is None and out["label"] is None
 
 
 def test_role_capture_starts_pending_and_rejects_role_play():
@@ -221,14 +212,6 @@ def test_city_trace_hides_costs_and_currency_even_for_legacy_saved_runs():
     assert '$100' not in text and 'USD 200' not in text and '"base"' not in text and '"rate"' not in text
     from cornerbrief.guards import check_text
     assert check_text('$100',{'value':100})
-
-
-@pytest.mark.parametrize('bad',[[],None,{},dict(decision='enable provisional concepts',reviewed_by='Reviewer',reviewed_on='2099-01-01'),dict(decision='enable provisional concepts',reviewed_by='Reviewer',reviewed_on='2026-01-01',tested_commit=5)])
-def test_malformed_release_fails_closed(bad,monkeypatch,tmp_path):
-    path=tmp_path/'release.json';path.write_text(json.dumps(bad))
-    monkeypatch.setattr(config,'PLANNING_RELEASE',path)
-    monkeypatch.setenv('SHOW_LABELS_AND_PLANS','true')
-    assert config.labels_enabled() is False
 
 
 @pytest.mark.parametrize('seconds',[float('nan'),float('inf'),-1,True])

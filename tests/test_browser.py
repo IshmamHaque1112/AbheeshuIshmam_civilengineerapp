@@ -223,7 +223,14 @@ def test_static_export_is_actual_ui_without_backend_calls(browser):
     context.close()
 
 
-def test_selecting_real_corner_renders_saved_actual_data_and_provenance(page,monkeypatch):
+def test_selecting_real_corner_renders_saved_actual_data_and_provenance(page, monkeypatch, tmp_path):
+    # The pull endpoint writes a snapshot; keep browser-test writes outside source data.
+    import shutil
+    from cornerbrief import search, data_loader
+    test_data = tmp_path / "data"
+    shutil.copytree(data_loader.DATA, test_data)
+    monkeypatch.setattr(search, "DATA", test_data)
+    monkeypatch.setattr(data_loader, "DATA", test_data)
     """Browser/HTTP flow uses the attributable live snapshot, not another live network request."""
     from cornerbrief.data_loader import load_corner
     from cornerbrief import search
