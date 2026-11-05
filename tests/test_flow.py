@@ -41,7 +41,7 @@ def full_entries():
 
 
 @pytest.fixture
-def fully_reviewed(monkeypatch):
+def fully_reviewed(monkeypatch, planning_release):
     """Everything a label and plan need: the setting on, verified rules, complete evidence and a finished review."""
     monkeypatch.setenv("SHOW_LABELS_AND_PLANS", "true")
     rules = [dict(r, status="verified", reviewed_by="Pat Example", reviewed_on="2026-11-03") for r in load_rules() if r["status"] == "unreviewed"]
@@ -341,7 +341,7 @@ def test_export_handles_missing_rate(monkeypatch, fully_reviewed):
     rates = load_rates()
     del rates["cost_curb"]
     run = fully_reviewed(rates=rates)
-    assert "Cost range: unknown" in to_markdown(approve(run, "R"))
+    assert "Dollar figures are hidden" in to_markdown(approve(run, "R"))
 
 
 def test_rule_review_flags_unreviewed_and_old_checks():
@@ -412,7 +412,7 @@ def test_dollars_are_hidden_by_default(monkeypatch, fully_reviewed):
     shown = public(run)["planning"]["cost"]
     assert shown["hidden"] and "base" not in shown and "rate" not in shown["lines"][0]
     monkeypatch.setenv("SHOW_DOLLARS", "true")
-    assert "$" in to_markdown(run)
+    assert "$" not in to_markdown(run)
 
 
 def test_takeoff_has_counts(fully_reviewed):

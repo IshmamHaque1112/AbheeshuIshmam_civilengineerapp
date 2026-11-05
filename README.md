@@ -69,7 +69,7 @@ Each rerun creates a new packet that needs its own release. The tab keeps showin
 
 ## Labels and concept plans
 
-"Probably standard," "probably custom," likely ramp types and concept plans are off by default. Set `SHOW_LABELS_AND_PLANS=true` only after the adversarial suite in `tests/test_v3.py` passes and you've decided to turn them on. Even then, they appear only with complete evidence, a finished review, every applicable rule and which-rule-applies decision reviewed by a named person, and no exceeded limit. Turning the setting off also hides them on runs saved earlier.
+"Probably standard," "probably custom," likely ramp types and concept plans are off by default. A switch alone cannot enable them. After a person reviews documented results for all ten R28 cases, record a named release as described in [P1 implementation](docs/P1-IMPLEMENTATION.md), then set `SHOW_LABELS_AND_PLANS=true`. Even then, they appear only with complete evidence, a finished review, every applicable rule and which-rule-applies decision reviewed by a named person, and no exceeded limit. Turning the setting off also hides them on runs saved earlier.
 
 ## Why results say "unknown"
 
@@ -100,7 +100,7 @@ Each person keeps their own `.env` file in the project folder. Git ignores it, s
 | Use live agents | Add `ANTHROPIC_API_KEY`, set `DEMO_MODE=false` and run `pip install anthropic` |
 | Send email | Fill in `EMAIL_ALLOWLIST`, `EMAIL_FROM`, `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER` and `SMTP_PASSWORD`, then set `EMAIL_ENABLED=true` |
 | Show cited background reading | Set `OPEN_LIBRARY_CONTACT` to a shared team address |
-| Show dollar figures | Set `SHOW_DOLLARS=true`, but keep it off for the city demo |
+| Dollar figures | Always withheld in the city-demo UI, traces and downloads; the legacy switch cannot expose them |
 | Show labels and concept plans | Set `SHOW_LABELS_AND_PLANS=true`, subject to the conditions above |
 
 A person must release each packet before it can be emailed, and every recipient must be on the allowlist. The email form stays hidden until `EMAIL_ALLOWLIST` is set.
@@ -146,3 +146,14 @@ These return "unknown" until a person adds the exact text and limit:
 - 2025 NYS Building Code and Residential Code limits. These don't apply to NYC corners.
 
 H-1011 Table 1 and its general notes come from `docs/sources/H-1011-1.pdf`. Surveyed ramps are compared with its work acceptance limits. Its stricter design limits appear only under "If this corner is rebuilt." The ADA rules use a third-party reproduction of the text, so confirm them on ada.gov.
+
+
+## P1 search and review
+
+Use **Find a real NYC corner** to choose a borough, enter a street, or combine both. Search returns at most 100 ramp rows; narrow the street when the query is bounded. Select a corner to load its ramp, program and complaint records. Each source query and retrieval timestamp stays in the packet. Real-record units are still undocumented, so limits remain unknown. The sample picker remains available during empty/error states.
+
+Expand **Agent trace** to inspect each agent's input, response and token accounting. Saved replay, deterministic offline steps and cached provider responses use zero provider tokens for that run. No live provider calls were made for this implementation's validation; SDK request/response handling is covered by mocked-provider tests. Traces redact credential-like text and dollar figures.
+
+The actual static UI and sample packets can be exported with `.venv/bin/python scripts/export_ui.py`. Helix serves `.helix/output/index.html`; search, field mutations and release/download require the local backend. The export makes no API or external resource requests.
+
+Real junior-engineer/reviewer participation is still pending. Follow [the R29 protocol](docs/R29-ROLE-TEST.md) and use `scripts/role_test.py` to create and check result captures. See [P1 coverage and validation](docs/P1-IMPLEMENTATION.md) for exact limits and remaining human work.

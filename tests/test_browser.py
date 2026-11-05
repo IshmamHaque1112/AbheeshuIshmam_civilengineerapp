@@ -132,3 +132,122 @@ def test_server_error_shows_a_readable_message(page):
 def test_preview_tags_dont_read_as_permission(page):
     text = page.inner_text("#main")
     assert "Within limit if confirmed" not in text and "Calculation within limit, unreviewed" in text
+
+
+def search_result(label="THOMSON and TEST", cid=1):
+    import json
+    return json.dumps(dict(corners=[dict(cornerid=cid,label=label)],note="First 100 ramp rows only.",sources=[dict(dataset="ufzp-rrqu",url="https://data.cityofnewyork.us/resource/ufzp-rrqu.json")]))
+
+
+def test_real_search_loading_empty_error_and_input_validation(page):
+    page.click('#search-form button')
+    assert "Choose a borough" in page.inner_text('#search-status')
+    page.select_option('#borough','QUEENS')
+    page.route('**/api/search?**', lambda route: route.fulfill(status=200,content_type='application/json',body='{"corners":[],"note":"First 100 ramp rows only.","sources":[]}'))
+    page.click('#search-form button')
+    page.wait_for_function("document.querySelector('#search-status').innerText.includes('No corners found')")
+    page.unroute('**/api/search?**')
+    page.route('**/api/search?**',lambda route: route.fulfill(status=502,content_type='application/json',body='{"error":"NYC unavailable. Use offline samples."}'))
+    page.click('#search-form button')
+    page.wait_for_function("document.querySelector('#search-status').innerText.includes('NYC unavailable')")
+    assert page.locator('.status').count()==1  # Samples stay usable.
+
+
+def test_real_search_response_after_sample_selection_is_discarded(page):
+    page.select_option('#borough','QUEENS')
+    # Hold the actual HTTP request until a different selection expresses newer intent.
+    page.route('**/api/search?**', lambda route: route.fulfill(status=200,content_type='application/json',body=search_result()))
+    page.evaluate('''() => {
+      const original = window.fetch;
+      window.fetch = async (...args) => {
+        const result = await original(...args);
+        if (String(args[0]).startsWith('/api/search')) await new Promise(resolve => window.resumeSearch = resolve);
+        return result;
+      };
+    }''')
+    page.click('#search-form button')
+    page.wait_for_function('!!window.resumeSearch')
+    pick(page,3)
+    page.wait_for_selector('.status.stop')
+    page.evaluate('window.resumeSearch()')
+    page.wait_for_timeout(100)
+    assert page.locator('[data-real]').count()==0
+
+
+def test_late_real_pull_cannot_replace_sample_and_trace_is_inspectable(page, base):
+    import json
+    from cornerbrief.orchestrator import analyze
+    from cornerbrief.data_loader import load_corner
+    from cornerbrief.app import public
+    packet=public(analyze(load_corner('standard'),save=False))
+    packet['corner'].update(key='real_1_aaaaaaaaaaaa',data_kind='NYC Open Data',label='THOMSON and TEST — HTTP fixture')
+    page.route('**/api/search?**',lambda route: route.fulfill(status=200,content_type='application/json',body=search_result()))
+    page.route('**/api/real/1/run',lambda route: route.fulfill(status=200,content_type='application/json',body=json.dumps(packet)))
+    page.evaluate('''() => {
+      const original = window.fetch;
+      window.fetch = async (...args) => {
+        const result = await original(...args);
+        if (String(args[0]).includes('/api/real/')) await new Promise(resolve => window.resumePull = resolve);
+        return result;
+      };
+    }''')
+    page.select_option('#borough','QUEENS');page.click('#search-form button')
+    page.wait_for_selector('[data-real]');page.click('[data-real]')
+    assert "Loading this corner" in page.inner_text('#main')
+    page.wait_for_function('!!window.resumePull')
+    pick(page,3);page.wait_for_selector('.status.stop')
+    page.evaluate('window.resumePull()');page.wait_for_timeout(100)
+    assert page.locator('.status.stop').count()==1
+    pick(page,1);page.wait_for_selector('.status')
+    heading=page.get_by_role('heading',name='Agent trace',exact=True)
+    section=heading.locator('..')
+    assert 'saved replay' in section.inner_text() and 'input tokens 0' in section.inner_text()
+    section.locator('summary').first.click()
+    assert 'response_schema' in section.locator('pre').first.inner_text()
+    assert '<script>' not in section.inner_html()
+
+
+def test_static_export_is_actual_ui_without_backend_calls(browser):
+    from pathlib import Path
+    context=browser.new_context()
+    pg=context.new_page();errors=[];requests=[]
+    pg.on('pageerror',lambda e:errors.append(str(e)))
+    pg.on('request',lambda r:requests.append(r.url))
+    pg.goto((Path(__file__).resolve().parent.parent/'.helix/output/index.html').as_uri())
+    pg.wait_for_selector('.status')
+    assert 'saved sample' in pg.inner_text('#search-status')
+    assert pg.locator('#search-form button').is_disabled()
+    pick(pg,3);pg.wait_for_selector('.status.stop')
+    assert pg.get_by_role('heading',name='Agent trace',exact=True).count()==1
+    assert not errors and all(url.startswith('file:') for url in requests)
+    context.close()
+
+
+def test_selecting_real_corner_renders_saved_actual_data_and_provenance(page,monkeypatch):
+    """Browser/HTTP flow uses the attributable live snapshot, not another live network request."""
+    from cornerbrief.data_loader import load_corner
+    from cornerbrief import search
+    snapshot=load_corner('real_1024569_c83661efedaa')
+    def get(url):
+        if search.fetch.LOC in url:return snapshot['locations']
+        if search.fetch.PROG in url:return snapshot['progress']
+        return snapshot['complaints']
+    monkeypatch.setattr(search.fetch,'get',get)
+    page.select_option('#borough','QUEENS');page.fill('#street','THOMSON')
+    page.click('#search-form button');page.wait_for_selector('[data-real="1024569"]')
+    page.click('[data-real="1024569"]');page.wait_for_selector('.status.stop')
+    assert 'Real test corner from NYC Open Data' in page.inner_text('.alert')
+    assert 'ufzp-rrqu' in page.inner_text('#main') and 'Source retrievals' in page.inner_text('#main')
+    assert 'deterministic offline' in page.inner_text('#main')
+    assert page.locator('#approve').count()==1 and page.locator('#model').count()==0
+    page.reload();page.wait_for_selector('.status.stop')
+    assert 'Real test corner from NYC Open Data' in page.inner_text('.alert')
+
+
+def test_external_search_label_is_rendered_as_text(page):
+    label='<img src=x onerror="window.injected=true">'
+    page.route('**/api/search?**',lambda route:route.fulfill(status=200,content_type='application/json',body=search_result(label=label)))
+    page.select_option('#borough','QUEENS');page.click('#search-form button')
+    page.wait_for_selector('[data-real]')
+    assert label in page.inner_text('[data-real]')
+    assert page.locator('#search-results img').count()==0 and not page.evaluate('!!window.injected')

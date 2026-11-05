@@ -32,5 +32,7 @@ def dollars_shown() -> bool:
 
 def hide_dollars(cost: dict) -> dict:
     """The city demo shows quantities only, so a placeholder price can't be quoted."""
+    if cost.get("hidden"):
+        return cost
     lines = [dict(item=l["item"], quantity=l["quantity"], unit=l.get("unit", "")) for l in cost["lines"]]
     return dict(label=cost["label"], lines=lines, hidden=True, note="Dollar figures are hidden for this demo.")

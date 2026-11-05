@@ -35,7 +35,7 @@ def reviewed_rules(drop_sources=True):
 
 
 @pytest.fixture
-def reviewed_precedence(monkeypatch):
+def reviewed_precedence(monkeypatch, planning_release):
     items = {k: dict(v, reviewed_by="Pat Example") for k, v in load_precedence().items()}
     monkeypatch.setattr("cornerbrief.orchestrator.load_precedence", lambda: items)
 

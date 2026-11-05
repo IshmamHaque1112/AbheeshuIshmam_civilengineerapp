@@ -13,6 +13,7 @@ from .guards import check_text
 from .library import background_reading
 from .llm import AgentOutputError, get_client
 from .models import BriefWriterOutput
+from .trace import TracingClient, redact
 from .paths import RUNS
 from .planning import run_planning
 from .rules import load_precedence, load_rules
@@ -92,14 +93,14 @@ def rule_review(rules: list[dict], precedence: dict | None = None, today: date |
 
 
 def _log(log, agent, attempt, payload, output, usage, error=None):
-    log.append(dict(agent=agent, attempt=attempt, input=payload, output=_dump(output) if output is not None else None, usage=usage, error=error))
+    log.append(redact(dict(agent=agent, attempt=attempt, input=payload, output=_dump(output) if output is not None else None, usage=usage, error=error)))
 
 
 def analyze(corner: dict, client=None, rules=None, rates=None, save=True, field=None) -> dict:
     rules = load_rules() if rules is None else rules
     precedence = load_precedence()
     field = field or []
-    client = client or get_client(corner, inputs_changed=bool(field))
+    client = TracingClient(client or get_client(corner, inputs_changed=bool(field)))
     road = next((e["value"] for e in field if e["key"] == "corner:road_control"), None)
     if road:
         corner = {**corner, "context": {**corner.get("context", {}), "road_control": road}}
@@ -196,7 +197,7 @@ def analyze(corner: dict, client=None, rules=None, rates=None, save=True, field=
     planning = run_planning(evidence, rates) if label == "probably standard" else None
     planning_note = None
     if labels_off:
-        planning_note = "Concept plans stay off until the adversarial suite passes."
+        planning_note = "Concept plans stay off until R28 has documented pass evidence and a named person authorizes them."
     elif planning is None:
         planning_note = "No model or quantities were made, because a plan needs complete evidence, a finished review, verified rules and no exceeded limit."
     record = dict(state=state, state_reason=state_reason, label=label, problems=problems, evidence=[e.model_dump() for e in evidence],
@@ -214,8 +215,8 @@ def analyze(corner: dict, client=None, rules=None, rates=None, save=True, field=
         rejections += [f"Brief writer: {i}" for i in issues]
         written = BriefWriterOutput(summary=f"{state_reason} See the sections below.", findings_narrative="The narrative was rejected, so only checked results are shown.")
 
-    token_in = sum(e["usage"].get("input_tokens", 0) for e in log)
-    token_out = sum(e["usage"].get("output_tokens", 0) for e in log)
+    token_in = sum((e.get("usage") or {}).get("input_tokens", 0) for e in client.calls)
+    token_out = sum((e.get("usage") or {}).get("output_tokens", 0) for e in client.calls)
     run = dict(id=uuid.uuid4().hex[:12], created=time.strftime("%Y-%m-%d %H:%M:%S"), mode=client.mode, notice=NOTICE,
                corner=dict(key=corner.get("key"), label=corner["label"], data_kind=corner["data_kind"]),
                context=corner.get("context", {}), state=state, state_reason=state_reason, label=label, label_reason=label_reason, sufficient=sufficient, problems=problems, join_notes=joins,
@@ -224,10 +225,12 @@ def analyze(corner: dict, client=None, rules=None, rates=None, save=True, field=
                constraints=constraints, challenges=challenges, site_visit=visits, planning=planning, planning_note=planning_note,
                background=background_reading(), rejections=rejections, retries=retries, retry_limit_hit=retry_limit_hit, review_status=review_status,
                field_measurements=field, field_inputs=field_inputs([e.model_dump() for e in evidence]), changes=None, previous_run_id=None,
+               source_provenance=corner.get("source_provenance", []),
                dataset_note=corner.get("dataset_note"), evidence_counts=dict(Counter(e.label for e in evidence)),
-               tokens=dict(input=token_in, output=token_out), approval=None, agent_log=log,
+               tokens=dict(input=token_in, output=token_out), approval=None, agent_log=log, trace_events=client.calls,
                records=corner_records(corner), rule_review=rule_review(rules, precedence),
                rules_needing_sources=[r["id"] for r in rules if r["status"] == "needs_source"])
+    run = redact(run)
     if save:
         save_run(run)
     return run

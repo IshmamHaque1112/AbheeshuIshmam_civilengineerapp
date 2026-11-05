@@ -4,8 +4,10 @@
 List candidates:  python scripts/fetch_corners.py --borough QUEENS --street THOMSON
 Save the test:    python scripts/fetch_corners.py --save real_test 1370422
 """
-import argparse, hashlib, json, os, sys, time, urllib.parse, urllib.request
+import argparse, hashlib, json, os, re, sys, time, urllib.parse, urllib.request
 from datetime import date
+from decimal import Decimal, InvalidOperation
+import tempfile
 from pathlib import Path
 
 try:
@@ -30,18 +32,25 @@ def get(url):
         return json.loads(path.read_text(encoding="utf-8"))
     data = _download(url)
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps(data), encoding="utf-8")
+    # Concurrent browser requests must never read a half-written cache entry.
+    with tempfile.NamedTemporaryFile(mode="w", encoding="utf-8", dir=path.parent, delete=False) as temporary:
+        json.dump(data, temporary)
+        temporary_path = Path(temporary.name)
+    try:
+        os.replace(temporary_path, path)
+    finally:
+        temporary_path.unlink(missing_ok=True)
     return data
 
 
 def _download(url):
     req = urllib.request.Request(url, headers={"User-Agent": "CornerBriefDemo/0.1"})
-    for attempt in range(3):
+    for attempt in range(2):
         try:
-            with urllib.request.urlopen(req, timeout=90) as r:
+            with urllib.request.urlopen(req, timeout=15) as r:
                 return json.load(r)
         except Exception:
-            if attempt == 2:
+            if attempt == 1:
                 raise
             time.sleep(2 * (attempt + 1))
 
@@ -55,8 +64,9 @@ def num(rows):
         for k in ("cornerid", "cmt_corner_id", "rampid"):
             if k in row:
                 try:
-                    row[k] = int(float(row[k]))
-                except (TypeError, ValueError):
+                    value = Decimal(str(row[k]))
+                    row[k] = int(value) if value.is_finite() and 0 < value <= 9999999999 and value == value.to_integral_value() else None
+                except (TypeError, ValueError, InvalidOperation):
                     row[k] = None  # The app stops on a missing ID instead of guessing
     return rows
 
@@ -93,11 +103,17 @@ def classify(locations, progress):
 def build_where(borough=None, street=None):
     """Build the location filter. Ramp records use borough numbers 1 to 5."""
     parts = ["geocyclora IS NOT NULL"]
+    if borough is not None and not isinstance(borough, str):
+        raise ValueError("Borough must be text.")
     if borough:
         code = BOROUGHS.get(borough.strip().upper())
         if code is None:
             raise ValueError("Borough must be one of: " + ", ".join(BOROUGHS))
         parts.append(f"borough={code}")
+    if street is not None and not isinstance(street, str):
+        raise ValueError("Street must be text.")
+    if street and (not 2 <= len(street.strip()) <= 80 or not re.fullmatch(r"[\w .'’/-]+", street.strip())):
+        raise ValueError("Street must be 2–80 letters, numbers, spaces or street-name punctuation; no wildcards.")
     if street:
         safe = street.strip().upper().replace("'", "''")
         parts.append(f"(upper(stname1) like '%{safe}%' OR upper(stname2) like '%{safe}%')")
@@ -124,18 +140,26 @@ def list_candidates(limit, borough=None, street=None):
     return found, len(corners), len(progress)
 
 
+def assemble_corner(locations, progress, complaints, retrieved=None, provenance=None):
+    """One real-record shape for the CLI and application; never infer units or ownership."""
+    first = locations[0]
+    corner = dict(label=f"{first.get('stname1') or 'Street not recorded'} and {first.get('stname2') or 'street not recorded'}",
+                  data_kind="NYC Open Data", retrieved=retrieved or date.today().isoformat(), sources=[LOC, PROG, COMP],
+                  dataset_note="Real NYC Open Data records. Dataset units remain undocumented; limits stay unknown. Historical records may not describe today's corner. Road control is not recorded.",
+                  context=dict(inside_nyc=True, work_type="corner_ramp_row", road_control="not_recorded"),
+                  locations=locations, progress=progress, complaints=complaints)
+    if provenance is not None:
+        corner["source_provenance"] = provenance
+    return corner
+
+
 def save(role, cid):
     locations = num(query(LOC, where=f"cornerid={cid}", limit=20))
     progress = num(query(PROG, where=f"cornerid={cid}", limit=20))
     complaints = num(query(COMP, where=f"cmt_corner_id={cid}", limit=50))
     if not locations:
-        sys.exit(f"Corner {cid} has no ramp measurements.")
-    first = locations[0]
-    corner = dict(label=f"{first.get('stname1')} and {first.get('stname2')}", data_kind="NYC Open Data",
-                  retrieved=date.today().isoformat(), sources=[LOC, PROG, COMP],
-                  dataset_note="Real test corner. The ramp measurement dataset was last updated in October 2021, so its values may not match the corner today.",
-                  context=dict(inside_nyc=True, work_type="corner_ramp_row", road_control="not_recorded"),
-                  locations=locations, progress=progress, complaints=complaints)
+        raise ValueError(f"Corner {cid} has no ramp measurements.")
+    corner = assemble_corner(locations, progress, complaints)
     out = ROOT / "data" / "live"
     out.mkdir(exist_ok=True, parents=True)
     path = out / f"{role}.json"

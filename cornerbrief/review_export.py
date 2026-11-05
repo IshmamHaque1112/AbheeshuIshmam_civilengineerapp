@@ -1,7 +1,8 @@
 """Release gate and plain-text export."""
 import time
 from .config import labels_enabled
-from .cost import dollars_shown, hide_dollars
+from .trace import redact
+from .cost import hide_dollars
 from .orchestrator import save_run
 
 
@@ -21,7 +22,7 @@ def approve(run: dict, reviewer: str) -> dict:
 
 def presented(run: dict) -> dict:
     """Apply the demo's display rules, so the page and the download match."""
-    if run.get("planning") and not dollars_shown():
+    if run.get("planning"):
         run = {**run, "planning": {**run["planning"], "cost": hide_dollars(run["planning"]["cost"])}}
     if not labels_enabled():
         run = {**run, "label": None, "label_reason": "", "planning": None}  # This also covers runs saved while the setting was on
@@ -48,11 +49,14 @@ def stricter(c: dict) -> str:
 def to_markdown(run: dict) -> str:
     if not run.get("approval"):
         raise NotApproved("A person must release this packet before it can be downloaded.")
-    run = presented(run)
+    run = redact(presented(run), hide_cost=True)
     L = [f"# CornerBrief packet: {run['corner']['label']}", "", f"**{run['notice']}**", "",
          f"Data: {run['corner']['data_kind']}. Agent mode: {run['mode']}.",
          f"Released by {run['approval']['reviewer']} on {run['approval']['at']}. {run['approval']['meaning']}", "",
          f"## State: {run['state']}", run["state_reason"], ""] + ([f"Label: {run['label']}. {run['label_reason']}", ""] if run["label"] else []) + [run["brief"]["summary"], "", run["brief"]["findings_narrative"], "", run["brief"]["engineer_note"], ""]
+    if run.get("source_provenance"):
+        L += ["## NYC source retrievals", ""]
+        L += [f"- {s['dataset']}: {s['url']} · retrieved {s.get('retrieved_at') or 'time unavailable'}. {s['note']}" for s in run["source_provenance"]] + [""]
     if run["problems"]:
         L += ["## Evidence still needed", ""] + [f"- {x}" for x in run["problems"]] + [""]
     if run["changes"]:

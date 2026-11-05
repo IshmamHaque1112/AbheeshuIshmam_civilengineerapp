@@ -5,13 +5,14 @@ const money = (n) => "$" + Number(n).toLocaleString("en-US");
 let current = null;
 let requestId = 0; // Only the newest corner request may change the page
 let saving = null; // A release or rerun in progress for the corner on screen, so the two can't cross
+const exportedPackets = window.CORNERBRIEF_EXPORT || null;
 const PHOTO_LIMIT = 5 * 1024 * 1024;
 // Keep the newest version with site entries for each corner, for this tab only
 const latest = {
-  get(key) { try { return sessionStorage.getItem(`latest:${key}`); } catch { return null; } },
-  set(key, id) { try { sessionStorage.setItem(`latest:${key}`, id); } catch { /* The page still works without it */ } },
-  clear(key) { try { sessionStorage.removeItem(`latest:${key}`); } catch { /* The page still works without it */ } },
-  chosen(key) { try { if (key) sessionStorage.setItem("chosen", key); return sessionStorage.getItem("chosen"); } catch { return null; } },
+  get(key) { if (exportedPackets) return null; try { return sessionStorage.getItem(`latest:${key}`); } catch { return null; } },
+  set(key, id) { if (exportedPackets) return; try { sessionStorage.setItem(`latest:${key}`, id); } catch { /* The page still works without it */ } },
+  clear(key) { if (exportedPackets) return; try { sessionStorage.removeItem(`latest:${key}`); } catch { /* The page still works without it */ } },
+  chosen(key) { if (exportedPackets) return null; try { if (key) sessionStorage.setItem("chosen", key); return sessionStorage.getItem("chosen"); } catch { return null; } },
 };
 const today = () => { const d = new Date(); return new Date(d - d.getTimezoneOffset() * 60000).toISOString().slice(0, 10); };
 
@@ -21,6 +22,12 @@ const stateTitle = (s) => s[0].toUpperCase() + s.slice(1);
 const fieldNames = { ramp_running_slope_total: "Running slope", ramp_cross_slope: "Ramp cross slope", ramp_width: "Ramp width", ramp_length: "Ramp length", lnd_width: "Landing width", lnd_length: "Landing length", lnd_cross_slope: "Landing cross slope", curb_reveal: "Lip height", gutter_slope: "Gutter slope", counter_slope: "Roadway slope", sidewalk_width: "Sidewalk width", legal_grade: "Legal grade", ramp_type: "Ramp type", sidewalk_transverse_slope: "Sidewalk slope", road_control: "Road control", ramp_rise: "Ramp rise", ramp_right_flare: "Right flare", ramp_left_flare: "Left flare" };
 
 async function api(path, options) {
+  if (exportedPackets) {
+    if (path === "/api/corners") return Object.values(exportedPackets).map(r => r.corner);
+    const match = path.match(/^\/api\/corners\/([^/]+)\/run$/);
+    if (match && exportedPackets[match[1]]) return structuredClone(exportedPackets[match[1]]);
+    throw new Error("This static preview shows the saved sample packets. Live search, site measurements, release and download require the local CornerBrief backend.");
+  }
   let res;
   try { res = await fetch(path, options); }
   catch { throw new Error("The app's server can't be reached. Make sure it's still running."); }
@@ -35,12 +42,14 @@ async function start() {
   const corners = await api("/api/corners");
   $("#picker").innerHTML = corners.map((c) => `<button data-key="${esc(c.key)}"><span>${esc(c.label)}</span><small>${c.data_kind === "SAMPLE DATA" ? "Sample data" : "Real test, NYC Open Data"}</small></button>`).join("");
   document.querySelectorAll("#picker button").forEach((b) => b.addEventListener("click", () => run(b.dataset.key)));
+  wireSearch();
   const chosen = latest.chosen();
-  run(corners.some((c) => c.key === chosen) ? chosen : corners[0].key);
+  run(corners.some((c) => c.key === chosen) || (/^real_[0-9]+_[a-f0-9]{12}$/.test(chosen || "") && latest.get(chosen)) ? chosen : corners[0].key);
 }
 
 async function run(key) {
   const mine = ++requestId;
+  ++searchId;
   latest.chosen(key);
   document.querySelectorAll("#picker button").forEach((b) => b.setAttribute("aria-current", b.dataset.key === key));
   current = null;
@@ -51,6 +60,49 @@ async function run(key) {
     if (mine === requestId) { current = out; render(); }
   }
   catch (err) { if (mine === requestId) $("#main").innerHTML = `<p class="empty error">${esc(err.message)}</p>`; }
+}
+
+let searchId = 0;
+function wireSearch() {
+  if (exportedPackets) {
+    $("#search-status").textContent = "This static preview includes the actual saved sample packets. Live NYC search requires the local CornerBrief backend.";
+    $("#search-form").querySelectorAll("input, select, button").forEach(el => { el.disabled = true; });
+    return;
+  }
+  $("#search-form").addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const mine = ++searchId;
+    ++requestId; // Search expresses a new selection intent; old packets cannot replace it.
+    const borough = $("#borough").value, street = $("#street").value.trim();
+    $("#search-results").innerHTML = "";
+    $("#search-status").textContent = "Searching NYC Open Data…";
+    try {
+      if (!borough && !street) throw new Error("Choose a borough or enter a street.");
+      const result = await api(`/api/search?${new URLSearchParams({borough, street})}`);
+      if (mine !== searchId) return;
+      $("#search-status").textContent = `${result.corners.length ? `${result.corners.length} corners found.` : "No corners found. Try a shorter street name or another borough."} ${result.note}`;
+      $("#search-results").innerHTML = `<p>${result.sources.map(s => link(s.dataset, s.url)).join(" · ")}</p>` + result.corners.map(c => `<button class="button alt" data-real="${esc(c.cornerid)}">${esc(c.label)} · Corner ${esc(c.cornerid)}</button>`).join("");
+      document.querySelectorAll("[data-real]").forEach(b => b.addEventListener("click", () => pullReal(b.dataset.real)));
+    } catch (err) { if (mine === searchId) $("#search-status").textContent = err.message; }
+  });
+}
+async function pullReal(id) {
+  const mine = ++requestId;
+  ++searchId;
+  current = null;
+  document.querySelectorAll("#picker button").forEach(b => b.setAttribute("aria-current", "false"));
+  $("#main").innerHTML = `<p class="empty" role="status">Loading this corner's ramp, program and complaint records…</p>`;
+  try {
+    const out = await post(`/api/real/${encodeURIComponent(id)}/run`);
+    if (mine !== requestId) return;
+    latest.set(out.corner.key, out.id);
+    latest.chosen(out.corner.key);
+    current = out; render();
+  } catch (err) { if (mine === requestId) $("#main").innerHTML = `<p class="empty error" role="alert">${esc(err.message)}</p>`; }
+}
+function traceSection(r) {
+  const trace = r.trace || [];
+  return `<section><h2>Agent trace</h2><p>Saved replay and deterministic offline steps make no provider call. Raw agent text is diagnostic, may have been rejected, and is not an engineering finding or permission to proceed. Secrets and dollar figures are redacted.</p>${trace.length ? trace.map(t => `<details><summary>${esc(t.agent)} · attempt ${Number(t.attempt) + 1} · ${esc(t.origin)} · input tokens ${esc(t.tokens.input ?? "unavailable")}, output tokens ${esc(t.tokens.output ?? "unavailable")}</summary><p>${esc(t.usage_note)}</p><p>${esc(t.validation_note)}</p>${t.error ? `<p class="error">${esc(t.error)}</p>` : ""}<h3>Request</h3><pre>${esc(JSON.stringify(t.request, null, 2))}</pre><h3>Response</h3><pre>${esc(JSON.stringify(t.response, null, 2))}</pre></details>`).join("") : "<p>No agent trace was captured for this run.</p>"}</section>`;
 }
 
 function rulesTable(rows) {
@@ -74,6 +126,7 @@ function plan(p) {
 }
 
 function releasePanel(r) {
+  if (r.features.static_export) return `<div class="panel" id="release"><h2>Static sample preview</h2><p>These are the application's saved sample packets. Site measurements, release and download require the local CornerBrief backend. Download still requires a person's release; releasing is not approval.</p></div>`;
   if (r.approval) return `<div class="panel" id="release"><h2>Released</h2><p>Released by ${esc(r.approval.reviewer)}. Releasing is not approval.</p>
     <a class="button" href="/api/runs/${esc(r.id)}/download">Download packet</a>
     ${r.features.email ? `<label for="to">Email to a test address</label><input id="to" type="email" autocomplete="off"><button class="button alt" id="send">Email packet</button>` : ""}<p id="msg" role="status"></p></div>`;
@@ -93,6 +146,7 @@ function changesSection(c) {
 }
 
 function fieldForm(r) {
+  if (r.features.static_export) return `<section><h2>Add site measurements</h2><p>Use the local CornerBrief app to enter dated measurements and rerun. This static preview cannot save measurements.</p></section>`;
   if (!r.field_inputs.length) return "";
   return `<section id="field"><h2>Add site measurements</h2><p>Enter what you measured, then rerun the check. Each value is labeled as measured on site, with its date.</p>
     <div class="fieldhead"><div><label for="by">Measured by</label><input id="by" autocomplete="name"></div><div><label for="on">Date measured</label><input id="on" type="date" value="${today()}" max="${today()}"></div></div>
@@ -159,6 +213,7 @@ function render() {
       ${r.problems.length ? `<section><h2>Evidence still needed</h2><ul class="plain">${r.problems.map((x) => `<li>${esc(x)}</li>`).join("")}</ul></section>` : ""}
       <section><h2>Corner records</h2>
         ${r.dataset_note ? `<p><strong>${esc(r.dataset_note)}</strong></p>` : ""}
+        ${(r.source_provenance || []).length ? `<h3>Source retrievals</h3><ul class="plain">${r.source_provenance.map(s => `<li>${link(s.dataset, s.url)} · retrieved ${esc(s.retrieved_at || "time unavailable")}. ${esc(s.note)}</li>`).join("")}</ul>` : ""}
         ${r.records.program.map((p) => `<p><strong>Program status:</strong> ${esc(p.status)}${p.construction_type ? `, ${esc(p.construction_type)}` : ""}${p.completed ? `, completed ${esc(p.completed)}` : ""}.</p>`).join("")}
         <div class="wrap"><table><thead><tr><th>Ramp</th><th>Surveyed</th><th>Warning surface</th><th>Ponding</th><th>Obstacles</th></tr></thead><tbody>${r.records.ramps.map((x) => `<tr><td>${esc(x.ramp_id)}</td><td>${esc(x.surveyed)}</td><td>${esc(x.warning_surface)}</td><td>${esc(x.ponding)}</td><td>Ramp: ${esc(x.obstacles_ramp)}. Landing: ${esc(x.obstacles_landing)}.</td></tr>`).join("")}</tbody></table></div>
         ${r.records.complaints.map((c) => `<p><strong>Complaint ${esc(c.id)}:</strong> ${esc(c.date)}. Temporary repair feasible: ${esc(c.repair_feasible)}.</p>`).join("")}
@@ -179,6 +234,7 @@ function render() {
       ${r.conflicts.length ? `<section><h2>Rule conflicts for engineer review</h2>${r.conflicts.map((c) => `<p><strong>${esc(fieldNames[c.parameter] || c.parameter)}:</strong> ${esc(c.warning)}</p><ul class="plain">${c.rules.map((x) => `<li>${link(x.section, x.url)}: ${esc(x.limit)}</li>`).join("")}</ul><p class="hint">Warning uses the stricter value${c.stricter_min != null ? `: minimum ${+c.stricter_min.toFixed(2)}${c.unit === "percent" ? "%" : " in"}` : ""}${c.stricter_max != null ? `${c.stricter_min != null ? " and" : ":"} maximum ${+c.stricter_max.toFixed(2)}${c.unit === "percent" ? "%" : " in"}` : ""}. An engineer decides which rule controls.</p>`).join("")}</section>` : ""}
       ${r.planning ? plan(r.planning) : ""}
       ${r.background.items.length ? `<section><h2>Background reading</h2><p>${esc(r.background.note)}</p><ul class="plain">${r.background.items.map((b) => `<li>${link(b.title, b.url)}${b.year ? `, ${esc(b.year)}` : ""}</li>`).join("")}</ul></section>` : ""}
+      ${traceSection(r)}
       ${r.rejections.length ? `<section><h2>Rejected agent output</h2><ul class="plain">${r.rejections.map((x) => `<li>${esc(x)}</li>`).join("")}</ul></section>` : ""}
     </div>
     <aside class="side">

@@ -10,6 +10,9 @@ from .config import labels_enabled, load_env
 from .data_loader import list_corners
 from .email_delivery import EmailBlocked, allowlist, send_brief
 from . import field as field_module
+from . import search as search_module
+from .trace import public_trace, redact
+from .cost import hide_dollars
 from .orchestrator import load_run, rerun_with_field, run_corner
 from .review_export import NotApproved, approve, presented, to_markdown
 
@@ -19,8 +22,12 @@ MAX_UPLOAD = 60 * 1024 * 1024
 
 def public(run: dict) -> dict:
     shown = {k: v for k, v in presented(run).items() if k != "agent_log"}
+    shown.pop("trace_events", None)
+    if shown.get("planning"):
+        shown["planning"] = {**shown["planning"], "cost": hide_dollars(shown["planning"]["cost"])}
+    shown["trace"] = public_trace(run)
     shown["features"] = {"email": bool(allowlist()), "labels_and_plans": labels_enabled()}
-    return shown
+    return redact(shown, hide_cost=True)
 
 
 def error(message: str, status: int) -> JSONResponse:
@@ -39,6 +46,25 @@ async def _body(request: Request) -> dict:
 
 async def corners(request: Request):
     return JSONResponse(await run_in_threadpool(list_corners))
+
+
+async def search_corners(request: Request):
+    try:
+        return JSONResponse(await run_in_threadpool(search_module.search, request.query_params.get("borough"), request.query_params.get("street")))
+    except ValueError as exc:
+        return error(str(exc), 400)
+    except Exception:
+        return error("NYC Open Data could not be reached or returned invalid data. Retry, narrow your search, or use the offline samples.", 502)
+
+
+async def pull_corner(request: Request):
+    try:
+        key = await run_in_threadpool(search_module.pull, request.path_params["corner_id"])
+        return JSONResponse(public(await run_in_threadpool(run_corner, key)))
+    except ValueError as exc:
+        return error(str(exc), 400)
+    except Exception:
+        return error("The real corner could not be loaded. Retry or use the offline samples.", 502)
 
 
 async def run(request: Request):
@@ -127,6 +153,8 @@ async def server_error(request: Request, exc: Exception):
 
 routes = [
     Route("/api/corners", corners),
+    Route("/api/search", search_corners),
+    Route("/api/real/{corner_id}/run", pull_corner, methods=["POST"]),
     Route("/api/corners/{key}/run", run, methods=["POST"]),
     Route("/api/runs/{run_id}", get_run),
     Route("/api/runs/{run_id}/approve", approve_run, methods=["POST"]),
