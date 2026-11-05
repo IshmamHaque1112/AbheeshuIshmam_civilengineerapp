@@ -54,7 +54,7 @@ No API key is needed, and the demo stays in this mode while `DEMO_MODE=true`. Th
 
 1. **Sample corner A, Queens:** Checks the evidence supports, with the source and math for each calculation.
 2. **Sample corner B, Brooklyn:** Checks the evidence supports, with a utility vault and catch basin to review and one Skeptic rework.
-3. **Real test corner:** Corner 1024569, Van Dam Street and Thomson Avenue, from NYC Open Data. It uses saved records, so it works offline. It stops because the 2018 survey predates four pedestrian ramp permits on the block. Its road owner is assumed, not confirmed.
+3. **Real test corner:** Corner 1024569, Van Dam Street and Thomson Avenue, from NYC Open Data. It uses saved records, so it works offline. It stops because a 2024 pedestrian ramp permit is located at each ramp, after the 2018 survey. Its road owner is assumed, not confirmed.
 4. **Sample corner C, Bronx:** Stop: evidence still needed, because it was rebuilt after its survey and has a placeholder value.
 
 Enter a name and select **Release packet** to turn on the download. Releasing is not approval. **Download site visit list** needs no release, because it lists only what to measure or confirm and contains no limit results.
@@ -116,7 +116,7 @@ The official data dictionary gives lengths in inches and slopes and flares in pe
 
 **Swapped columns:** Open Data's `ramp_length` and `ramp_left_flare` columns are swapped. All 300 ramps sampled on November 5, 2026 matched DOT's survey map only when swapped, so the app reads them corrected. That explains the negative lengths, since negative flares are a direction. If DOT's survey map disagrees for a ramp, the packet says so.
 
-A pedestrian ramp permit after the survey labels that ramp's measurements assumed. Other permits add a site-visit item. Permit holder names aren't saved. If a lookup fails, the packet says that dataset wasn't checked.
+A pedestrian ramp permit after the survey labels that ramp's measurements assumed only when its location ties it to the ramp: its point is within 30 m and its corner note, such as SW, fits. Other permits, including ramp permits that only share the block's street names, add a site-visit item. Permit holder names aren't saved. If a lookup fails, the packet says that dataset wasn't checked.
 
 Legal grade and H-1011 ramp type still come from a person. Sidewalk width starts from DOT's approach width, read as inches and labeled assumed, because no document gives its unit. A site measurement replaces it.
 

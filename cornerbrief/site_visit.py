@@ -1,5 +1,5 @@
 """List what to measure or confirm. No AI here."""
-from .evidence import NOT_IN_DATASETS, parse_date, permits_after
+from .evidence import NOT_IN_DATASETS, parse_date, permits_after, ramp_permits_after, tied_ramp_permits
 from .models import EvidenceItem
 
 ACTIONS = {
@@ -49,6 +49,11 @@ def build_list(evidence: list[EvidenceItem], corner: dict) -> list[dict]:
         kinds = ", ".join(sorted({str(p.get("permittypedesc") or "unlisted type").strip().lower() for p in later})[:6])
         items.append({"where": "Corner", "action": "Look for work done under the block's street permits since the survey.",
                       "why": f"{len(later)} permit{'' if len(later) == 1 else 's'} {'has' if len(later) == 1 else 'have'} work ending after the survey, including: {kinds}."})
+    tied = {str(p.get("permitnumber")) for r in corner.get("locations", []) for p in tied_ramp_permits(corner, r, str(r.get("geocyclora"))[:10])}
+    block_only = [p for p in (ramp_permits_after(corner, surveys[0]) if surveys else []) if str(p.get("permitnumber")) not in tied]
+    if block_only:
+        items.append({"where": "Corner", "action": "Check whether the block's pedestrian ramp permits changed this corner.",
+                      "why": f"{len(block_only)} permit{'' if len(block_only) == 1 else 's'} on this block {'has' if len(block_only) == 1 else 'have'} work ending after the survey, but the location doesn't tie {'it' if len(block_only) == 1 else 'them'} to this ramp."})
     if any(e.unit is not None and e.label == "measured" and not e.unit_documented for e in evidence):
         items.append({"where": "Dataset", "action": "Confirm the measurement units in the ramp dataset's documentation.", "why": "Limit checks stay unknown until the units are documented."})
     if corner.get("context", {}).get("road_control_basis") == "assumed":

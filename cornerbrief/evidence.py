@@ -3,6 +3,7 @@ import math
 import re
 from datetime import date
 from typing import Optional
+from .geo import offset_m, permit_point
 from .models import EvidenceItem, RecordsOutput
 
 REQUIRED_FIELDS = ["ramp_running_slope_total", "ramp_cross_slope", "ramp_width", "ramp_length",
@@ -65,6 +66,33 @@ def permits_after(corner: dict, survey) -> list[dict]:
 
 def ramp_permits_after(corner: dict, survey) -> list[dict]:
     return [p for p in permits_after(corner, survey) if RAMP_PERMIT.search(str(p.get("permittypedesc") or "").upper())]
+
+
+def tied_ramp_permits(corner: dict, row: dict, survey) -> list[dict]:
+    """Return later ramp permits located at this ramp. A permit that only shares the block's street names isn't enough.
+
+    A permit counts when its point is within 30 m and its corner note, such as SW, fits the ramp's side of that point.
+    City grids aren't all true north, so an adjacent side counts only when no permit matches exactly.
+    """
+    geometry = row.get("the_geom") if isinstance(row.get("the_geom"), dict) else {}
+    ramp = geometry.get("coordinates") or []
+    if len(ramp) != 2:
+        return []
+    exact, adjacent = [], []
+    for permit in ramp_permits_after(corner, survey):
+        point = permit_point(permit)
+        if not point:
+            continue
+        east, north = offset_m(ramp[0], ramp[1], *point)
+        if math.hypot(east, north) > TIED_PERMIT_METERS:
+            continue
+        note = re.match(r"\s*(NE|NW|SE|SW)\b", str(permit.get("permitlocationcomments") or "").upper())
+        if not note:
+            exact.append(permit)
+            continue
+        fits = (note.group(1)[0] == ("N" if north > 0 else "S")) + (note.group(1)[1] == ("E" if east > 0 else "W"))
+        (exact if fits == 2 else adjacent if fits == 1 else []).append(permit)
+    return exact or adjacent
 
 
 def _count(number: int, noun: str) -> str:
@@ -230,6 +258,7 @@ def join_report(corner: dict) -> list[str]:
     return notes + nearby_notes(corner)
 
 
+TIED_PERMIT_METERS = 30
 RAMP_PERMIT = re.compile(r"\bPED(ESTRIAN)?\s+RAMP")
 SUFFIXES = {"STREET": "ST", "AVENUE": "AVE", "BOULEVARD": "BLVD", "PLACE": "PL", "ROAD": "RD", "DRIVE": "DR", "COURT": "CT", "LANE": "LN", "PARKWAY": "PKWY", "HIGHWAY": "HWY", "EXPRESSWAY": "EXPY", "TERRACE": "TER"}
 
@@ -265,7 +294,7 @@ def build_evidence(corner: dict, dictionary: dict, field: list[dict] | None = No
         survey = str(row.get("geocyclora", ""))[:10] or None
         stale = is_stale(survey, built)
         uncertain = currency_problem(corner, row)
-        ramp_work = ramp_permits_after(corner, survey)
+        ramp_work = tied_ramp_permits(corner, row, survey)
         for field in CHECK_FIELDS:
             spec = dictionary["fields"][field]
             raw = row.get(spec.get("column", field))
@@ -289,8 +318,8 @@ def build_evidence(corner: dict, dictionary: dict, field: list[dict] | None = No
             elif stale:
                 value, label, reason = number, "stale", f"Surveyed {survey}, but construction finished {built}."
             elif ramp_work:
-                value, label, reason = number, "assumed", (f"Unknown whether this is current. {_count(len(ramp_work), 'pedestrian ramp permit')} for this block {'has' if len(ramp_work) == 1 else 'have'} work ending after the {survey} survey. "
-                                                           "A permit shows work was allowed, not that it happened or touched this corner.")
+                value, label, reason = number, "assumed", (f"Unknown whether this is current. {_count(len(ramp_work), 'pedestrian ramp permit')} located at this ramp {'has' if len(ramp_work) == 1 else 'have'} work ending after the {survey} survey. "
+                                                           "A permit shows work was allowed, not that it happened.")
             else:
                 value = number
             item = EvidenceItem(key=f"{ramp}:{field}", ramp_id=ramp, field=field, value=value,

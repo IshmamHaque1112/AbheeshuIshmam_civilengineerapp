@@ -72,7 +72,7 @@ def nearby_records(locations):
             found[f"{key}_more"] = True
         sources.append(source)
     if "permits" in found:
-        unique = {str(p.get("permitnumber")): p for p in found["permits"]}
+        unique = {str(p.get("permitnumber")): fetch.trim_permit(p) for p in found["permits"]}
         found["permits"] = sorted(unique.values(), key=lambda p: str(p.get("issuedworkenddate") or ""), reverse=True)
     try:
         where = fetch.sidewalk_where(locations)

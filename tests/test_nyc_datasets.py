@@ -6,6 +6,7 @@ import pytest
 
 from cornerbrief import search
 from cornerbrief.data_loader import load_corner, load_dictionary
+from cornerbrief.geo import state_plane_to_lonlat
 from cornerbrief.evidence import build_evidence, data_sufficient, join_report, road_owner, road_owner_assumed
 from cornerbrief.llm import OfflineClient
 from cornerbrief.orchestrator import analyze
@@ -73,15 +74,60 @@ def test_site_measurement_replaces_a_negative_length():
     assert length.label == "measured" and length.on_site
 
 
-def test_ramp_permit_after_the_survey_questions_the_measurement():
-    corner = real(permits=[permit("PED RAMP REPLACE/MODIFY/INSTALL GOVERNMENT", "2024-04-06T23:59:59.000")])
+# A real permit point at Thomson Avenue and Van Dam Street, and a ramp about 14 m southwest of it.
+PERMIT_POINT = "POINT (1002652.3247999996 210610.10690000653)"
+RAMP_NEAR = dict(type="Point", coordinates=[-73.93370894345186, 40.74464324083891])
+RAMP_FAR = dict(type="Point", coordinates=[-73.9300, 40.7446])
+
+
+def ramp_permit(note=None, wkt=PERMIT_POINT, end="2024-04-06T23:59:59.000", number="Q1"):
+    extra = {k: v for k, v in dict(permitlocationcomments=note, wkt=wkt).items() if v}
+    return dict(permit("PED RAMP REPLACE/MODIFY/INSTALL GOVERNMENT", end, **extra), permitnumber=number)
+
+
+@pytest.mark.parametrize("permits,geometry,label", [
+    ([ramp_permit("SW")], RAMP_NEAR, "assumed"),
+    ([ramp_permit("sw corner")], RAMP_NEAR, "assumed"),
+    ([ramp_permit()], RAMP_NEAR, "assumed"),
+    ([ramp_permit("NW")], RAMP_NEAR, "assumed"),
+    ([ramp_permit("NE")], RAMP_NEAR, "measured"),
+    ([ramp_permit("SW")], RAMP_FAR, "measured"),
+    ([ramp_permit("SW", wkt=None)], RAMP_NEAR, "measured"),
+    ([ramp_permit("SW", wkt="not a point")], RAMP_NEAR, "measured"),
+    ([ramp_permit("SW")], None, "measured"),
+])
+def test_only_a_permit_located_at_the_ramp_questions_the_measurement(permits, geometry, label):
+    corner = real(permits=permits, the_geom=geometry)
+    assert item(evidence_of(corner), "ramp_width").label == label
+
+
+def test_exact_corner_note_beats_an_adjacent_one():
+    corner = real(permits=[ramp_permit(n, number=n) for n in ("SW", "NW", "SE", "NE")], the_geom=RAMP_NEAR)
+    assert "1 pedestrian ramp permit located at this ramp has" in item(evidence_of(corner), "ramp_width").reason
+
+
+def test_block_ramp_permit_goes_on_the_site_visit_without_a_stop():
+    corner = real(permits=[ramp_permit("SW", wkt=None)], the_geom=RAMP_NEAR)
     items = evidence_of(corner)
-    assert item(items, "ramp_width").label == "assumed" and "1 pedestrian ramp permit for this block has" in item(items, "ramp_width").reason
-    assert any("Confirm this is current" in v["action"] for v in build_list(items, corner))
+    assert not any("ramp permit" in p for p in data_sufficient(corner, items)[1])
+    visit = [v for v in build_list(items, corner) if "pedestrian ramp permits changed" in v["action"]]
+    assert visit and "doesn't tie it" in visit[0]["why"]
+    assert any("Confirm this is current" not in v["action"] for v in build_list(items, corner))
+
+
+def test_tied_permit_is_not_also_listed_as_block_only():
+    corner = real(permits=[ramp_permit("SW")], the_geom=RAMP_NEAR)
+    assert not any("pedestrian ramp permits changed" in v["action"] for v in build_list(evidence_of(corner), corner))
+    assert any("Confirm this is current" in v["action"] for v in build_list(evidence_of(corner), corner))
+
+
+@pytest.mark.parametrize("x,y,lon,lat", [(1002652.3248, 210610.1069, -73.93359, 40.74473), (984250.0, 0.0, -74.0, 40.16667)])
+def test_state_plane_conversion(x, y, lon, lat):
+    assert state_plane_to_lonlat(x, y) == pytest.approx((lon, lat), abs=0.0001)
 
 
 def test_ramp_permit_before_the_survey_changes_nothing():
-    corner = real(permits=[permit("PED RAMP REPLACE/MODIFY/INSTALL GOVERNMENT", "2022-04-06T23:59:59.000")])
+    corner = real(permits=[ramp_permit("SW", end="2022-04-06T23:59:59.000")], the_geom=RAMP_NEAR)
     assert item(evidence_of(corner), "ramp_width").label == "measured"
     assert any("no permit" in n for n in join_report(corner))
 
@@ -95,7 +141,7 @@ def test_other_permit_is_a_site_visit_item_and_not_a_stale_label():
 
 
 def test_site_measurement_clears_the_permit_question():
-    corner = real(permits=[permit("PED RAMP REPLACE", "2024-04-06T23:59:59.000")])
+    corner = real(permits=[ramp_permit("SW")], the_geom=RAMP_NEAR)
     width = item(evidence_of(corner, [dict(key="2:ramp_width", value=60, unit="in", date="2026-11-02", by="A B")]), "ramp_width")
     assert width.label == "measured"
 
@@ -112,6 +158,13 @@ def test_centerline_matches_abbreviated_names_and_reports_a_missing_one():
     assert not any("No street within 100 m" in n for n in join_report(corner))
     corner["street_segments"] = [dict(full_street_name="VAN DAM ST", streetwidth="44")]
     assert any("THOMSON AVENUE" in n and "No street within 100 m" in n for n in join_report(corner))
+
+
+def test_permit_keeps_only_a_point_and_corner_note():
+    kept = search.fetch.trim_permit(dict(permitnumber="Q1", permitlocationcomments="SW", wkt=PERMIT_POINT))
+    assert kept == dict(permitnumber="Q1", permitlocationcomments="SW", wkt=PERMIT_POINT)
+    kept = search.fetch.trim_permit(dict(permitnumber="Q2", permitlocationcomments="31-28 Example Ave", wkt="LINESTRING (1 2, 3 4)"))
+    assert kept == dict(permitnumber="Q2")
 
 
 def test_filters_escape_street_names():
@@ -181,7 +234,7 @@ def test_saved_real_corner_shows_the_new_evidence():
     assert all(o["result"] in ("unknown", "not applicable") for o in run["rule_results"])
     assert not any("units" in p or "road owner" in p for p in run["problems"])
     assert item_of(run, "corner:road_control")["label"] == "assumed" and item_of(run, "corner:sidewalk_width")["value"] == 14.11
-    assert not any("negative" in p for p in run["problems"]) and any("pedestrian ramp permits" in p for p in run["problems"])
+    assert not any("negative" in p for p in run["problems"]) and any("1 pedestrian ramp permit located at this ramp" in p for p in run["problems"])
     assert item_of(run, "116256:ramp_length")["value"] == 39.6 and item_of(run, "116256:ramp_left_flare")["value"] == -17.0
     assert any("Non-Compliant" in x for x in run["dot_survey"]) and not any("Compliant" in n for n in run["join_notes"])
     assert not any("permitteename" in p for p in run["permits"])

@@ -34,15 +34,15 @@
   },
   {
    "dataset": "tqtj-sjs8",
-   "url": "https://data.cityofnewyork.us/resource/tqtj-sjs8.json?%24limit=51&%24where=upper%28boroughname%29%3D%27QUEENS%27+AND+issuedworkenddate%3E%3D%272018-08-08%27+AND+%28%28upper%28onstreetname%29+like+%27%25VAN+DAM+STREET%25%27+AND+%28upper%28fromstreetname%29+like+%27%25THOMSON+AVENUE%25%27+OR+upper%28tostreetname%29+like+%27%25THOMSON+AVENUE%25%27%29%29+OR+%28upper%28onstreetname%29+like+%27%25THOMSON+AVENUE%25%27+AND+%28upper%28fromstreetname%29+like+%27%25VAN+DAM+STREET%25%27+OR+upper%28tostreetname%29+like+%27%25VAN+DAM+STREET%25%27%29%29%29&%24order=issuedworkenddate+DESC&%24select=permitnumber%2Cpermittypedesc%2Cpermitstatusshortdesc%2Cpermitissuedate%2Cissuedworkstartdate%2Cissuedworkenddate%2Constreetname%2Cfromstreetname%2Ctostreetname%2Csidewalkshortdesc",
+   "url": "https://data.cityofnewyork.us/resource/tqtj-sjs8.json?%24limit=51&%24where=upper%28boroughname%29%3D%27QUEENS%27+AND+issuedworkenddate%3E%3D%272018-08-08%27+AND+%28%28upper%28onstreetname%29+like+%27%25VAN+DAM+STREET%25%27+AND+%28upper%28fromstreetname%29+like+%27%25THOMSON+AVENUE%25%27+OR+upper%28tostreetname%29+like+%27%25THOMSON+AVENUE%25%27%29%29+OR+%28upper%28onstreetname%29+like+%27%25THOMSON+AVENUE%25%27+AND+%28upper%28fromstreetname%29+like+%27%25VAN+DAM+STREET%25%27+OR+upper%28tostreetname%29+like+%27%25VAN+DAM+STREET%25%27%29%29%29&%24order=issuedworkenddate+DESC&%24select=permitnumber%2Cpermittypedesc%2Cpermitstatusshortdesc%2Cpermitissuedate%2Cissuedworkstartdate%2Cissuedworkenddate%2Constreetname%2Cfromstreetname%2Ctostreetname%2Csidewalkshortdesc%2Cpermitlocationcomments%2Cwkt",
    "retrieved_at": "2026-11-05T00:00:00+00:00",
-   "note": "Read from the NYC Open Data portal through a browser on November 5, 2026."
+   "note": "Read through a browser on November 5, 2026. Location text is reduced to a point and corner note."
   },
   {
    "dataset": "c9sj-fmsg",
-   "url": "https://data.cityofnewyork.us/resource/c9sj-fmsg.json?%24limit=51&%24where=upper%28boroughname%29%3D%27QUEENS%27+AND+issuedworkenddate%3E%3D%272018-08-08%27+AND+%28%28upper%28onstreetname%29+like+%27%25VAN+DAM+STREET%25%27+AND+%28upper%28fromstreetname%29+like+%27%25THOMSON+AVENUE%25%27+OR+upper%28tostreetname%29+like+%27%25THOMSON+AVENUE%25%27%29%29+OR+%28upper%28onstreetname%29+like+%27%25THOMSON+AVENUE%25%27+AND+%28upper%28fromstreetname%29+like+%27%25VAN+DAM+STREET%25%27+OR+upper%28tostreetname%29+like+%27%25VAN+DAM+STREET%25%27%29%29%29&%24order=issuedworkenddate+DESC&%24select=permitnumber%2Cpermittypedesc%2Cpermitstatusshortdesc%2Cpermitissuedate%2Cissuedworkstartdate%2Cissuedworkenddate%2Constreetname%2Cfromstreetname%2Ctostreetname%2Csidewalkshortdesc",
+   "url": "https://data.cityofnewyork.us/resource/c9sj-fmsg.json?%24limit=51&%24where=upper%28boroughname%29%3D%27QUEENS%27+AND+issuedworkenddate%3E%3D%272018-08-08%27+AND+%28%28upper%28onstreetname%29+like+%27%25VAN+DAM+STREET%25%27+AND+%28upper%28fromstreetname%29+like+%27%25THOMSON+AVENUE%25%27+OR+upper%28tostreetname%29+like+%27%25THOMSON+AVENUE%25%27%29%29+OR+%28upper%28onstreetname%29+like+%27%25THOMSON+AVENUE%25%27+AND+%28upper%28fromstreetname%29+like+%27%25VAN+DAM+STREET%25%27+OR+upper%28tostreetname%29+like+%27%25VAN+DAM+STREET%25%27%29%29%29&%24order=issuedworkenddate+DESC&%24select=permitnumber%2Cpermittypedesc%2Cpermitstatusshortdesc%2Cpermitissuedate%2Cissuedworkstartdate%2Cissuedworkenddate%2Constreetname%2Cfromstreetname%2Ctostreetname%2Csidewalkshortdesc%2Cpermitlocationcomments%2Cwkt",
    "retrieved_at": "2026-11-05T00:00:00+00:00",
-   "note": "Read through a browser on November 5, 2026."
+   "note": "Read through a browser on November 5, 2026. Location text is reduced to a point and corner note."
   },
   {
    "dataset": "CMT_SURVEY_COMPLIANCY_TOLERANCE_PROD",
@@ -285,7 +285,9 @@
    "issuedworkenddate": "2024-04-16T23:59:59.000",
    "onstreetname": "THOMSON AVENUE",
    "fromstreetname": "VAN DAM STREET",
-   "sidewalkshortdesc": "CONCRETE"
+   "sidewalkshortdesc": "CONCRETE",
+   "permitlocationcomments": "SW",
+   "wkt": "POINT (1002652.3247999996 210610.10690000653)"
   },
   {
    "permitnumber": "Q042024071A07",
@@ -296,7 +298,9 @@
    "issuedworkenddate": "2024-04-06T23:59:59.000",
    "onstreetname": "THOMSON AVENUE",
    "fromstreetname": "VAN DAM STREET",
-   "sidewalkshortdesc": "CONCRETE"
+   "sidewalkshortdesc": "CONCRETE",
+   "permitlocationcomments": "NE",
+   "wkt": "POINT (1002652.3247999996 210610.10690000653)"
   },
   {
    "permitnumber": "Q042024071A06",
@@ -307,7 +311,9 @@
    "issuedworkenddate": "2024-04-06T23:59:59.000",
    "onstreetname": "THOMSON AVENUE",
    "fromstreetname": "VAN DAM STREET",
-   "sidewalkshortdesc": "CONCRETE"
+   "sidewalkshortdesc": "CONCRETE",
+   "permitlocationcomments": "NW",
+   "wkt": "POINT (1002652.3247999996 210610.10690000653)"
   },
   {
    "permitnumber": "Q042024071A08",
@@ -318,7 +324,9 @@
    "issuedworkenddate": "2024-04-06T23:59:59.000",
    "onstreetname": "THOMSON AVENUE",
    "fromstreetname": "VAN DAM STREET",
-   "sidewalkshortdesc": "CONCRETE"
+   "sidewalkshortdesc": "CONCRETE",
+   "permitlocationcomments": "SE",
+   "wkt": "POINT (1002652.3247999996 210610.10690000653)"
   },
   {
    "permitnumber": "Q012023179B07",
@@ -341,7 +349,8 @@
    "issuedworkenddate": "2023-09-05T23:59:59.000",
    "onstreetname": "THOMSON AVENUE",
    "fromstreetname": "VAN DAM STREET",
-   "sidewalkshortdesc": "CONCRETE"
+   "sidewalkshortdesc": "CONCRETE",
+   "wkt": "POINT (1002652.3247999996 210610.10690000653)"
   },
   {
    "permitnumber": "Q012023179B09",
@@ -376,7 +385,8 @@
    "issuedworkenddate": "2023-07-16T23:59:59.000",
    "onstreetname": "THOMSON AVENUE",
    "fromstreetname": "VAN DAM STREET",
-   "sidewalkshortdesc": "CONCRETE"
+   "sidewalkshortdesc": "CONCRETE",
+   "wkt": "POINT (1002652.3247999996 210610.10690000653)"
   },
   {
    "permitnumber": "Q012023108B84",

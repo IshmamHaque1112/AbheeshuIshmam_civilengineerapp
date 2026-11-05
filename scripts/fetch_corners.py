@@ -28,7 +28,7 @@ NEARBY_METERS = 100
 SEGMENT_CAP, PERMIT_CAP = 30, 50
 SEGMENT_FIELDS = "physicalid,full_street_name,rw_type,status,streetwidth,trafdir,rwjurisdiction"
 # The permit holder's name is left out on purpose, because a permit holder can be a private person.
-PERMIT_FIELDS = "permitnumber,permittypedesc,permitstatusshortdesc,permitissuedate,issuedworkstartdate,issuedworkenddate,onstreetname,fromstreetname,tostreetname,sidewalkshortdesc"
+PERMIT_FIELDS = "permitnumber,permittypedesc,permitstatusshortdesc,permitissuedate,issuedworkstartdate,issuedworkenddate,onstreetname,fromstreetname,tostreetname,sidewalkshortdesc,permitlocationcomments,wkt"
 PLACEHOLDER = {999, 9999, -999}
 BOROUGHS = {"MANHATTAN": 1, "BRONX": 2, "BROOKLYN": 3, "QUEENS": 4, "STATEN ISLAND": 5}
 REFRESH = {"on": False}
@@ -174,6 +174,18 @@ def centerline_where(locations):
     """Find street segments near the first ramp with a location. Returns None when no ramp has one."""
     point = ramp_point(locations)
     return f"within_circle(the_geom,{point[1]},{point[0]},{NEARBY_METERS})" if point else None
+
+
+def trim_permit(permit):
+    """Keep a permit's point and corner note only. Other location text can name an address, and street lines are long."""
+    kept = dict(permit)
+    note = re.match(r"\s*(NE|NW|SE|SW)\b", str(kept.pop("permitlocationcomments", "") or "").upper())
+    wkt = kept.pop("wkt", None)
+    if note:
+        kept["permitlocationcomments"] = note.group(1)
+    if str(wkt or "").strip().upper().startswith("POINT"):
+        kept["wkt"] = wkt
+    return kept
 
 
 def sidewalk_where(locations):

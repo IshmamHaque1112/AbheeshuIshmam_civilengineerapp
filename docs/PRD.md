@@ -190,7 +190,7 @@ Still open:
 - Queens and Brooklyn reach "checks the evidence supports" with four corner inputs missing, and each affected check shows its own stop. `docs/P0-REVIEW.md` reads the stop wording more strictly, so the team should decide which it wants.
 - With no API key, a rerun has no Skeptic review, because the saved responses describe the original records. It can reach "checks the evidence supports," but it says the review wasn't reused, and it can't show a label or plan.
 - No named person has reviewed the rules, so every limit result stays "unknown."
-- Corner 1024569 (Van Dam Street and Thomson Avenue) is now the demo's real corner, using saved records. Its ramp and program records name different streets, and Street Centerline shows all of them within 100 m. Four pedestrian ramp permits from 2024 mean its 2018 measurements may be out of date, so confirm it's a good choice. R29 and the timing metrics need people.
+- Corner 1024569 (Van Dam Street and Thomson Avenue) is now the demo's real corner, using saved records. Its ramp and program records name different streets, and Street Centerline shows all of them within 100 m. A 2024 pedestrian ramp permit located at its southwest corner means its 2018 measurements may be out of date, so confirm it's a good choice. R29 and the timing metrics need people.
 - `docs/RUN-CHECK.md` (Nov 3) failed on Apple's Python 3.9. The app needs Python 3.10 or newer, and the README has Mac setup steps.
 
 ## 6. Demo plan (Nov 12)
@@ -198,7 +198,7 @@ Still open:
 1. State the limits: sample corners, no NYC affiliation, an engineer must review the rules.
 2. Lead with one supported check against H-1011 Table 1 and §19-112, quote on screen.
 3. Queens and Brooklyn sample corners: the packet and the checks the evidence supports.
-4. Real corner near Thomson Ave: saved records, limits "unknown" until a named review. The tool stops because later ramp permits may have changed the 2018 survey.
+4. Real corner near Thomson Ave: saved records, limits "unknown" until a named review. The tool stops because a 2024 ramp permit located at this corner may have changed the 2018 survey.
 5. One line on how a student could follow the math on a real corner.
 6. End on the Bronx stop case: rebuilt after its survey, so the tool stops and writes the site-visit list.
 
