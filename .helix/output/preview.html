@@ -1,0 +1,348 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CornerBrief 3D Preview</title>
+<style>:root { --asphalt:#20272b; --ink:#232b2f; --quiet:#566166; --concrete:#dfe2de; --surface:#f5f6f3; --line:#b9bfba; --dws:#f2c200; --blue:#0d5c9e; --stop:#a8261d; --go:#27634a; }
+* { box-sizing:border-box; }
+body { margin:0; background:var(--concrete); color:var(--ink); font:400 16px/1.5 Barlow, "Segoe UI", Arial, sans-serif; font-variant-numeric:tabular-nums; }
+h1,h2,h3,.status strong { font-family:"Barlow Semi Condensed", "Arial Narrow", Arial, sans-serif; font-weight:700; line-height:1.15; }
+a { color:var(--blue); }
+:focus-visible { outline:3px solid var(--blue); outline-offset:2px; }
+.top { background:var(--asphalt); color:#fff; padding:14px 24px; display:flex; flex-wrap:wrap; align-items:baseline; gap:6px 20px; }
+.top h1 { margin:0; font-size:28px; }
+.top p { margin:0; color:#d7dcda; font-size:15px; }
+.picker { display:grid; grid-auto-flow:column; grid-auto-columns:minmax(0,1fr); background:var(--asphalt); padding:0 24px; gap:4px; }
+.picker button { font:inherit; font-weight:500; text-align:left; padding:10px 14px; background:#343d41; color:#fff; border:0; border-radius:6px 6px 0 0; cursor:pointer; }
+.picker button small { display:block; color:#cfd5d2; font-weight:400; }
+.picker button[aria-current="true"] { background:var(--concrete); color:var(--ink); }
+.picker button[aria-current="true"] small { color:var(--quiet); }
+.status { --dot:rgba(32,39,43,.2); background-color:var(--dws); background-image:radial-gradient(var(--dot) 3.5px,transparent 4px); background-size:16px 16px; padding:22px 24px; color:var(--asphalt); }
+.status strong { display:table; font-size:44px; background:var(--dws); padding:0 8px 0 0; }
+.status p { margin:4px 0 0; max-width:70ch; font-weight:500; background:var(--dws); display:inline-block; padding:0 6px 0 0; }
+.status.stop { --dot:rgba(255,255,255,.14); background-color:var(--stop); color:#fff; }
+.status.stop strong, .status.stop p { background:var(--stop); }
+.changes { background:var(--surface); border:1px solid var(--line); border-left:6px solid var(--dws); padding:14px; border-radius:4px; }
+blockquote { margin:5px 0 0; padding-left:8px; border-left:2px solid var(--line); color:var(--quiet); font-size:13px; }
+.fieldhead { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; max-width:520px; margin-bottom:12px; }
+.entry { display:flex; align-items:center; gap:6px; min-width:130px; }
+.entry input { width:90px; flex:none; }
+.entry select { min-width:150px; font:inherit; padding:7px; }
+label.cell { display:inline; font-weight:400; margin:0; }
+td input[type=file] { padding:0; border:0; font-size:14px; min-width:190px; background:transparent; }
+.button:disabled { opacity:.6; cursor:wait; }
+.alert { background:var(--asphalt); color:#fff; padding:10px 24px; font-weight:500; }
+.alert span { color:var(--dws); }
+.sheet { display:grid; grid-template-columns:minmax(0,1fr) 400px; gap:28px; padding:24px; max-width:1440px; margin:auto; align-items:start; }
+.brief { min-width:0; }
+.side { position:sticky; top:16px; display:grid; gap:16px; }
+section { margin:0 0 30px; }
+h2 { font-size:26px; margin:0 0 8px; }
+h3 { font-size:20px; margin:18px 0 6px; }
+p { max-width:75ch; }
+.lead { font-size:19px; font-weight:500; margin-top:0; }
+table { width:100%; border-collapse:collapse; background:var(--surface); font-size:15px; }
+th { text-align:left; font-weight:600; background:#ccd1cc; }
+th,td { padding:7px 10px; border-bottom:1px solid var(--line); vertical-align:top; }
+.wrap { overflow-x:auto; }
+td .tag { white-space:normal; }
+.tag { display:inline-block; padding:0 7px; border:1.5px solid var(--ink); border-radius:3px; font-size:14px; font-weight:500; white-space:nowrap; }
+.tag.measured { background:var(--ink); color:#fff; }
+.tag.assumed { border-style:dashed; }
+.tag.missing { color:var(--stop); border-color:var(--stop); background:transparent; }
+.tag.stale { background:repeating-linear-gradient(135deg,#d6d9d5,#d6d9d5 4px,#f5f6f3 4px,#f5f6f3 8px); }
+.tag.exceeded { background:var(--stop); border-color:var(--stop); color:#fff; }
+.tag.clear { color:var(--go); border-color:var(--go); }
+.tag.preview-over { color:var(--stop); border-color:var(--stop); margin-top:3px; }
+.tag.preview-in { color:var(--go); border-color:var(--go); margin-top:3px; }
+.tag.stoptag { background:var(--stop); border-color:var(--stop); color:#fff; margin-top:3px; }
+.tag.na { color:var(--quiet); border-color:var(--line); }
+details { background:var(--surface); border:1px solid var(--line); border-radius:4px; margin:10px 0; }
+summary { padding:9px 12px; cursor:pointer; font-weight:600; }
+details .wrap { border-top:1px solid var(--line); }
+.panel { background:var(--surface); border:1px solid var(--line); border-radius:4px; padding:14px; }
+.panel h2 { font-size:22px; }
+canvas { display:block; width:100%; height:300px; background:#ccd1cc; cursor:grab; touch-action:none; border-radius:3px; }
+.hint { font-size:14px; color:var(--quiet); margin:6px 0 0; }
+label { display:block; font-weight:500; margin:10px 0 3px; }
+input { width:100%; font:inherit; padding:8px; border:1px solid var(--quiet); border-radius:3px; background:#fff; }
+.button { display:inline-block; font:inherit; font-weight:600; padding:9px 14px; margin-top:10px; border:1.5px solid var(--asphalt); border-radius:4px; background:var(--asphalt); color:#fff; cursor:pointer; text-decoration:none; }
+.button.alt { background:transparent; color:var(--asphalt); }
+.error { color:var(--stop); font-weight:500; margin:8px 0 0; }
+.ok { color:var(--go); font-weight:500; margin:8px 0 0; }
+ul.plain { padding-left:20px; margin:6px 0; }
+ul.plain li { margin:0 0 5px; }
+.money { font:700 34px/1.1 "Barlow Semi Condensed", "Arial Narrow", Arial, sans-serif; }
+.empty { padding:40px 24px; }
+@media (max-width:980px) { .sheet { grid-template-columns:minmax(0,1fr); padding:16px; } .side { position:static; } .picker { padding:0 16px; } .top,.status,.alert { padding-left:16px; padding-right:16px; } .status strong { font-size:36px; } }
+@media (max-width:620px) { .picker { grid-auto-flow:row; gap:0; } .picker button { border-radius:0; } }
+
+.readingrow { display:flex; gap:8px; align-items:stretch; }
+.readingrow .button { margin:0; white-space:nowrap; }
+.search { margin:12px 24px 0; padding:12px 14px; }
+.search h2 { margin:0 0 6px; font-size:18px; }
+.search form { display:grid; grid-template-columns:200px minmax(0,1fr) auto; gap:12px; align-items:end; }
+.search label { display:block; margin:0 0 3px; font-size:14px; }
+.search select, .search input { box-sizing:border-box; width:100%; height:42px; margin:0; font:inherit; }
+.search select { padding:0 8px; }
+.search form .button { margin:0; height:42px; }
+#search-status { margin:6px 0 0; font-size:14px; color:var(--quiet); }
+#search-results { max-height:190px; overflow-y:auto; }
+#search-results p { margin:6px 0; font-size:14px; }
+#search-results button { margin:3px 6px 3px 0; padding:6px 10px; font-size:14px; }
+@media (max-width:980px) { .search { margin:12px 16px 0; } }
+@media (max-width:620px) { .search form { grid-template-columns:minmax(0,1fr); } .search form .button { width:100%; } }
+pre { white-space: pre-wrap; overflow-wrap: anywhere; max-height: 28rem; overflow: auto; padding: 1rem; background: #f3f5f5; }
+.synthetic { background:var(--blue); color:#fff; font-weight:600; padding:10px 24px; }
+.toplink { color:#fff; margin-left:8px; font-weight:600; }
+.sheet.preview { display:grid; grid-template-columns:340px minmax(0,1fr); gap:20px; align-items:start; }
+.viewer { position:relative; }
+.viewer canvas { height:520px; }
+.viewbuttons { position:absolute; right:10px; bottom:10px; display:flex; gap:4px; }
+.viewbuttons button { font:inherit; font-weight:600; min-width:36px; height:36px; padding:0 10px; border:1px solid var(--asphalt); border-radius:3px; background:var(--surface); cursor:pointer; }
+.dim { margin-bottom:6px; }
+.dim label { display:block; margin:0 0 2px; }
+.dimrow { display:grid; grid-template-columns:minmax(0,1fr) 84px; gap:8px; align-items:center; }
+.dimrow input[type=range] { padding:0; border:0; background:transparent; }
+.fielderror { margin:2px 0 0; font-size:14px; }
+.fielderror:empty { display:none; }
+input[aria-invalid="true"] { border:2px solid var(--stop); }
+label.inline { display:block; font-weight:400; margin:2px 0 14px; }
+label.inline input { width:auto; }
+.detailbody { padding:0 14px 10px; }
+.previewlink { display:block; color:#fff; font-weight:600; }
+.stalenote { border-left:4px solid var(--stop); background:#fbeeec; color:var(--stop); font-weight:600; padding:8px 12px; margin:8px 0; }
+.isstale table { opacity:.45; }
+#basis { margin-top:18px; border-top:1px solid var(--line); padding-top:10px; }
+#basis h2 { font-size:20px; margin:0 0 6px; }
+#basis h3 { font-size:15px; margin:12px 0 4px; }
+#basis ul { margin:0; font-size:14px; }
+.tag.synthetic-tag { color:var(--blue); border-color:var(--blue); }
+@media (max-width:980px) { .sheet.preview { grid-template-columns:minmax(0,1fr); } .viewer canvas { height:400px; } .synthetic { padding:10px 16px; } }
+</style>
+</head>
+<body>
+<header class="top">
+  <h1>CornerBrief</h1>
+  <p>3D preview. Demo only, with no affiliation to NYC. Not a design or a compliance decision. <a class="toplink" href="/">Back to corner packets</a></p>
+</header>
+<div class="synthetic" id="notice" role="note"></div>
+<main class="sheet preview">
+  <section class="panel" aria-labelledby="controls-title">
+    <h2 id="controls-title">Dimensions</h2>
+    <p class="hint">The model and quantities update as you type. There are no rule checks on this page.</p>
+    <form id="dims" novalidate></form>
+    <button class="button alt" id="reset" type="button">Reset dimensions</button>
+    <p id="status" role="status"></p>
+    <section aria-labelledby="basis-title" id="basis">
+      <h2 id="basis-title">What the model is built from</h2>
+      <h3><span class="tag synthetic-tag">Synthetic</span> Typed in on this page</h3><ul class="plain" id="basis-synthetic"></ul>
+      <h3><span class="tag">Assumed</span> Sample assumptions</h3><ul class="plain" id="basis-assumed"></ul>
+      <h3><span class="tag stoptag">Unknown</span> Not modeled</h3><p class="hint">A real corner needs these. The sandbox leaves them out rather than filling them in.</p><ul class="plain" id="basis-unknown"></ul>
+    </section>
+  </section>
+  <div>
+    <div class="viewer">
+      <canvas id="scene" tabindex="0" role="img" aria-label="Synthetic 3D model of a corner ramp and landing"></canvas>
+      <div class="viewbuttons" aria-label="View controls">
+        <button type="button" id="zoom-in" aria-label="Zoom in">+</button>
+        <button type="button" id="zoom-out" aria-label="Zoom out">−</button>
+        <button type="button" id="view-reset">Reset view</button>
+      </div>
+    </div>
+    <p class="hint">Drag to rotate. Scroll to zoom. Shift-drag or right-drag to pan. Arrow keys, + and − also work.</p>
+    <label class="inline"><input type="checkbox" id="exaggerate" checked> Show height at 3×</label>
+    <section aria-labelledby="quantities-title" id="quantity-section">
+      <h2 id="quantities-title">Provisional quantities</h2>
+      <p id="revision" class="hint"></p>
+      <p id="stale" class="stalenote" role="alert" hidden></p>
+      <div class="wrap"><table><thead><tr><th>Item</th><th>Quantity</th><th>Change</th></tr></thead><tbody id="quantities"></tbody></table></div>
+      <details><summary>Assumptions and exclusions</summary><div class="detailbody"><h3>Sample assumptions</h3><ul class="plain" id="assumptions"></ul><h3>Not included</h3><ul class="plain" id="exclusions"></ul></div></details>
+    </section>
+  </div>
+</main>
+<script>window.CORNERBRIEF_PREVIEW_EXPORT = {"defaults": {"notice": "Synthetic exploration: these dimensions were typed in, not measured. This isn't field evidence, a design or a rule check.", "fields": [{"id": "width_ft", "label": "Ramp width", "unit": "ft", "low": 1, "high": 20, "default": 5}, {"id": "length_ft", "label": "Ramp length", "unit": "ft", "low": 1, "high": 30, "default": 6}, {"id": "landing_width_ft", "label": "Landing width", "unit": "ft", "low": 1, "high": 20, "default": 5}, {"id": "landing_length_ft", "label": "Landing length", "unit": "ft", "low": 1, "high": 20, "default": 5}, {"id": "slope_pct", "label": "Running slope", "unit": "%", "low": 0, "high": 15, "default": 6}]}, "model": {"input_basis": {"synthetic": ["Ramp width 5 ft", "Ramp length 6 ft", "Landing width 5 ft", "Landing length 5 ft", "Running slope 6 %"], "assumed": ["Slab thickness 4 in", "Warning surface depth 2 ft", "Extra curb length 4 ft", "Removal area factor 1.25\u00d7"], "unknown": ["Sidewalk width", "Ramp and landing cross slope", "Side flares", "Gutter and roadway slope", "Lip height at the gutter", "Legal grade", "Utilities, vaults and catch basins", "Road ownership"]}, "basis_version": 2, "kind": "synthetic exploration", "notice": "Synthetic exploration: these dimensions were typed in, not measured. This isn't field evidence, a design or a rule check.", "revision": "c859c21d", "scene": {"faces": [{"p": [[-6, -8, -0.01], [11.0, -8, -0.01], [11.0, 0, -0.01], [-6, 0, -0.01]], "c": "#4a5154"}, {"p": [[-6, 0, -0.005], [11.0, 0, -0.005], [11.0, 15.0, -0.005], [-6, 15.0, -0.005]], "c": "#c7cac5"}, {"p": [[0.0, 2, 0.12], [5.0, 2, 0.12], [5.0, 6.0, 0.36], [0.0, 6.0, 0.36]], "c": "#b9bdb9"}, {"p": [[0.0, 0, 0], [5.0, 0, 0], [5.0, 2, 0.12], [0.0, 2, 0.12]], "c": "#f2c200"}, {"p": [[0.0, 0, 0], [0.0, 6.0, 0], [0.0, 6.0, 0.36]], "c": "#9aa09c"}, {"p": [[5.0, 0, 0], [5.0, 6.0, 0], [5.0, 6.0, 0.36]], "c": "#9aa09c"}, {"p": [[0.0, 6.0, 0.36], [5.0, 6.0, 0.36], [5.0, 11.0, 0.36], [0.0, 11.0, 0.36]], "c": "#d2d4cf"}, {"p": [[0.0, 6.0, 0], [5.0, 6.0, 0], [5.0, 6.0, 0.36], [0.0, 6.0, 0.36]], "c": "#9aa09c"}, {"p": [[5.0, 6.0, 0], [5.0, 11.0, 0], [5.0, 11.0, 0.36], [5.0, 6.0, 0.36]], "c": "#9aa09c"}, {"p": [[0.0, 6.0, 0], [0.0, 11.0, 0], [0.0, 11.0, 0.36], [0.0, 6.0, 0.36]], "c": "#9aa09c"}, {"p": [[-2.0, -0.5, 0.36], [0.0, -0.5, 0.36], [0.0, 0, 0.36], [-2.0, 0, 0.36]], "c": "#7f8785"}, {"p": [[-2.0, -0.5, 0], [0.0, -0.5, 0], [0.0, -0.5, 0.36], [-2.0, -0.5, 0.36]], "c": "#7f8785"}, {"p": [[0.0, -0.5, 0], [0.0, 0, 0], [0.0, 0, 0.36], [0.0, -0.5, 0.36]], "c": "#7f8785"}, {"p": [[-2.0, -0.5, 0], [-2.0, 0, 0], [-2.0, 0, 0.36], [-2.0, -0.5, 0.36]], "c": "#7f8785"}, {"p": [[5.0, -0.5, 0.36], [7.0, -0.5, 0.36], [7.0, 0, 0.36], [5.0, 0, 0.36]], "c": "#7f8785"}, {"p": [[5.0, -0.5, 0], [7.0, -0.5, 0], [7.0, -0.5, 0.36], [5.0, -0.5, 0.36]], "c": "#7f8785"}, {"p": [[7.0, -0.5, 0], [7.0, 0, 0], [7.0, 0, 0.36], [7.0, -0.5, 0.36]], "c": "#7f8785"}, {"p": [[5.0, -0.5, 0], [5.0, 0, 0], [5.0, 0, 0.36], [5.0, -0.5, 0.36]], "c": "#7f8785"}], "center": [2.5, 5.5, 0], "radius": 19.0}, "dimensions": [{"label": "Ramp width 5 ft", "a": [0, -1.4, 0], "b": [5.0, -1.4, 0]}, {"label": "Ramp length 6 ft", "a": [6.2, 0, 0], "b": [6.2, 6.0, 0]}, {"label": "Landing width 5 ft", "a": [0.0, 12.2, 0.36], "b": [5.0, 12.2, 0.36]}, {"label": "Landing length 5 ft", "a": [6.2, 6.0, 0.36], "b": [6.2, 11.0, 0.36]}, {"label": "Rise 4.3 in", "a": [-1.2, 6.0, 0], "b": [-1.2, 6.0, 0.36]}], "rise_in": 4.3, "inputs": [{"id": "width_ft", "label": "Ramp width", "value": 5.0, "unit": "ft", "provenance": "synthetic, typed in"}, {"id": "length_ft", "label": "Ramp length", "value": 6.0, "unit": "ft", "provenance": "synthetic, typed in"}, {"id": "landing_width_ft", "label": "Landing width", "value": 5.0, "unit": "ft", "provenance": "synthetic, typed in"}, {"id": "landing_length_ft", "label": "Landing length", "value": 5.0, "unit": "ft", "provenance": "synthetic, typed in"}, {"id": "slope_pct", "label": "Running slope", "value": 6.0, "unit": "%", "provenance": "synthetic, typed in"}], "quantities": [{"id": "slab_area", "label": "Ramp and landing slab", "qty": 55.0, "unit": "sf", "basis": "provisional, from synthetic inputs and sample assumptions"}, {"id": "dws_area", "label": "Detectable warning surface", "qty": 10.0, "unit": "sf", "basis": "provisional, from synthetic inputs and sample assumptions"}, {"id": "curb_length", "label": "Curb", "qty": 9.0, "unit": "lf", "basis": "provisional, from synthetic inputs and sample assumptions"}, {"id": "removal_area", "label": "Existing surface removal", "qty": 68.8, "unit": "sf", "basis": "provisional, from synthetic inputs and sample assumptions"}, {"id": "concrete_volume", "label": "Slab concrete", "qty": 0.68, "unit": "cy", "basis": "provisional, from synthetic inputs and sample assumptions"}, {"id": "ramp_count", "label": "Ramps", "qty": 1, "unit": "count", "basis": "provisional, from synthetic inputs and sample assumptions"}, {"id": "landing_count", "label": "Landings", "qty": 1, "unit": "count", "basis": "provisional, from synthetic inputs and sample assumptions"}], "assumptions": [{"id": "slab_thickness_in", "value": 4, "unit": null, "note": "34 RCNY \u00a72-09 sidewalk course thickness, used here as an assumption for ramps"}, {"id": "dws_depth_ft", "value": 2, "unit": null, "note": "Assumed 24 inches in the direction of travel; confirm against the current H-1011"}, {"id": "curb_extra_length_ft", "value": 4, "unit": null, "note": "Assumed curb replacement beyond the ramp width, for the concept only"}, {"id": "removal_factor", "value": 1.25, "unit": null, "note": "Assumed existing-surface removal area compared with the new slab area"}], "exclusions": ["Utilities and utility relocation", "Drainage changes", "Traffic and pedestrian control", "Permits and inspection", "Roadway or sidewalk work beyond the modeled parts", "Base preparation and reinforcement", "Overhead, profit and escalation"], "review_note": "Any estimate or schedule based on an earlier revision needs review against revision c859c21d."}};</script>
+<script>const $ = (s) => document.querySelector(s);
+const esc = (v) => String(v ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
+const canvas = $("#scene"), ctx = canvas.getContext("2d");
+const VIEW = { yaw: -0.7, pitch: 0.8, zoom: 1, panX: 0, panY: 0 };
+const exported = window.CORNERBRIEF_PREVIEW_EXPORT; // Set only in the static copy, which has no backend
+let view = { ...VIEW }, model = null, lastQuantities = null, lastRevision = null, stale = null, fields = [], requestNumber = 0, timer = null, drag = null;
+
+function shade(hex, f) { const n = parseInt(hex.slice(1), 16); return `rgb(${[n >> 16, (n >> 8) & 255, n & 255].map((v) => Math.round(v * f)).join(",")})`; }
+
+// Nudge a label up or down until it no longer covers one already drawn, keeping it inside the canvas.
+function placeLabel(placed, x, y, width, w, h) {
+  const left = Math.max(4, Math.min(w - width - 4, x - width / 2));
+  const at = (offset) => ({ x: left, y: Math.max(4, Math.min(h - 24, y - 10 + offset)), w: width, h: 20 });
+  const clear = (box) => !placed.some((p) => box.x < p.x + p.w && p.x < box.x + box.w && box.y < p.y + p.h && p.y < box.y + box.h);
+  const box = [0, 22, -22, 44, -44, 66, -66, 88, -88].map(at).find(clear) || at(0);
+  placed.push(box);
+  return box;
+}
+
+function draw() {
+  const ratio = Math.min(devicePixelRatio || 1, 1.5), w = canvas.clientWidth, h = canvas.clientHeight;
+  canvas.width = w * ratio; canvas.height = h * ratio; ctx.setTransform(ratio, 0, 0, ratio, 0, 0); ctx.clearRect(0, 0, w, h);
+  if (!model) return;
+  const lift = $("#exaggerate").checked ? 3 : 1;
+  const [cx, cy] = model.scene.center, scale = Math.min(w, h) / model.scene.radius * 0.82 * view.zoom;
+  const project = ([x, y, z]) => {
+    const dx = x - cx, dy = y - cy, zz = z * lift;
+    const rx = dx * Math.cos(view.yaw) - dy * Math.sin(view.yaw), ry = dx * Math.sin(view.yaw) + dy * Math.cos(view.yaw);
+    return { x: w / 2 + view.panX + rx * scale, y: h / 2 + view.panY - (ry * Math.sin(view.pitch) + zz * Math.cos(view.pitch)) * scale, d: ry * Math.cos(view.pitch) - zz * Math.sin(view.pitch) };
+  };
+  const faces = model.scene.faces.map((f, i) => { const pts = f.p.map(project); return { pts, c: f.c, i, d: pts.reduce((a, p) => a + p.d, 0) / pts.length }; });
+  faces.sort((a, b) => (a.i < 2 || b.i < 2) ? a.i - b.i : b.d - a.d || a.i - b.i);
+  for (const f of faces) {
+    ctx.beginPath(); f.pts.forEach((p, i) => (i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y))); ctx.closePath();
+    ctx.fillStyle = shade(f.c, 1); ctx.fill(); ctx.strokeStyle = shade(f.c, 0.7); ctx.lineWidth = 1; ctx.stroke();
+  }
+  ctx.font = "600 13px Barlow, 'Segoe UI', Arial, sans-serif"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+  const placed = [];
+  for (const dim of model.dimensions) {
+    const a = project(dim.a), b = project(dim.b), mx = (a.x + b.x) / 2, my = (a.y + b.y) / 2;
+    ctx.strokeStyle = "#0d5c9e"; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke();
+    for (const end of [a, b]) { ctx.beginPath(); ctx.arc(end.x, end.y, 2.5, 0, 7); ctx.fillStyle = "#0d5c9e"; ctx.fill(); }
+    const box = placeLabel(placed, mx, my, ctx.measureText(dim.label).width + 10, w, h);
+    if (Math.abs(box.y + 10 - my) > 1 || Math.abs(box.x + box.w / 2 - mx) > 1) { // A leader line ties a moved label to its dimension
+      ctx.strokeStyle = "rgba(13,92,158,.6)"; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(mx, my); ctx.lineTo(box.x + box.w / 2, box.y + 10); ctx.stroke();
+    }
+    ctx.fillStyle = "rgba(245,246,243,.94)"; ctx.fillRect(box.x, box.y, box.w, box.h);
+    ctx.fillStyle = "#232b2f"; ctx.fillText(dim.label, box.x + box.w / 2, box.y + 10);
+  }
+  canvas.labelBoxes = placed; // Read by the browser tests to check labels don't overlap
+  if (stale) { ctx.fillStyle = "rgba(245,246,243,.55)"; ctx.fillRect(0, 0, w, h); }
+  ctx.font = "700 13px Barlow, 'Segoe UI', Arial, sans-serif"; ctx.textAlign = "left";
+  const stamp = stale ? `NOT UPDATED · fix ${stale.join(", ")} · showing revision ${model.revision}` : `SYNTHETIC · revision ${model.revision}${lift > 1 ? " · height 3×" : ""}`;
+  ctx.fillStyle = stale ? "rgba(168,38,29,.94)" : "rgba(32,39,43,.86)"; ctx.fillRect(10, 10, Math.min(w - 20, ctx.measureText(stamp).width + 16), 24);
+  ctx.fillStyle = "#fff"; ctx.fillText(stamp, 18, 22, w - 36);
+}
+
+function describe() {
+  const dims = model.dimensions.map((d) => d.label).join(", ");
+  canvas.setAttribute("aria-label", stale ? `Not updated. Fix ${stale.join(", ")}. Still showing synthetic revision ${model.revision}: ${dims}.` : `Synthetic 3D model, revision ${model.revision}: ${dims}.`);
+}
+
+function showModel(next) {
+  model = next; stale = null;
+  const before = lastQuantities, previous = lastRevision;
+  const format = (n) => `${+n.toFixed(2)}`;
+  $("#quantities").innerHTML = next.quantities.map((q) => {
+    const old = before && before[q.id], delta = old == null ? 0 : q.qty - old;
+    return `<tr><td>${esc(q.label)}</td><td>${format(q.qty)} ${esc(q.unit === "count" ? "" : q.unit)}</td><td>${Math.abs(delta) < 0.005 ? "—" : `${delta > 0 ? "+" : "−"}${format(Math.abs(delta))}`}</td></tr>`;
+  }).join("");
+  lastQuantities = Object.fromEntries(next.quantities.map((q) => [q.id, q.qty]));
+  lastRevision = next.revision;
+  const changed = previous && previous !== next.revision
+    ? ` Changed from revision ${previous}: quantities were recalculated, and any estimate or schedule built on ${previous} must be recalculated before use.`
+    : ` ${next.review_note}`;
+  $("#revision").textContent = `Revision ${next.revision}. Provisional, from synthetic inputs and sample assumptions. Rise ${next.rise_in} in.${changed}`;
+  $("#stale").hidden = true; $("#quantity-section").classList.remove("isstale");
+  const list = (items) => items.map((x) => `<li>${esc(x)}</li>`).join("");
+  $("#basis-synthetic").innerHTML = list(next.input_basis.synthetic);
+  $("#basis-assumed").innerHTML = list(next.input_basis.assumed);
+  $("#basis-unknown").innerHTML = list(next.input_basis.unknown);
+  $("#assumptions").innerHTML = next.assumptions.map((a) => `<li>${esc(a.id.replaceAll("_", " "))}: ${esc(a.value)}${a.unit ? ` ${esc(a.unit)}` : ""}${a.note ? `. ${esc(a.note)}` : ""}</li>`).join("");
+  $("#exclusions").innerHTML = next.exclusions.map((x) => `<li>${esc(x)}</li>`).join("");
+  describe(); draw();
+}
+
+function setStatus(text, isError) { const s = $("#status"); s.textContent = text; s.className = isError ? "error" : ""; }
+
+function showProblems(problems) {
+  for (const [id, text] of Object.entries(problems)) {
+    const box = $(`#error-${CSS.escape(id)}`), input = $(`#${CSS.escape(id)}`);
+    if (box) box.textContent = text;
+    if (input) input.setAttribute("aria-invalid", "true");
+  }
+  setStatus("The model still shows the last valid dimensions, so nothing was guessed.", true);
+  if (!model) return;
+  stale = Object.keys(problems).map((id) => (fields.find((f) => f.id === id) || { label: id }).label);
+  $("#stale").textContent = `Not updated: fix ${stale.join(", ")}. The model and quantities still show revision ${model.revision}, the last valid dimensions.`;
+  $("#stale").hidden = false; $("#quantity-section").classList.add("isstale");
+  describe(); draw();
+}
+
+// The server checks every value again. This only saves a round trip for blank or out-of-range typing.
+function localProblems(values) {
+  const problems = {};
+  for (const f of fields) {
+    const text = String(values[f.id]).trim(), number = Number(text);
+    if (text === "" || !Number.isFinite(number) || number < f.low || number > f.high) problems[f.id] = `${f.label} must be a number from ${f.low} to ${f.high} ${f.unit}.`;
+  }
+  return problems;
+}
+
+async function update() {
+  const mine = ++requestNumber, values = Object.fromEntries(fields.map((f) => [f.id, $(`#${f.id}`).value]));
+  document.querySelectorAll(".fielderror").forEach((e) => { e.textContent = ""; });
+  fields.forEach((f) => $(`#${f.id}`).removeAttribute("aria-invalid"));
+  const local = localProblems(values);
+  if (Object.keys(local).length) { showProblems(local); return; }
+  try {
+    const res = await fetch("/api/preview", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(values) });
+    const out = await res.json();
+    if (mine !== requestNumber) return;
+    if (res.status === 400 && out.problems) { showProblems(out.problems); return; }
+    if (!res.ok) throw new Error(out.error || "The preview couldn't update.");
+    setStatus("Model and quantities are up to date.", false);
+    showModel(out);
+  } catch (err) {
+    if (mine === requestNumber) setStatus(err.message === "Failed to fetch" ? "The app's server can't be reached. Make sure it's still running." : err.message, true);
+  }
+}
+const schedule = () => { clearTimeout(timer); timer = setTimeout(update, 120); };
+
+function resetValues() { for (const f of fields) { $(`#${f.id}`).value = f.default; $(`#${f.id}-range`).value = f.default; } }
+
+async function start() {
+  const info = exported ? exported.defaults : await (await fetch("/api/preview")).json();
+  fields = info.fields;
+  $("#notice").textContent = info.notice;
+  $("#dims").innerHTML = fields.map((f) => `<div class="dim"><label for="${f.id}">${esc(f.label)} (${esc(f.unit)})</label><div class="dimrow"><input id="${f.id}-range" type="range" min="${f.low}" max="${f.high}" step="0.1" value="${f.default}" aria-label="${esc(f.label)} slider"><input id="${f.id}" type="number" step="any" min="${f.low}" max="${f.high}" value="${f.default}" aria-describedby="error-${f.id}"></div><p class="fielderror error" id="error-${f.id}"></p></div>`).join("");
+  $("#dims").addEventListener("submit", (event) => event.preventDefault());
+  if (exported) {
+    document.querySelectorAll("#dims input, #reset").forEach((input) => { input.disabled = true; });
+    document.querySelectorAll('a[href="/"]').forEach((a) => { a.href = "index.html"; });
+    showModel(exported.model);
+    setStatus("This static copy shows the default model built by the app's Python code. Editing dimensions needs the local CornerBrief app.", false);
+    return;
+  }
+  for (const f of fields) {
+    const number = $(`#${f.id}`), range = $(`#${f.id}-range`);
+    number.addEventListener("input", () => { if (number.value !== "") range.value = number.value; schedule(); });
+    range.addEventListener("input", () => { number.value = range.value; schedule(); });
+  }
+  $("#reset").addEventListener("click", () => { resetValues(); update(); });
+  await update();
+}
+
+canvas.addEventListener("contextmenu", (e) => e.preventDefault());
+canvas.addEventListener("pointerdown", (e) => { drag = { x: e.clientX, y: e.clientY, pan: e.shiftKey || e.button !== 0 }; canvas.setPointerCapture(e.pointerId); });
+canvas.addEventListener("pointermove", (e) => {
+  if (!drag) return;
+  const dx = e.clientX - drag.x, dy = e.clientY - drag.y;
+  if (drag.pan) { view.panX += dx; view.panY += dy; } else { view.yaw += dx * 0.01; view.pitch = Math.max(0.15, Math.min(1.5, view.pitch + dy * 0.01)); }
+  drag.x = e.clientX; drag.y = e.clientY; draw();
+});
+canvas.addEventListener("pointerup", () => { drag = null; });
+canvas.addEventListener("pointercancel", () => { drag = null; });
+const zoomBy = (factor) => { view.zoom = Math.max(0.3, Math.min(6, view.zoom * factor)); draw(); };
+canvas.addEventListener("wheel", (e) => { e.preventDefault(); zoomBy(e.deltaY < 0 ? 1.12 : 1 / 1.12); }, { passive: false });
+canvas.addEventListener("keydown", (e) => {
+  const moves = { ArrowLeft: [-0.15, 0], ArrowRight: [0.15, 0], ArrowUp: [0, 0.1], ArrowDown: [0, -0.1] }[e.key];
+  if (moves) { e.preventDefault(); view.yaw += moves[0]; view.pitch = Math.max(0.15, Math.min(1.5, view.pitch + moves[1])); draw(); }
+  if (e.key === "+" || e.key === "=") zoomBy(1.2);
+  if (e.key === "-") zoomBy(1 / 1.2);
+});
+$("#zoom-in").addEventListener("click", () => zoomBy(1.2));
+$("#zoom-out").addEventListener("click", () => zoomBy(1 / 1.2));
+$("#view-reset").addEventListener("click", () => { view = { ...VIEW }; draw(); });
+$("#exaggerate").addEventListener("change", draw);
+new ResizeObserver(draw).observe(canvas);
+start().catch(() => setStatus("The preview couldn't load. Make sure the app is still running.", true));
+</script>
+</body>
+</html>

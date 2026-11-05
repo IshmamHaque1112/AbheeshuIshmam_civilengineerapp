@@ -40,7 +40,8 @@ def build_parts(ramps: list[dict]) -> list[dict]:
         parts += [
             dict(name="Ramp slab", kind="ramp", ramp_id=rid, length_ft=r["length_ft"], width_ft=r["width_ft"], thickness_ft=thick),
             dict(name="Landing slab", kind="landing", ramp_id=rid, length_ft=r["landing_length_ft"], width_ft=r["landing_width_ft"], thickness_ft=thick),
-            dict(name="Detectable warning surface", kind="dws", ramp_id=rid, length_ft=dws, width_ft=r["width_ft"], thickness_ft=0),
+            # A ramp shorter than the assumed depth can only hold that much warning surface, as the 3D model draws it
+            dict(name="Detectable warning surface", kind="dws", ramp_id=rid, length_ft=min(dws, r["length_ft"]), width_ft=r["width_ft"], thickness_ft=0),
             dict(name="Curb", kind="curb", ramp_id=rid, length_ft=r["width_ft"] + extra, width_ft=0.5, thickness_ft=0),
         ]
     return parts

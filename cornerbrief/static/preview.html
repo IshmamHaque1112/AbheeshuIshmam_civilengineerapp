@@ -19,6 +19,12 @@
     <form id="dims" novalidate></form>
     <button class="button alt" id="reset" type="button">Reset dimensions</button>
     <p id="status" role="status"></p>
+    <section aria-labelledby="basis-title" id="basis">
+      <h2 id="basis-title">What the model is built from</h2>
+      <h3><span class="tag synthetic-tag">Synthetic</span> Typed in on this page</h3><ul class="plain" id="basis-synthetic"></ul>
+      <h3><span class="tag">Assumed</span> Sample assumptions</h3><ul class="plain" id="basis-assumed"></ul>
+      <h3><span class="tag stoptag">Unknown</span> Not modeled</h3><p class="hint">A real corner needs these. The sandbox leaves them out rather than filling them in.</p><ul class="plain" id="basis-unknown"></ul>
+    </section>
   </section>
   <div>
     <div class="viewer">
@@ -31,9 +37,10 @@
     </div>
     <p class="hint">Drag to rotate. Scroll to zoom. Shift-drag or right-drag to pan. Arrow keys, + and − also work.</p>
     <label class="inline"><input type="checkbox" id="exaggerate" checked> Show height at 3×</label>
-    <section aria-labelledby="quantities-title">
+    <section aria-labelledby="quantities-title" id="quantity-section">
       <h2 id="quantities-title">Provisional quantities</h2>
       <p id="revision" class="hint"></p>
+      <p id="stale" class="stalenote" role="alert" hidden></p>
       <div class="wrap"><table><thead><tr><th>Item</th><th>Quantity</th><th>Change</th></tr></thead><tbody id="quantities"></tbody></table></div>
       <details><summary>Assumptions and exclusions</summary><div class="detailbody"><h3>Sample assumptions</h3><ul class="plain" id="assumptions"></ul><h3>Not included</h3><ul class="plain" id="exclusions"></ul></div></details>
     </section>
