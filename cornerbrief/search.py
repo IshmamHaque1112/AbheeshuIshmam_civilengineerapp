@@ -13,8 +13,10 @@ MAX_SEARCH = 100
 CAPS = {fetch.LOC: 20, fetch.PROG: 20, fetch.COMP: 50}
 
 
-def rows(dataset, limit, where):
-    params = {"$limit": limit, "$where": where, "$order": "cornerid" if dataset != fetch.COMP else "cmt_corner_id"}
+def rows(dataset, limit, where, order=None, select=None):
+    params = {"$limit": limit, "$where": where, "$order": order or ("cornerid" if dataset != fetch.COMP else "cmt_corner_id")}
+    if select:
+        params["$select"] = select
     url = f"{fetch.PORTAL}/resource/{dataset}.json?" + urllib.parse.urlencode(params)
     raw = fetch.get(url)
     if not isinstance(raw, list) or any(not isinstance(r, dict) for r in raw):
@@ -40,6 +42,29 @@ def search(borough=None, street=None):
                 note=("First 100 ramp rows only, not every matching corner. Narrow the street to refine results. " if len(locations) > MAX_SEARCH else "") + "Program and complaint records are fetched on selection; missing matches stay unknown.")
 
 
+def nearby_records(locations):
+    """Add street and permit context. A failed lookup is reported, because it must not read as "nothing found"."""
+    found, sources, failed = {}, [], []
+    lookups = (("street_segments", "NYC Street Centerline", fetch.CENTERLINE, fetch.centerline_where(locations), "full_street_name,physicalid", fetch.SEGMENT_FIELDS, fetch.SEGMENT_CAP),
+               ("permits", "Street Construction Permits", fetch.PERMITS, fetch.permits_where(locations), "issuedworkenddate DESC", fetch.PERMIT_FIELDS, fetch.PERMIT_CAP))
+    for key, name, dataset, where, order, select, cap in lookups:
+        if not where:
+            failed.append(name)
+            continue
+        try:
+            result, source = rows(dataset, cap + 1, where, order=order, select=select)
+        except Exception:
+            failed.append(name)
+            continue
+        found[key] = result[:cap]
+        if len(result) > cap:
+            found[f"{key}_more"] = True
+        sources.append(source)
+    if failed:
+        found["nearby_not_checked"] = failed
+    return found, sources
+
+
 def pull(cid):
     if not re.fullmatch(r"[1-9][0-9]{0,9}", str(cid)):
         raise ValueError("Corner ID must be a positive integer of at most 10 digits.")
@@ -56,11 +81,13 @@ def pull(cid):
     locations = groups[fetch.LOC]
     if not locations:
         raise ValueError("No ramp records found for this corner. Search again.")
+    nearby, nearby_sources = nearby_records(locations)
+    sources += nearby_sources
     times = [s["retrieved_at"] for s in sources if s.get("retrieved_at")]
     corner = fetch.assemble_corner(locations, groups[fetch.PROG], groups[fetch.COMP],
-                                   retrieved=max(times) if times else None, provenance=sources)
+                                   retrieved=max(times) if times else None, provenance=sources, nearby=nearby)
     # The name comes from the records alone, so the same records reuse one snapshot and a saved run's inputs never change.
-    digest = hashlib.sha256(json.dumps(groups, sort_keys=True).encode()).hexdigest()[:12]
+    digest = hashlib.sha256(json.dumps([groups, nearby], sort_keys=True).encode()).hexdigest()[:12]
     key = f"real_{cid}_{digest}"
     path = DATA / "live" / f"{key}.json"
     if not path.exists():

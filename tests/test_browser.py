@@ -293,7 +293,7 @@ def test_saved_real_snapshot_renders_on_desktop_and_phone(browser, base):
         pg.reload()
         pg.wait_for_selector(".status.stop")
         text = pg.inner_text("#main")
-        assert "Real test corner" in text and "VAN DAM" in text and "units" in text
+        assert "Real test corner" in text and "VAN DAM" in text and "road owner" in text
         assert pg.evaluate("document.documentElement.scrollWidth > innerWidth") is False
         assert errors == []
         context.close()

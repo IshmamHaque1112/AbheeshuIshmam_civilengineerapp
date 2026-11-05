@@ -27,7 +27,7 @@
    "note": "Cached response when available; retrieval time is the cache file timestamp."
   }
  ],
- "dataset_note": "Real NYC Open Data records. Dataset units remain undocumented; limits stay unknown. Historical records may not describe today's corner. Road control is not recorded.",
+ "dataset_note": "Real NYC Open Data records. The ramp measurement dataset was last updated in October 2021, so its values may not describe today's corner. NYC DOT says these measurements don't by themselves show ADA compliance, because it also weighs site constraints and technical infeasibility. Its own assessment, including locations pending technical review, is at https://www.nycpedramps.info/survey. Road control is not recorded.",
  "context": {
   "inside_nyc": true,
   "work_type": "corner_ramp_row",

@@ -1,17 +1,21 @@
-# Live NYC data. Units below are assumptions from example values. They are not documented
-# by the dataset, so the checker returns "unknown" until a person confirms each one
-# and changes unit_status to documented.
+# Live NYC data. Units come from NYC DOT's official Pedestrian Ramp Locations data dictionary:
+# https://data.cityofnewyork.us/api/views/ufzp-rrqu/files/7ea4e786-66d8-4797-98af-df606a14a039?download=true&filename=Data_Dictionary_Pedestrian_Ramp_Locations_2021.xlsx
+# Read on 2026-11-05. Lengths are in inches and slopes and flares are in percent.
+# Running slope and roadway slope read from the road toward the landing. The other slopes and flares read
+# left to right when facing the ramp from the road, so a negative slope is a direction, not a bad value.
+# The dictionary doesn't explain a negative ramp length, and most rows have one. evidence.py labels it "assumed".
+# The dictionary doesn't define 999 either. It's treated as a placeholder because no measurement could be that large.
 placeholder_values: [999, 999.0, -999, 9999]
 fields:
-  ramp_running_slope_total: {unit: percent, unit_status: assumed, plausible: [0, 40]}
-  ramp_cross_slope: {unit: percent, unit_status: assumed, plausible: [0, 40]}
-  gutter_slope: {unit: percent, unit_status: assumed, plausible: [0, 40]}
-  counter_slope: {unit: percent, unit_status: assumed, plausible: [0, 40]}
-  lnd_cross_slope: {unit: percent, unit_status: assumed, plausible: [0, 40]}
-  ramp_width: {unit: in, unit_status: assumed, plausible: [1, 400]}
-  lnd_width: {unit: in, unit_status: assumed, plausible: [1, 400]}
-  lnd_length: {unit: in, unit_status: assumed, plausible: [1, 400]}
-  ramp_length: {unit: unconfirmed, unit_status: assumed, plausible: [0.1, 400]}
-  curb_reveal: {unit: in, unit_status: assumed, plausible: [0, 12]}
-  ramp_right_flare: {unit: percent, unit_status: assumed, plausible: [0, 40]}
-  ramp_left_flare: {unit: percent, unit_status: assumed, plausible: [0, 40]}
+  ramp_running_slope_total: {unit: percent, unit_status: documented, plausible: [0, 40]}
+  ramp_cross_slope: {unit: percent, unit_status: documented, plausible: [0, 40]}
+  gutter_slope: {unit: percent, unit_status: documented, plausible: [0, 40]}
+  counter_slope: {unit: percent, unit_status: documented, plausible: [0, 40]}
+  lnd_cross_slope: {unit: percent, unit_status: documented, plausible: [0, 40]}
+  ramp_width: {unit: in, unit_status: documented, plausible: [1, 400]}
+  lnd_width: {unit: in, unit_status: documented, plausible: [1, 400]}
+  lnd_length: {unit: in, unit_status: documented, plausible: [1, 400]}
+  ramp_length: {unit: in, unit_status: documented, plausible: [0.1, 400]}
+  curb_reveal: {unit: in, unit_status: documented, plausible: [0, 12]}
+  ramp_right_flare: {unit: percent, unit_status: documented, plausible: [0, 40]}
+  ramp_left_flare: {unit: percent, unit_status: documented, plausible: [0, 40]}

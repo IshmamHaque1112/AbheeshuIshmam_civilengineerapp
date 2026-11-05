@@ -114,7 +114,7 @@ Checking the corner
 - [P0] R16 A rule file with no exact source fails to load; any rule not verified by a named reviewer returns "unknown."
 - [P0] R17 When rule tiers disagree, both show and the stricter drives the warning.
 - [P0] R18 Models cannot create or change limits; agent text cannot say compliant, approved, allowed or safe.
-- [P0] R27 Every limit on a real corner stays "unknown" until the dataset's units are documented.
+- [P0] R27 Every limit on a real corner stays "unknown" until the dataset's units are documented. Units were recorded from the official dictionary on Nov 5, so limits now wait on a named rule review.
 
 Ending state
 
@@ -170,12 +170,14 @@ The code now follows this version:
 - **Synthetic 3D preview (from issue #7):** A separate page has editable dimensions, orbit, zoom, pan and provisional quantities. It reads and saves no corner data and can't turn on labels or plans, so the concept plans in the non-goals stay off. This is an optional preview, not a change to the demo's promise.
 - **R13:** Open Library search and suggested books are built, off by default and separate from the checks. It remains a P2 non-goal for the demo unless the team changes that.
 
+- **NYC data (Nov 5):** Units now come from the official ramp data dictionary. Real corners also pull Street Centerline for nearby streets and Street Construction Permits for later work on the block. Neither dataset confirms the road owner, and permit holder names aren't saved.
+
 Still open:
 
 - Queens and Brooklyn reach "checks the evidence supports" with four corner inputs missing, and each affected check shows its own stop. `docs/P0-REVIEW.md` reads the stop wording more strictly, so the team should decide which it wants.
 - With no API key, a rerun has no Skeptic review, because the saved responses describe the original records. It can reach "checks the evidence supports," but it says the review wasn't reused, and it can't show a label or plan.
 - No named person has reviewed the rules, so every limit result stays "unknown."
-- Corner 1024569 (Van Dam Street and Thomson Avenue) is now the demo's real corner, using saved records. Its ramp and program records name different streets, so confirm it's a good choice. R29 and the timing metrics need people.
+- Corner 1024569 (Van Dam Street and Thomson Avenue) is now the demo's real corner, using saved records. Its ramp and program records name different streets, and Street Centerline shows all of them within 100 m. Four pedestrian ramp permits from 2024 mean its 2018 measurements may be out of date, so confirm it's a good choice. R29 and the timing metrics need people.
 - `docs/RUN-CHECK.md` (Nov 3) failed on Apple's Python 3.9. The app needs Python 3.10 or newer, and the README has Mac setup steps.
 
 ## 6. Demo plan (Nov 12)
@@ -183,7 +185,7 @@ Still open:
 1. State the limits: sample corners, no NYC affiliation, an engineer must review the rules.
 2. Lead with one supported check against H-1011 Table 1 and §19-112, quote on screen.
 3. Queens and Brooklyn sample corners: the packet and the checks the evidence supports.
-4. Real corner near Thomson Ave: live records, limits "unknown" until units are documented.
+4. Real corner near Thomson Ave: saved records, limits "unknown" until a named review. The tool stops because later ramp permits may have changed the 2018 survey.
 5. One line on how a student could follow the math on a real corner.
 6. End on the Bronx stop case: rebuilt after its survey, so the tool stops and writes the site-visit list.
 
@@ -192,7 +194,8 @@ Still open:
 | Question | Owner |
 | --- | --- |
 | Which real corner near Thomson Ave? | Ishmam (filter), then both |
-| What units do the ramp dataset's measurements use? | Abheeshu |
+| Why are most ramp lengths negative in the dataset? Ask NYC DOT or an engineer. | Abheeshu |
+| Who confirms the road owner for a real corner, and from what source? | Abheeshu |
 | Which civil engineer reviews the rules and packets before Nov 12? | Abheeshu |
 | H-1011 sheets 2–9 and ADA sections on ada.gov | Ishmam |
 | Manual-check baseline time | Both, this week |

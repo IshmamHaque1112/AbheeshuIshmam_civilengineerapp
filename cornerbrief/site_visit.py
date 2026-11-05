@@ -1,5 +1,5 @@
 """List what to measure or confirm. No AI here."""
-from .evidence import NOT_IN_DATASETS
+from .evidence import NOT_IN_DATASETS, parse_date, permits_after
 from .models import EvidenceItem
 
 ACTIONS = {
@@ -35,7 +35,7 @@ def build_list(evidence: list[EvidenceItem], corner: dict) -> list[dict]:
         id_ = (where, e.field)
         if id_ not in seen:
             seen.add(id_)
-            items.append({"where": where, "action": action, "why": WHY.get(e.field, "This isn't in the three NYC datasets.") if e.field in NOT_IN_DATASETS else e.reason})
+            items.append({"where": where, "action": action, "why": WHY.get(e.field, "This isn't in the NYC datasets used here.") if e.field in NOT_IN_DATASETS else e.reason})
     for row in corner.get("locations", []):
         for field in ("obstacles_ramp", "obstacles_landing"):
             value = row.get(field)
@@ -43,6 +43,12 @@ def build_list(evidence: list[EvidenceItem], corner: dict) -> list[dict]:
                 items.append({"where": f"Ramp {row.get('rampid')}", "action": f"Locate and photograph: {value}.", "why": "A recorded obstacle may limit the ramp layout."})
         if row.get("ponding") == "Yes":
             items.append({"where": f"Ramp {row.get('rampid')}", "action": "Check drainage at the base of the ramp.", "why": "The record shows pooling water."})
+    surveys = sorted(str(r.get("geocyclora"))[:10] for r in corner.get("locations", []) if parse_date(r.get("geocyclora")))
+    later = permits_after(corner, surveys[0]) if surveys else []
+    if later:
+        kinds = ", ".join(sorted({str(p.get("permittypedesc") or "unlisted type").strip().lower() for p in later})[:6])
+        items.append({"where": "Corner", "action": "Look for work done under the block's street permits since the survey.",
+                      "why": f"{len(later)} permit{'' if len(later) == 1 else 's'} {'has' if len(later) == 1 else 'have'} work ending after the survey, including: {kinds}."})
     if any(e.unit is not None and e.label == "measured" and not e.unit_documented for e in evidence):
         items.append({"where": "Dataset", "action": "Confirm the measurement units in the ramp dataset's documentation.", "why": "Limit checks stay unknown until the units are documented."})
     if corner.get("context", {}).get("road_control") != "city":

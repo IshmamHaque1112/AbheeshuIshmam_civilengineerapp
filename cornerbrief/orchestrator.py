@@ -226,6 +226,7 @@ def analyze(corner: dict, client=None, rules=None, rates=None, save=True, field=
                background=background_reading(), rejections=rejections, retries=retries, retry_limit_hit=retry_limit_hit, review_status=review_status,
                field_measurements=field, field_inputs=field_inputs([e.model_dump() for e in evidence]), changes=None, previous_run_id=None,
                source_provenance=corner.get("source_provenance", []),
+               street_segments=corner.get("street_segments") or [], permits=corner.get("permits") or [],
                dataset_note=corner.get("dataset_note"), evidence_counts=dict(Counter(e.label for e in evidence)),
                tokens=dict(input=token_in, output=token_out), approval=None, agent_log=log, trace_events=client.calls,
                records=corner_records(corner), rule_review=rule_review(rules, precedence),

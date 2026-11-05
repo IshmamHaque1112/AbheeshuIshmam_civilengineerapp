@@ -54,7 +54,7 @@ No API key is needed, and the demo stays in this mode while `DEMO_MODE=true`. Th
 
 1. **Sample corner A, Queens:** Checks the evidence supports, with the source and math for each calculation.
 2. **Sample corner B, Brooklyn:** Checks the evidence supports, with a utility vault and catch basin to review and one Skeptic rework.
-3. **Real test corner:** Corner 1024569, Van Dam Street and Thomson Avenue, from NYC Open Data. It uses saved records, so it works offline, and it stops until its units and road owner are confirmed.
+3. **Real test corner:** Corner 1024569, Van Dam Street and Thomson Avenue, from NYC Open Data. It uses saved records, so it works offline. It stops because the 2018 survey predates four pedestrian ramp permits on the block, the ramp lengths are negative and the road owner is unconfirmed.
 4. **Sample corner C, Bronx:** Stop: evidence still needed, because it was rebuilt after its survey and has a placeholder value.
 
 Enter a name and select **Release packet** to turn on the download. Releasing is not approval. **Download site visit list** needs no release, because it lists only what to measure or confirm and contains no limit results.
@@ -97,7 +97,23 @@ python scripts/fetch_corners.py --borough QUEENS --street THOMSON
 python scripts/fetch_corners.py --save real_test CORNER_ID
 ```
 
-The first command writes `docs/candidates.md`. The saved corner is added to the demo list, and the sample corners don't change. Limits stay "unknown" until its measurement units are documented in `data/data_dictionary.yaml` and its road owner is confirmed.
+The first command writes `docs/candidates.md`. The saved corner is added to the demo list, and the sample corners don't change. Limits stay "unknown" until a named person reviews the rules, and the corner stops until its road owner is confirmed.
+
+## NYC data
+
+| Dataset | What the app uses it for | Limit |
+| --- | --- | --- |
+| [Pedestrian Ramp Locations](https://data.cityofnewyork.us/d/ufzp-rrqu) | Ramp measurements | Last updated October 2021. NYC DOT says these measurements don't by themselves show ADA compliance. |
+| [Program Progress](https://data.cityofnewyork.us/d/e7gc-ub6z) | Construction status and date | Updated regularly |
+| [Complaints](https://data.cityofnewyork.us/d/jagj-gttd) | Ramp complaints and temporary repairs | Updated regularly |
+| [Street Centerline](https://data.cityofnewyork.us/d/inkn-q76z) | Streets within 100 m of the ramp and their paved width | Can't confirm the road owner, because its documentation doesn't explain the jurisdiction field |
+| [Street Construction Permits](https://data.cityofnewyork.us/d/tqtj-sjs8) | Permits for the block with work ending after the survey | Shows work was allowed, not that it happened or touched this corner. Older permits may be missing. |
+
+The official data dictionary gives lengths in inches and slopes and flares in percent, as recorded in `data/data_dictionary.yaml`. It doesn't explain negative ramp lengths, which appear in about 95% of rows, so a negative length is labeled assumed rather than made positive.
+
+A pedestrian ramp permit after the survey labels that ramp's measurements assumed. Other permits add a site-visit item. Permit holder names aren't saved. If a street or permit lookup fails, the packet says that dataset wasn't checked.
+
+Sidewalk width, legal grade, road owner and existing ramp type still come from a person, because no dataset used here records them.
 
 ## Settings
 
@@ -137,7 +153,7 @@ Regular code handles data checks, rule selection, limit checks, geometry, quanti
 - **Rule review:** No named person has reviewed any of the 44 sourced rules or the which-rule-applies decisions yet.
 - **User testing:** No junior engineer or reviewer has tried the app yet, and the manual timing baseline hasn't been recorded.
 - **Live agents:** The live API path hasn't been run with a real key. Tests use saved or scripted responses.
-- **Real data fetch:** `scripts/fetch_corners.py` hasn't run against the NYC portal, because the build environment blocks it. Its filter and sorting logic are tested, and no real corner has been saved yet.
+- **Real data fetch:** The queries were checked in a browser on November 5, 2026, and the build environment still can't reach the NYC portal. Run a search on your own computer to confirm the app's connection.
 - **Site entries:** The newest version is remembered only in the browser tab where you entered it. Every version stays saved in `runs`.
 - **Ramp data age:** The ramp measurement dataset was last updated in October 2021.
 - **Open Library:** It's hidden until `OPEN_LIBRARY_CONTACT` is set. Its API and suggested topics were checked from a browser on November 5, 2026, but the app's own connection hasn't been confirmed. It stores citation details only, and no book text or corner details are used.
@@ -158,7 +174,7 @@ H-1011 Table 1 and its general notes come from `docs/sources/H-1011-1.pdf`. Surv
 
 ## P1 search and review
 
-Use **Find a real NYC corner** to choose a borough, enter a street, or combine both. Search returns at most 100 ramp rows; narrow the street when the query is bounded. Select a corner to load its ramp, program and complaint records. Each source query and retrieval timestamp stays in the packet. Real-record units are still undocumented, so limits remain unknown. The sample picker remains available during empty/error states.
+Use **Find a real NYC corner** to choose a borough, enter a street, or combine both. Search returns at most 100 ramp rows; narrow the street when the query is bounded. Select a corner to load its ramp, program and complaint records. Each source query and retrieval timestamp stays in the packet. Limits remain unknown until a named person reviews the rules. The sample picker remains available during empty/error states.
 
 Expand **Agent trace** to inspect each agent's input, response and token accounting. Saved replay, deterministic offline steps and cached provider responses use zero provider tokens for that run. No live provider calls were made for this implementation's validation; SDK request/response handling is covered by mocked-provider tests. Traces redact credential-like text and dollar figures.
 

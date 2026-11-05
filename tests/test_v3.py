@@ -3,7 +3,7 @@ import base64, copy, json
 from concurrent.futures import ThreadPoolExecutor
 from datetime import date
 import pytest
-from cornerbrief.data_loader import load_corner
+from cornerbrief.data_loader import load_corner, load_dictionary
 from cornerbrief.field import validate_entries
 from cornerbrief.guards import check_text
 from cornerbrief.llm import AgentOutputError, OfflineClient, ReplayClient, get_client
@@ -127,7 +127,11 @@ def test_r28_3_unmatched_corner_ids(change):
 
 
 @pytest.mark.usefixtures("label_setting")
-def test_r28_4_undocumented_units():
+def test_r28_4_undocumented_units(monkeypatch):
+    dictionary = copy.deepcopy(load_dictionary(corner(data_kind="NYC Open Data")))
+    for field in dictionary["fields"].values():
+        field["unit_status"] = "assumed"
+    monkeypatch.setattr("cornerbrief.orchestrator.load_dictionary", lambda _: dictionary)
     run = analyze(corner(data_kind="NYC Open Data"), client=ReplayClient("standard"))
     assert run["state"] == STOP and any("units" in p for p in run["problems"])
     assert all(o["result"] in ("unknown", "not applicable") and o["preview"] is None for o in run["rule_results"])
@@ -269,8 +273,10 @@ def test_unrecorded_road_owner_can_be_confirmed_on_site():
 
 def test_real_corner_stays_unknown_when_site_values_are_added():
     c = corner(data_kind="NYC Open Data", key="standard")
+    c["context"]["road_control"] = "not_recorded"
     run = analyze(c, client=OfflineClient(), field=[dict(key="corner:sidewalk_width", field="sidewalk_width", value=10.0, unit="ft", date="2026-11-02", by="A B", photo=None)])
-    assert run["state"] == STOP and any("units" in p for p in run["problems"])
+    assert run["state"] == STOP and any("road owner" in p for p in run["problems"])
+    assert all(o["result"] in ("unknown", "not applicable") for o in run["rule_results"])
 
 
 def test_saved_replies_are_not_used_after_inputs_change():

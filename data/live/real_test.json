@@ -5,7 +5,9 @@
  "sources": [
   "ufzp-rrqu",
   "e7gc-ub6z",
-  "jagj-gttd"
+  "jagj-gttd",
+  "inkn-q76z",
+  "tqtj-sjs8"
  ],
  "source_provenance": [
   {
@@ -25,9 +27,21 @@
    "url": "https://data.cityofnewyork.us/resource/jagj-gttd.json?%24limit=51&%24where=cmt_corner_id%3D1024569&%24order=cmt_corner_id",
    "retrieved_at": "2026-11-05T15:49:04.926854+00:00",
    "note": "Cached response when available; retrieval time is the cache file timestamp."
+  },
+  {
+   "dataset": "inkn-q76z",
+   "url": "https://data.cityofnewyork.us/resource/inkn-q76z.json?%24limit=31&%24where=within_circle%28the_geom%2C40.74464324083891%2C-73.93370894345186%2C100%29&%24order=full_street_name%2Cphysicalid&%24select=physicalid%2Cfull_street_name%2Crw_type%2Cstatus%2Cstreetwidth%2Ctrafdir%2Crwjurisdiction",
+   "retrieved_at": "2026-11-05T00:00:00+00:00",
+   "note": "Read from the NYC Open Data portal through a browser on November 5, 2026."
+  },
+  {
+   "dataset": "tqtj-sjs8",
+   "url": "https://data.cityofnewyork.us/resource/tqtj-sjs8.json?%24limit=51&%24where=upper%28boroughname%29%3D%27QUEENS%27+AND+issuedworkenddate%3E%3D%272018-08-08%27+AND+%28%28upper%28onstreetname%29+like+%27%25VAN+DAM+STREET%25%27+AND+%28upper%28fromstreetname%29+like+%27%25THOMSON+AVENUE%25%27+OR+upper%28tostreetname%29+like+%27%25THOMSON+AVENUE%25%27%29%29+OR+%28upper%28onstreetname%29+like+%27%25THOMSON+AVENUE%25%27+AND+%28upper%28fromstreetname%29+like+%27%25VAN+DAM+STREET%25%27+OR+upper%28tostreetname%29+like+%27%25VAN+DAM+STREET%25%27%29%29%29&%24order=issuedworkenddate+DESC&%24select=permitnumber%2Cpermittypedesc%2Cpermitstatusshortdesc%2Cpermitissuedate%2Cissuedworkstartdate%2Cissuedworkenddate%2Constreetname%2Cfromstreetname%2Ctostreetname%2Csidewalkshortdesc",
+   "retrieved_at": "2026-11-05T00:00:00+00:00",
+   "note": "Read from the NYC Open Data portal through a browser on November 5, 2026."
   }
  ],
- "dataset_note": "Real NYC Open Data records. Dataset units remain undocumented; limits stay unknown. Historical records may not describe today's corner. Road control is not recorded.",
+ "dataset_note": "Real NYC Open Data records. The ramp measurement dataset was last updated in October 2021, so its values may not describe today's corner. NYC DOT says these measurements don't by themselves show ADA compliance, because it also weighs site constraints and technical infeasibility. Its own assessment, including locations pending technical review, is at https://www.nycpedramps.info/survey. Road control is not recorded.",
  "context": {
   "inside_nyc": true,
   "work_type": "corner_ramp_row",
@@ -116,5 +130,410 @@
    "construc_2": "Planned Construction"
   }
  ],
- "complaints": []
+ "complaints": [],
+ "street_segments": [
+  {
+   "physicalid": "26386",
+   "full_street_name": "32 PL",
+   "rw_type": "1",
+   "status": "2",
+   "streetwidth": "30",
+   "trafdir": "FT"
+  },
+  {
+   "physicalid": "12154",
+   "full_street_name": "QUEENS BLVD",
+   "rw_type": "1",
+   "status": "2",
+   "streetwidth": "60",
+   "trafdir": "TF"
+  },
+  {
+   "physicalid": "12155",
+   "full_street_name": "QUEENS BLVD",
+   "rw_type": "1",
+   "status": "2",
+   "streetwidth": "60",
+   "trafdir": "FT"
+  },
+  {
+   "physicalid": "12156",
+   "full_street_name": "QUEENS BLVD",
+   "rw_type": "1",
+   "status": "2",
+   "streetwidth": "31",
+   "trafdir": "FT"
+  },
+  {
+   "physicalid": "201911",
+   "full_street_name": "QUEENS BLVD",
+   "rw_type": "1",
+   "status": "2",
+   "streetwidth": "60",
+   "trafdir": "TF"
+  },
+  {
+   "physicalid": "164098",
+   "full_street_name": "THOMSON AVE",
+   "rw_type": "1",
+   "status": "2",
+   "streetwidth": "40",
+   "trafdir": "FT"
+  },
+  {
+   "physicalid": "24475",
+   "full_street_name": "VAN DAM ST",
+   "rw_type": "1",
+   "status": "2",
+   "streetwidth": "44",
+   "trafdir": "TW"
+  },
+  {
+   "physicalid": "24476",
+   "full_street_name": "VAN DAM ST",
+   "rw_type": "1",
+   "status": "2",
+   "streetwidth": "33",
+   "trafdir": "FT"
+  },
+  {
+   "physicalid": "24478",
+   "full_street_name": "VAN DAM ST",
+   "rw_type": "1",
+   "status": "2",
+   "streetwidth": "44",
+   "trafdir": "FT"
+  },
+  {
+   "physicalid": "24479",
+   "full_street_name": "VAN DAM ST",
+   "rw_type": "1",
+   "status": "2",
+   "streetwidth": "34",
+   "trafdir": "FT"
+  },
+  {
+   "physicalid": "201908",
+   "full_street_name": "VAN DAM ST",
+   "rw_type": "1",
+   "status": "2",
+   "streetwidth": "44",
+   "trafdir": "TF"
+  },
+  {
+   "physicalid": "201909",
+   "full_street_name": "VAN DAM ST",
+   "rw_type": "1",
+   "status": "2",
+   "streetwidth": "44",
+   "trafdir": "TF"
+  }
+ ],
+ "permits": [
+  {
+   "permitnumber": "Q012026257A57",
+   "permittypedesc": "OPEN SIDEWALK TO INSTALL FOUNDATION",
+   "permitstatusshortdesc": "ISSUED & PRINTED",
+   "permitissuedate": "2026-09-14T07:45:08.000",
+   "issuedworkstartdate": "2026-09-14T07:45:08.000",
+   "issuedworkenddate": "2026-11-14T23:59:59.000",
+   "onstreetname": "VAN DAM STREET",
+   "fromstreetname": "QUEENS BOULEVARD",
+   "tostreetname": "THOMSON AVENUE",
+   "sidewalkshortdesc": "CONCRETE"
+  },
+  {
+   "permitnumber": "Q022025050A59",
+   "permittypedesc": "OCCUPANCY OF ROADWAY AS STIPULATED",
+   "permitstatusshortdesc": "EXPIRED",
+   "permitissuedate": "2025-02-19T09:21:42.000",
+   "issuedworkstartdate": "2025-02-24T00:00:00.000",
+   "issuedworkenddate": "2025-03-24T23:59:59.000",
+   "onstreetname": "VAN DAM STREET",
+   "fromstreetname": "47 AVENUE",
+   "tostreetname": "THOMSON AVENUE"
+  },
+  {
+   "permitnumber": "Q042024071A05",
+   "permittypedesc": "PED RAMP REPLACE/MODIFY/INSTALL GOVERNMENT",
+   "permitstatusshortdesc": "DELINQUENT NOTIFICATION",
+   "permitissuedate": "2024-03-11T06:32:57.000",
+   "issuedworkstartdate": "2024-03-18T00:00:00.000",
+   "issuedworkenddate": "2024-04-16T23:59:59.000",
+   "onstreetname": "THOMSON AVENUE",
+   "fromstreetname": "VAN DAM STREET",
+   "sidewalkshortdesc": "CONCRETE"
+  },
+  {
+   "permitnumber": "Q042024071A07",
+   "permittypedesc": "PED RAMP REPLACE/MODIFY/INSTALL GOVERNMENT",
+   "permitstatusshortdesc": "DELINQUENT NOTIFICATION",
+   "permitissuedate": "2024-03-11T06:32:57.000",
+   "issuedworkstartdate": "2024-03-18T00:00:00.000",
+   "issuedworkenddate": "2024-04-06T23:59:59.000",
+   "onstreetname": "THOMSON AVENUE",
+   "fromstreetname": "VAN DAM STREET",
+   "sidewalkshortdesc": "CONCRETE"
+  },
+  {
+   "permitnumber": "Q042024071A06",
+   "permittypedesc": "PED RAMP REPLACE/MODIFY/INSTALL GOVERNMENT",
+   "permitstatusshortdesc": "DELINQUENT NOTIFICATION",
+   "permitissuedate": "2024-03-11T06:32:57.000",
+   "issuedworkstartdate": "2024-03-18T00:00:00.000",
+   "issuedworkenddate": "2024-04-06T23:59:59.000",
+   "onstreetname": "THOMSON AVENUE",
+   "fromstreetname": "VAN DAM STREET",
+   "sidewalkshortdesc": "CONCRETE"
+  },
+  {
+   "permitnumber": "Q042024071A08",
+   "permittypedesc": "PED RAMP REPLACE/MODIFY/INSTALL GOVERNMENT",
+   "permitstatusshortdesc": "DELINQUENT NOTIFICATION",
+   "permitissuedate": "2024-03-11T06:32:57.000",
+   "issuedworkstartdate": "2024-03-18T00:00:00.000",
+   "issuedworkenddate": "2024-04-06T23:59:59.000",
+   "onstreetname": "THOMSON AVENUE",
+   "fromstreetname": "VAN DAM STREET",
+   "sidewalkshortdesc": "CONCRETE"
+  },
+  {
+   "permitnumber": "Q012023179B07",
+   "permittypedesc": "INSTALL TRAFFIC SIGNALS",
+   "permitstatusshortdesc": "EXPIRED",
+   "permitissuedate": "2023-06-28T09:26:18.000",
+   "issuedworkstartdate": "2023-07-17T00:00:00.000",
+   "issuedworkenddate": "2023-09-05T23:59:59.000",
+   "onstreetname": "VAN DAM STREET",
+   "fromstreetname": "  47 AVENUE",
+   "tostreetname": "THOMSON AVENUE",
+   "sidewalkshortdesc": "CONCRETE"
+  },
+  {
+   "permitnumber": "Q012023179B05",
+   "permittypedesc": "INSTALL TRAFFIC SIGNALS",
+   "permitstatusshortdesc": "EXPIRED",
+   "permitissuedate": "2023-06-28T09:26:18.000",
+   "issuedworkstartdate": "2023-07-17T00:00:00.000",
+   "issuedworkenddate": "2023-09-05T23:59:59.000",
+   "onstreetname": "THOMSON AVENUE",
+   "fromstreetname": "VAN DAM STREET",
+   "sidewalkshortdesc": "CONCRETE"
+  },
+  {
+   "permitnumber": "Q012023179B09",
+   "permittypedesc": "INSTALL TRAFFIC SIGNALS",
+   "permitstatusshortdesc": "EXPIRED",
+   "permitissuedate": "2023-06-28T09:26:19.000",
+   "issuedworkstartdate": "2023-07-17T00:00:00.000",
+   "issuedworkenddate": "2023-09-05T23:59:59.000",
+   "onstreetname": "VAN DAM STREET",
+   "fromstreetname": "QUEENS BOULEVARD",
+   "tostreetname": "THOMSON AVENUE",
+   "sidewalkshortdesc": "CONCRETE"
+  },
+  {
+   "permitnumber": "Q012023108B86",
+   "permittypedesc": "INSTALL TRAFFIC SIGNALS",
+   "permitstatusshortdesc": "EXPIRED",
+   "permitissuedate": "2023-04-18T14:03:25.000",
+   "issuedworkstartdate": "2023-04-18T14:03:25.000",
+   "issuedworkenddate": "2023-07-16T23:59:59.000",
+   "onstreetname": "VAN DAM STREET",
+   "fromstreetname": "QUEENS BOULEVARD",
+   "tostreetname": "THOMSON AVENUE",
+   "sidewalkshortdesc": "CONCRETE"
+  },
+  {
+   "permitnumber": "Q012023108B82",
+   "permittypedesc": "INSTALL TRAFFIC SIGNALS",
+   "permitstatusshortdesc": "EXPIRED",
+   "permitissuedate": "2023-04-18T14:03:24.000",
+   "issuedworkstartdate": "2023-04-18T14:03:24.000",
+   "issuedworkenddate": "2023-07-16T23:59:59.000",
+   "onstreetname": "THOMSON AVENUE",
+   "fromstreetname": "VAN DAM STREET",
+   "sidewalkshortdesc": "CONCRETE"
+  },
+  {
+   "permitnumber": "Q012023108B84",
+   "permittypedesc": "INSTALL TRAFFIC SIGNALS",
+   "permitstatusshortdesc": "EXPIRED",
+   "permitissuedate": "2023-04-18T14:03:25.000",
+   "issuedworkstartdate": "2023-04-18T14:03:25.000",
+   "issuedworkenddate": "2023-07-16T23:59:59.000",
+   "onstreetname": "VAN DAM STREET",
+   "fromstreetname": "47 AVENUE",
+   "tostreetname": "THOMSON AVENUE",
+   "sidewalkshortdesc": "CONCRETE"
+  },
+  {
+   "permitnumber": "Q022023095B24",
+   "permittypedesc": "CROSSING SIDEWALK",
+   "permitstatusshortdesc": "EXPIRED",
+   "permitissuedate": "2023-04-05T13:50:24.000",
+   "issuedworkstartdate": "2023-04-17T00:00:00.000",
+   "issuedworkenddate": "2023-04-22T23:59:59.000",
+   "onstreetname": "VAN DAM STREET",
+   "fromstreetname": "QUEENS BOULEVARD",
+   "tostreetname": "THOMSON AVENUE",
+   "sidewalkshortdesc": "CONCRETE"
+  },
+  {
+   "permitnumber": "Q012022277A18",
+   "permittypedesc": "CONSTRUCT OR ALTER MANHOLE &/OR CASTING",
+   "permitstatusshortdesc": "EXPIRED",
+   "permitissuedate": "2022-10-04T08:51:24.000",
+   "issuedworkstartdate": "2022-10-04T08:51:24.000",
+   "issuedworkenddate": "2022-12-02T23:59:59.000",
+   "onstreetname": "VAN DAM STREET",
+   "fromstreetname": "47 AVENUE",
+   "tostreetname": "THOMSON AVENUE",
+   "sidewalkshortdesc": "CONCRETE"
+  },
+  {
+   "permitnumber": "Q012021032A67",
+   "permittypedesc": "TREE PIT/STORM WATER INLET",
+   "permitstatusshortdesc": "EXPIRED",
+   "permitissuedate": "2021-02-01T10:58:13.000",
+   "issuedworkstartdate": "2021-02-01T10:58:13.000",
+   "issuedworkenddate": "2021-02-28T23:59:59.000",
+   "onstreetname": "VAN DAM STREET",
+   "fromstreetname": "QUEENS BOULEVARD",
+   "tostreetname": "THOMSON AVENUE",
+   "sidewalkshortdesc": "CONCRETE"
+  },
+  {
+   "permitnumber": "Q012020356B93",
+   "permittypedesc": "TREE PIT/STORM WATER INLET",
+   "permitstatusshortdesc": "EXPIRED",
+   "permitissuedate": "2020-12-21T15:29:47.000",
+   "issuedworkstartdate": "2020-12-29T00:00:00.000",
+   "issuedworkenddate": "2021-01-30T23:59:59.000",
+   "onstreetname": "VAN DAM STREET",
+   "fromstreetname": "QUEENS BOULEVARD",
+   "tostreetname": "THOMSON AVENUE",
+   "sidewalkshortdesc": "CONCRETE"
+  },
+  {
+   "permitnumber": "Q012020255D16",
+   "permittypedesc": "TREE PIT/STORM WATER INLET",
+   "permitstatusshortdesc": "EXPIRED",
+   "permitissuedate": "2020-09-11T14:33:46.000",
+   "issuedworkstartdate": "2020-09-30T00:00:00.000",
+   "issuedworkenddate": "2020-12-28T23:59:59.000",
+   "onstreetname": "VAN DAM STREET",
+   "fromstreetname": "QUEENS BOULEVARD",
+   "tostreetname": "THOMSON AVENUE",
+   "sidewalkshortdesc": "CONCRETE"
+  },
+  {
+   "permitnumber": "Q012020176B45",
+   "permittypedesc": "TREE PIT/STORM WATER INLET",
+   "permitstatusshortdesc": "EXPIRED",
+   "permitissuedate": "2020-06-24T10:52:35.000",
+   "issuedworkstartdate": "2020-07-02T00:00:00.000",
+   "issuedworkenddate": "2020-09-29T23:59:59.000",
+   "onstreetname": "VAN DAM STREET",
+   "fromstreetname": "QUEENS BOULEVARD",
+   "tostreetname": "THOMSON AVENUE",
+   "sidewalkshortdesc": "CONCRETE"
+  },
+  {
+   "permitnumber": "Q012020156B83",
+   "permittypedesc": "TREE PIT/STORM WATER INLET",
+   "permitstatusshortdesc": "EXPIRED",
+   "permitissuedate": "2020-06-04T15:45:51.000",
+   "issuedworkstartdate": "2020-06-24T00:00:00.000",
+   "issuedworkenddate": "2020-07-01T23:59:59.000",
+   "onstreetname": "VAN DAM STREET",
+   "fromstreetname": "QUEENS BOULEVARD",
+   "tostreetname": "THOMSON AVENUE",
+   "sidewalkshortdesc": "CONCRETE"
+  },
+  {
+   "permitnumber": "Q012020073B73",
+   "permittypedesc": "TREE PIT/STORM WATER INLET",
+   "permitstatusshortdesc": "EXPIRED",
+   "permitissuedate": "2020-03-13T14:18:38.000",
+   "issuedworkstartdate": "2020-03-31T00:00:00.000",
+   "issuedworkenddate": "2020-06-23T23:59:59.000",
+   "onstreetname": "VAN DAM STREET",
+   "fromstreetname": "QUEENS BOULEVARD",
+   "tostreetname": "THOMSON AVENUE",
+   "sidewalkshortdesc": "CONCRETE"
+  },
+  {
+   "permitnumber": "Q012019350F22",
+   "permittypedesc": "TREE PIT/STORM WATER INLET",
+   "permitstatusshortdesc": "EXPIRED",
+   "permitissuedate": "2019-12-16T10:31:35.000",
+   "issuedworkstartdate": "2020-01-01T00:00:00.000",
+   "issuedworkenddate": "2020-03-30T23:59:59.000",
+   "onstreetname": "VAN DAM STREET",
+   "fromstreetname": "QUEENS BOULEVARD",
+   "tostreetname": "THOMSON AVENUE",
+   "sidewalkshortdesc": "CONCRETE"
+  },
+  {
+   "permitnumber": "Q012019302E98",
+   "permittypedesc": "TREE PIT/STORM WATER INLET",
+   "permitstatusshortdesc": "EXPIRED",
+   "permitissuedate": "2019-10-29T15:11:25.000",
+   "issuedworkstartdate": "2019-10-29T15:11:25.000",
+   "issuedworkenddate": "2019-12-31T23:59:59.000",
+   "onstreetname": "VAN DAM STREET",
+   "fromstreetname": "QUEENS BOULEVARD",
+   "tostreetname": "THOMSON AVENUE",
+   "sidewalkshortdesc": "CONCRETE"
+  },
+  {
+   "permitnumber": "Q012019294A81",
+   "permittypedesc": "REPAIR GAS",
+   "permitstatusshortdesc": "EXPIRED",
+   "permitissuedate": "2019-10-21T08:31:33.000",
+   "issuedworkstartdate": "2019-10-21T08:31:33.000",
+   "issuedworkenddate": "2019-11-19T23:59:59.000",
+   "onstreetname": "VAN DAM STREET",
+   "fromstreetname": "47 AVENUE",
+   "tostreetname": "THOMSON AVENUE",
+   "sidewalkshortdesc": "CONCRETE"
+  },
+  {
+   "permitnumber": "Q012019262A98",
+   "permittypedesc": "REPAIR GAS",
+   "permitstatusshortdesc": "EXPIRED",
+   "permitissuedate": "2019-09-23T10:28:42.000",
+   "issuedworkstartdate": "2019-09-19T10:35:37.000",
+   "issuedworkenddate": "2019-10-18T23:59:59.000",
+   "onstreetname": "VAN DAM STREET",
+   "fromstreetname": "47 AVENUE",
+   "tostreetname": "THOMSON AVENUE",
+   "sidewalkshortdesc": "CONCRETE"
+  },
+  {
+   "permitnumber": "Q012019032C87",
+   "permittypedesc": "INSTALL TRAFFIC SIGNALS",
+   "permitstatusshortdesc": "EXPIRED",
+   "permitissuedate": "2019-02-01T12:42:52.000",
+   "issuedworkstartdate": "2019-02-04T00:00:00.000",
+   "issuedworkenddate": "2019-03-01T23:59:59.000",
+   "onstreetname": "VAN DAM STREET",
+   "fromstreetname": "QUEENS BOULEVARD",
+   "tostreetname": "THOMSON AVENUE",
+   "sidewalkshortdesc": "CONCRETE"
+  },
+  {
+   "permitnumber": "Q012018302C43",
+   "permittypedesc": "INSTALL TRAFFIC SIGNALS",
+   "permitstatusshortdesc": "EXPIRED",
+   "permitissuedate": "2018-10-29T15:29:46.000",
+   "issuedworkstartdate": "2018-10-30T00:00:00.000",
+   "issuedworkenddate": "2019-01-27T23:59:59.000",
+   "onstreetname": "VAN DAM STREET",
+   "fromstreetname": "QUEENS BOULEVARD",
+   "tostreetname": "THOMSON AVENUE",
+   "sidewalkshortdesc": "CONCRETE"
+  }
+ ]
 }

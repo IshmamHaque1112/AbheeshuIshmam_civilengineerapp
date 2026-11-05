@@ -6,7 +6,7 @@ import pytest
 from cornerbrief import email_delivery
 from cornerbrief.cost import build_cost
 from cornerbrief.crew_sequence import build_crew
-from cornerbrief.data_loader import load_corner
+from cornerbrief.data_loader import load_corner, load_dictionary
 from cornerbrief.email_delivery import EmailBlocked, send_brief
 from cornerbrief.guards import check_text
 from cornerbrief.library import fetch_topic
@@ -223,9 +223,13 @@ def test_no_crane_or_final_ppe_output(fully_reviewed):
     assert "crane" not in text and "final ppe" not in text.replace("not a final ppe", "")
 
 
-def test_undocumented_units_produce_no_planning():
+def test_undocumented_units_produce_no_planning(monkeypatch):
     corner = copy.deepcopy(load_corner("standard"))
     corner["data_kind"] = "live"
+    dictionary = copy.deepcopy(load_dictionary(corner))
+    for field in dictionary["fields"].values():
+        field["unit_status"] = "assumed"
+    monkeypatch.setattr("cornerbrief.orchestrator.load_dictionary", lambda _: dictionary)
     run = analyze(corner, client=ReplayClient("standard"))
     assert run["planning"] is None and any("units" in x for x in run["problems"]) and run["state"] == STOP
 
@@ -454,10 +458,10 @@ def test_real_test_corner_runs_offline_with_every_limit_unknown():
     assert isinstance(client, OfflineClient)
     run = analyze(REAL, client=client)
     assert run["state"] == STOP and run["options"] == [] and run["planning"] is None and run["tokens"] == dict(input=0, output=0)
-    assert all(o["result"] in ("unknown", "not applicable") and o["preview"] is None for o in run["rule_results"])
-    assert any("units" in p for p in run["problems"]) and any("road owner" in p for p in run["problems"])
+    assert all(o["result"] in ("unknown", "not applicable") for o in run["rule_results"])
+    assert not any("units" in p for p in run["problems"]) and any("road owner" in p for p in run["problems"])
     assert next(e for e in run["evidence"] if e["field"] == "ramp_width")["label"] == "measured"
-    assert any("units" in v["action"] for v in run["site_visit"])
+    assert any("road" in v["action"] for v in run["site_visit"])
     assert "October 2021" in to_markdown(approve(run, "R"))
 
 

@@ -92,9 +92,10 @@ def test_placeholder_is_missing():
     assert reveal.label == "missing" and reveal.value is None and "placeholder" in reveal.reason
 
 
-def test_live_dictionary_units_are_not_documented():
+def test_live_units_are_documented_but_unreviewed_limits_stay_unknown():
     corner = copy.deepcopy(load_corner("standard"))
     corner["data_kind"] = "live"
+    assert {f["unit_status"] for f in load_dictionary(corner)["fields"].values()} == {"documented"}
     ev = build_evidence(corner, load_dictionary(corner))
     outcomes = run_checks(RULES, resolve(CTX, RULES, PREC), ev)
     assert all(o.result in ("unknown", "not applicable") for o in outcomes)
@@ -325,14 +326,17 @@ def test_missing_date_or_unmatched_record_is_unknown(change, progress):
 def test_undocumented_units_stop_the_design_path():
     corner = copy.deepcopy(load_corner("standard"))
     corner["data_kind"] = "NYC Open Data"
-    ok, problems = data_sufficient(corner, build_evidence(corner, load_dictionary(corner)))
+    dictionary = copy.deepcopy(load_dictionary(corner))
+    for field in dictionary["fields"].values():
+        field["unit_status"] = "assumed"
+    ok, problems = data_sufficient(corner, build_evidence(corner, dictionary))
     assert not ok and any("units" in p for p in problems)
 
 
 def test_problems_use_plain_field_names():
     corner = copy.deepcopy(load_corner("standard"))
     corner["data_kind"] = "NYC Open Data"
-    corner["locations"][0]["curb_reveal"] = None
+    corner["locations"][0].update(curb_reveal=None, lnd_width=None)
     _, problems = data_sufficient(corner, build_evidence(corner, load_dictionary(corner)))
     text = " ".join(problems)
     assert "lip height" in text and "landing width" in text
