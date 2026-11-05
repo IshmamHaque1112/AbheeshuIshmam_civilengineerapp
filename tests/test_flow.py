@@ -468,6 +468,7 @@ def test_real_test_only_listed_when_saved_and_samples_never_change(tmp_path, mon
     data = tmp_path / "data"
     shutil.copytree(Path(__file__).parent.parent / "data", data)
     monkeypatch.setattr(data_loader, "DATA", data)
+    (data / "live" / "real_test.json").unlink()
     assert [c["key"] for c in data_loader.list_corners()] == ["standard", "constrained", "missing_or_stale"]
     with pytest.raises(KeyError):
         data_loader.load_corner("real_test")

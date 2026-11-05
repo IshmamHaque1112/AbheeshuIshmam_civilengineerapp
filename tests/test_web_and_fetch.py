@@ -49,7 +49,7 @@ def test_review_flow_over_http(server):
     status, page = call(server + "/")
     assert status == 200 and b"CornerBrief" in page
     status, corners = call(server + "/api/corners")
-    assert [c["key"] for c in json.loads(corners)] == ["standard", "constrained", "missing_or_stale"]
+    assert [c["key"] for c in json.loads(corners)] == ["standard", "constrained", "real_test", "missing_or_stale"]
     status, body = call(server + "/api/corners/standard/run", {})
     run = json.loads(body)
     assert status == 200 and run["corner"]["data_kind"] == "SAMPLE DATA" and "agent_log" not in run

@@ -303,3 +303,16 @@ def test_other_sites_cant_post_to_the_app(server):
         urllib.request.urlopen(req, timeout=10)
     assert exc.value.code == 403
     assert json.loads(call(server + f"/api/runs/{run['id']}")[1])["approval"] is None
+
+
+def test_site_visit_download_has_no_results_and_needs_no_release(server):
+    run = json.loads(call(server + "/api/corners/constrained/run", {})[1])
+    assert run["approval"] is None
+    assert call(f"{server}/api/runs/{run['id']}/download")[0] == 409
+    status, body = call(f"{server}/api/runs/{run['id']}/site-visit")
+    text = body.decode()
+    assert status == 200 and "SAMPLE DATA" in text and "no affiliation" in text and "permission to proceed" in text
+    for hidden in ("limit exceeded", "no conflict found", "Unreviewed calculation", "≤", "Rule results", "probably"):
+        assert hidden not in text
+    assert all(v["action"] in text for v in run["site_visit"][:3])
+    assert call(f"{server}/api/runs/nothere/site-visit")[0] == 404

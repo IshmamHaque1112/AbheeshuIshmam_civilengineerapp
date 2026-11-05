@@ -18,7 +18,7 @@ from . import search as search_module
 from .trace import public_trace, redact
 from .cost import hide_dollars
 from .orchestrator import load_run, rerun_with_field, run_corner
-from .review_export import NotApproved, approve, presented, to_markdown
+from .review_export import NotApproved, approve, presented, site_visit_markdown, to_markdown
 
 load_env()
 MAX_UPLOAD = 60 * 1024 * 1024
@@ -150,6 +150,15 @@ async def download(request: Request):
         return error(str(exc), 409)
 
 
+async def site_visit(request: Request):
+    try:
+        current = _run(request)
+    except FileNotFoundError:
+        return error("That run wasn't found.", 404)
+    return PlainTextResponse(site_visit_markdown(current), media_type="text/markdown; charset=utf-8",
+                             headers={"Content-Disposition": f'attachment; filename="cornerbrief_site_visit_{current["corner"]["key"]}.md"'})
+
+
 async def email(request: Request):
     try:
         body = await _body(request)
@@ -182,6 +191,7 @@ routes = [
     Route("/api/runs/{run_id}/field", add_field, methods=["POST"]),
     Route("/api/photos/{name}", photo),
     Route("/api/runs/{run_id}/download", download),
+    Route("/api/runs/{run_id}/site-visit", site_visit),
     Route("/api/runs/{run_id}/email", email, methods=["POST"]),
     Mount("/", StaticFiles(directory=Path(__file__).parent / "static", html=True)),
 ]

@@ -54,10 +54,10 @@ No API key is needed, and the demo stays in this mode while `DEMO_MODE=true`. Th
 
 1. **Sample corner A, Queens:** Checks the evidence supports, with the source and math for each calculation.
 2. **Sample corner B, Brooklyn:** Checks the evidence supports, with a utility vault and catch basin to review and one Skeptic rework.
-3. **Real test corner:** Appears only after you save one. It runs offline and stops until its units and road owner are confirmed.
+3. **Real test corner:** Corner 1024569, Van Dam Street and Thomson Avenue, from NYC Open Data. It uses saved records, so it works offline, and it stops until its units and road owner are confirmed.
 4. **Sample corner C, Bronx:** Stop: evidence still needed, because it was rebuilt after its survey and has a placeholder value.
 
-Enter a name and select **Release packet** to turn on the download. Releasing is not approval.
+Enter a name and select **Release packet** to turn on the download. Releasing is not approval. **Download site visit list** needs no release, because it lists only what to measure or confirm and contains no limit results.
 
 To print the results without the browser, run `python scripts/run_demo.py`.
 

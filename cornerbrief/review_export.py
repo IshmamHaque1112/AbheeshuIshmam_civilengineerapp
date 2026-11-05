@@ -51,6 +51,19 @@ def stricter(c: dict) -> str:
     return " and ".join(parts)
 
 
+def site_visit_markdown(run: dict) -> str:
+    """A field sheet needs no release, because it lists what to find out and contains no limit result."""
+    L = [f"# CornerBrief site visit list: {run['corner']['label']}", "", f"**{run['notice']}**", "",
+         f"Data: {run['corner']['data_kind']}. Prepared {run['created']}.",
+         "This list shows what to measure or confirm. It isn't a released packet, a limit result or permission to proceed.", ""]
+    if run["site_visit"]:
+        L += ["| Where | What to do | Why | Value found | Date | Checked by |", "| --- | --- | --- | --- | --- | --- |"]
+        L += [row(v["where"], v["action"], v["why"], "", "", "") for v in run["site_visit"]]
+    else:
+        L.append("The records didn't produce any site visit items.")
+    return "\n".join(" ".join(line.splitlines()) for line in L) + "\n"
+
+
 def to_markdown(run: dict) -> str:
     if not run.get("approval"):
         raise NotApproved("A person must release this packet before it can be downloaded.")

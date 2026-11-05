@@ -7,3 +7,4 @@ cache/
 .venv/
 data/live/real_*.json
 r29-*.json
+!data/live/real_test.json

@@ -53,7 +53,8 @@ def page(browser, base):
 
 
 def pick(page, n):
-    page.click(f"#picker button:nth-child({n})")
+    key = {1: "standard", 2: "constrained", 3: "missing_or_stale"}[n]
+    page.click(f'#picker button[data-key="{key}"]')
 
 
 def slow(page, pattern, seconds=0.6):
@@ -112,7 +113,7 @@ def test_reload_returns_to_the_same_corner(page):
     page.wait_for_selector(".status.stop")
     page.reload()
     page.wait_for_selector(".status.stop")
-    assert page.get_attribute("#picker button:nth-child(3)", "aria-current") == "true"
+    assert page.get_attribute('#picker button[data-key="missing_or_stale"]', "aria-current") == "true"
 
 
 def test_missing_saved_version_falls_back_to_the_records(page):
@@ -329,3 +330,20 @@ def test_reading_loads_after_the_packet_and_searches(browser, base, monkeypatch)
     pg.wait_for_function("document.querySelector('#reading-note').innerText.includes('Enter 2 to 80')")
     assert pg.locator(".status").count() == 1
     context.close()
+
+
+def test_site_visit_list_downloads_without_a_release(page):
+    assert page.locator("#approve").count() == 1
+    with page.expect_download() as info:
+        page.click("#site-visit-download")
+    download = info.value
+    assert download.suggested_filename == "cornerbrief_site_visit_standard.md"
+    text = open(download.path(), encoding="utf-8").read()
+    assert "What to do" in text and "no affiliation" in text and "Value found" in text
+
+
+def test_demo_list_shows_the_real_corner_in_order(page):
+    assert page.eval_on_selector_all("#picker button", "b => b.map(x => x.dataset.key)") == ["standard", "constrained", "real_test", "missing_or_stale"]
+    page.click('#picker button[data-key="real_test"]')
+    page.wait_for_selector(".status.stop")
+    assert "VAN DAM" in page.inner_text("#main") and "Real test corner" in page.inner_text("#main")
