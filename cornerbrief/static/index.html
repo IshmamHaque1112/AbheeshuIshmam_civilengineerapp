@@ -14,8 +14,8 @@
 <nav class="picker" aria-label="Demo corners" id="picker"></nav>
 <section class="search panel" aria-labelledby="search-title">
 <h2 id="search-title">Find a real NYC corner</h2>
-<form id="search-form"><label for="borough">Borough</label><select id="borough"><option value="">Any borough</option><option>MANHATTAN</option><option>BRONX</option><option>BROOKLYN</option><option>QUEENS</option><option>STATEN ISLAND</option></select>
-<label for="street">Street name</label><input id="street" maxlength="80" placeholder="e.g. THOMSON"><button class="button" type="submit">Search NYC records</button></form>
+<form id="search-form"><div><label for="borough">Borough</label><select id="borough"><option value="">Any borough</option><option>MANHATTAN</option><option>BRONX</option><option>BROOKLYN</option><option>QUEENS</option><option>STATEN ISLAND</option></select></div>
+<div><label for="street">Street name</label><input id="street" maxlength="80" placeholder="e.g. THOMSON"></div><button class="button" type="submit">Search NYC records</button></form>
 <p id="search-status" role="status">Choose a borough or enter a street. The sample demo above works without NYC access.</p><div id="search-results"></div></section>
 <main id="main"><p class="empty">Choose a corner to prepare its packet.</p></main>
 <script src="/app.js"></script>

@@ -1,6 +1,7 @@
 """Release gate and plain-text export."""
 import time
 from .config import labels_enabled
+from .evidence import input_name
 from .trace import redact
 from .cost import hide_dollars
 from .orchestrator import save_run
@@ -62,12 +63,12 @@ def to_markdown(run: dict) -> str:
     if run["changes"]:
         c = run["changes"]
         L += ["## What changed in this rerun", "", f"State: {c['state_before']} to {c['state_after']}.", ""]
-        L += [f"- Input {i['key']}: {i['before_label']} {'' if i['before_value'] is None else i['before_value']} to {i['after_label']} {'' if i['after_value'] is None else i['after_value']} {i['unit'] or ''}".rstrip() + (f", {i['after_date']}" if i.get("on_site") else "") for i in c["inputs"]]
+        L += [f"- {input_name(i['field'], i['ramp_id'])}: {i['before_label']} {'' if i['before_value'] is None else i['before_value']} to {i['after_label']} {'' if i['after_value'] is None else i['after_value']} {i['unit'] or ''}".rstrip() + (f", {i['after_date']}" if i.get("on_site") else "") for i in c["inputs"]]
         L += [f"- Result, {r['title']}{', ramp ' + r['ramp_id'] if r['ramp_id'] else ''}: {r['before']} to {r['after']}{' (unreviewed calculation)' if r['unreviewed'] else ''}. {r['math']}" for r in c["results"]]
         L += [f"- Site visit item done: {x}" for x in c["site_visit_done"]] + [f"- New site visit item: {x}" for x in c.get("site_visit_added", [])] + [""]
     if run["field_measurements"]:
         L += ["## Measured on site", "", "| Input | Value | Unit | Date | Measured by | Photo |", "| --- | --- | --- | --- | --- | --- |"]
-        L += [row(e["key"], e["value"], e["unit"], e["date"], e["by"], e["photo"]) for e in run["field_measurements"]] + [""]
+        L += [row(input_name(e["field"], None if e["key"].startswith("corner:") else e["key"].split(":")[0]), e["value"], e["unit"], e["date"], e["by"], e["photo"]) for e in run["field_measurements"]] + [""]
     rec = run["records"]
     L += ["## Corner records", ""]
     L += [f"- Program status: {p['status']}; type: {p['construction_type'] or 'not listed'}; completed: {p['completed'] or 'not listed'}" for p in rec["program"]]
@@ -83,7 +84,7 @@ def to_markdown(run: dict) -> str:
     L += ["## Applicable rules", "", "| Rule | Applies | Why | Decision source |", "| --- | --- | --- | --- |"]
     L += [row(d["title"], "Yes" if d["applies"] else "No", d["reason"], f"{d['source_section']} {d['url']}") for d in run["applicability"]]
     L += ["", "## Evidence", "", "| Input | Value | Unit | Label | Source | Date | Note |", "| --- | --- | --- | --- | --- | --- | --- |"]
-    L += [row(e["key"], e["value"], e["unit"], "measured on site" if e.get("on_site") and e["label"] == "measured" else e["label"], e["source"], e["date"], e["reason"]) for e in run["evidence"]]
+    L += [row(input_name(e["field"], e["ramp_id"]), e["value"], e["unit"], "measured on site" if e.get("on_site") and e["label"] == "measured" else e["label"], e["source"], e["date"], e["reason"]) for e in run["evidence"]]
     L += ["", "## Rule results", "", "| Rule | Ramp | Limit | Result | Math or reason | Source | Quote |", "| --- | --- | --- | --- | --- | --- | --- |"]
     L += [row(o["title"], o["ramp_id"], o["limit_text"], o["result"] + (" (stop: evidence still needed)" if o["evidence_stop"] else ""), o["math"] or o["reason"], f"{o['section'] or ''} {o['url'] or ''}", o["quote"]) for o in run["rule_results"]]
     if run["design_targets"]:

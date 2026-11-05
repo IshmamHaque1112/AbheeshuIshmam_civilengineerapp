@@ -77,6 +77,19 @@ def join_report(corner: dict) -> list[str]:
     return notes
 
 
+FIELD_NAMES = {"ramp_running_slope_total": "running slope", "ramp_cross_slope": "ramp cross slope", "ramp_width": "ramp width", "ramp_length": "ramp length",
+               "lnd_width": "landing width", "lnd_length": "landing length", "lnd_cross_slope": "landing cross slope", "curb_reveal": "lip height",
+               "gutter_slope": "gutter slope", "counter_slope": "roadway slope", "ramp_right_flare": "right flare", "ramp_left_flare": "left flare", "ramp_rise": "ramp rise",
+               "sidewalk_width": "sidewalk width", "legal_grade": "legal grade", "ramp_type": "ramp type", "sidewalk_transverse_slope": "sidewalk slope",
+               "road_control": "road owner", "geocyclora": "survey date"}
+
+
+def input_name(field: str, ramp_id=None) -> str:
+    """Name an input the way an engineer would read it."""
+    name = FIELD_NAMES.get(field, field)
+    return f"Ramp {ramp_id} {name}" if ramp_id else name[0].upper() + name[1:]
+
+
 def _on_site(item: EvidenceItem, entry: dict, built) -> EvidenceItem:
     """Replace a record with what a person measured. A measurement from before the latest construction is still stale."""
     stale = is_stale(entry["date"], built)
@@ -160,7 +173,7 @@ def record_conflicts(corner: dict) -> list[str]:
     for ramp, rows in by_ramp.items():
         differs = [f for f in CHECK_FIELDS + ["geocyclora"] if len({str(r.get(f)) for r in rows}) > 1]
         if differs:
-            problems.append(f"Ramp {ramp} has records that disagree on: " + ", ".join(differs) + ".")
+            problems.append(f"Ramp {ramp} has records that disagree on: " + ", ".join(FIELD_NAMES.get(f, f) for f in differs) + ".")
     return problems
 
 
@@ -170,11 +183,11 @@ def data_sufficient(corner: dict, evidence: list[EvidenceItem]) -> tuple[bool, l
         problems.append("No ramp measurements were found.")
     for item in evidence:
         if item.field in REQUIRED_FIELDS and item.label != "measured":
-            problems.append(f"{item.key} is {item.label}. {item.reason}".strip())
+            problems.append(f"{input_name(item.field, item.ramp_id)} is {item.label}. {item.reason}".strip())
     problems += [n for n in join_report(corner) if "did not match" in n] + record_conflicts(corner)
     undocumented = sorted({e.field for e in evidence if e.field in REQUIRED_FIELDS and e.label == "measured" and not e.unit_documented})
     if undocumented:
-        problems.append("Measurement units aren't documented for: " + ", ".join(undocumented) + ".")
+        problems.append("Measurement units aren't documented for: " + ", ".join(FIELD_NAMES.get(f, f) for f in undocumented) + ".")
     if corner.get("context", {}).get("road_control") != "city":
         problems.append("The road owner isn't confirmed, so the applicable rules are unknown.")
     return (not problems, problems)

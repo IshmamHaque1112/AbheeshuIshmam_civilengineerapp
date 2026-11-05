@@ -327,3 +327,14 @@ def test_undocumented_units_stop_the_design_path():
     corner["data_kind"] = "NYC Open Data"
     ok, problems = data_sufficient(corner, build_evidence(corner, load_dictionary(corner)))
     assert not ok and any("units" in p for p in problems)
+
+
+def test_problems_use_plain_field_names():
+    corner = copy.deepcopy(load_corner("standard"))
+    corner["data_kind"] = "NYC Open Data"
+    corner["locations"][0]["curb_reveal"] = None
+    _, problems = data_sufficient(corner, build_evidence(corner, load_dictionary(corner)))
+    text = " ".join(problems)
+    assert "lip height" in text and "landing width" in text
+    for raw in ("curb_reveal", "lnd_width", ":", "ramp_running_slope_total"):
+        assert raw not in text.replace("units aren't documented for:", "")
