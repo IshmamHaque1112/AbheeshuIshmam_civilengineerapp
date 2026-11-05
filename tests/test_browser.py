@@ -258,3 +258,41 @@ def test_external_search_label_is_rendered_as_text(page):
     page.wait_for_selector('[data-real]')
     assert label in page.inner_text('[data-real]')
     assert page.locator('#search-results img').count()==0 and not page.evaluate('!!window.injected')
+
+
+def test_search_doesnt_leave_a_loading_corner_stuck(page):
+    slow(page, "**/api/corners/constrained/run")
+    page.route("**/api/search?**", lambda r: r.fulfill(status=200, content_type="application/json", body='{"corners":[],"note":"n","sources":[]}'))
+    pick(page, 2)
+    page.select_option("#borough", "QUEENS")
+    page.click("#search-form button")
+    page.wait_for_function("document.querySelector('.lead')?.innerText.includes('complex')", timeout=5000)
+
+
+def test_choosing_a_corner_doesnt_leave_search_status_stuck(page):
+    page.evaluate('''() => { const f = window.fetch; window.fetch = async (...a) => { if (String(a[0]).startsWith('/api/search')) await new Promise(() => {}); return f(...a); }; }''')
+    page.select_option("#borough", "QUEENS")
+    page.click("#search-form button")
+    pick(page, 3)
+    page.wait_for_selector(".status.stop")
+    assert "Searching" not in page.inner_text("#search-status")
+
+
+def test_saved_real_snapshot_renders_on_desktop_and_phone(browser, base):
+    for viewport in (dict(width=1440, height=900), dict(width=390, height=800)):
+        context = browser.new_context(viewport=viewport)
+        pg = context.new_page()
+        errors = []
+        pg.on("pageerror", lambda e: errors.append(str(e)))
+        pg.goto(base + "/")
+        pg.wait_for_selector(".status strong")
+        pg.evaluate("sessionStorage.clear()")
+        pg.evaluate("fetch('/api/corners/real_1024569_c83661efedaa/run',{method:'POST',headers:{'Content-Type':'application/json'},body:'{}'}).then(r=>r.json()).then(o=>{sessionStorage.setItem('latest:'+o.corner.key,o.id);sessionStorage.setItem('chosen',o.corner.key);})")
+        pg.wait_for_function("sessionStorage.getItem('chosen')")
+        pg.reload()
+        pg.wait_for_selector(".status.stop")
+        text = pg.inner_text("#main")
+        assert "Real test corner" in text and "VAN DAM" in text and "units" in text
+        assert pg.evaluate("document.documentElement.scrollWidth > innerWidth") is False
+        assert errors == []
+        context.close()

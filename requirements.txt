@@ -3,7 +3,7 @@ uvicorn>=0.27
 pydantic>=2.6
 pyyaml>=6.0
 pytest>=8.0
+truststore  # Lets Python use the system certificate store, which NYC data needed on Windows
 # Optional packages:
 # anthropic   needed for live agents
-# truststore  helps Python use the Windows certificate store for NYC data
 # playwright  runs the browser tests in tests/test_browser.py, which skip without it

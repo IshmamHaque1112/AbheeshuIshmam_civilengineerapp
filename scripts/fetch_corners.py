@@ -145,7 +145,7 @@ def assemble_corner(locations, progress, complaints, retrieved=None, provenance=
     first = locations[0]
     corner = dict(label=f"{first.get('stname1') or 'Street not recorded'} and {first.get('stname2') or 'street not recorded'}",
                   data_kind="NYC Open Data", retrieved=retrieved or date.today().isoformat(), sources=[LOC, PROG, COMP],
-                  dataset_note="Real NYC Open Data records. Dataset units remain undocumented; limits stay unknown. Historical records may not describe today's corner. Road control is not recorded.",
+                  dataset_note="Real NYC Open Data records. The ramp measurement dataset was last updated in October 2021, so its values may not describe today's corner. Dataset units remain undocumented, so limits stay unknown. Road control is not recorded.",
                   context=dict(inside_nyc=True, work_type="corner_ramp_row", road_control="not_recorded"),
                   locations=locations, progress=progress, complaints=complaints)
     if provenance is not None:
@@ -158,7 +158,7 @@ def save(role, cid):
     progress = num(query(PROG, where=f"cornerid={cid}", limit=20))
     complaints = num(query(COMP, where=f"cmt_corner_id={cid}", limit=50))
     if not locations:
-        raise ValueError(f"Corner {cid} has no ramp measurements.")
+        raise ValueError("it has no ramp measurements.")
     corner = assemble_corner(locations, progress, complaints)
     out = ROOT / "data" / "live"
     out.mkdir(exist_ok=True, parents=True)
@@ -185,7 +185,12 @@ def main():
     if args.save:
         if args.save[0] != "real_test":
             sys.exit("ROLE must be real_test. The sample corners don't change.")
-        save(args.save[0], int(args.save[1]))
+        if not args.save[1].isdigit():
+            sys.exit(f"Corner ID must be a number, not {args.save[1]}.")
+        try:
+            save(args.save[0], int(args.save[1]))
+        except (ValueError, OSError) as exc:  # Network errors are OSErrors
+            sys.exit(f"Couldn't save corner {args.save[1]}: {exc}")
         return
     found, total, joined = list_candidates(args.limit, args.borough, args.street)
     lines = ["# Real corner candidates", "", f"Checked {total} corners. {joined} joined to Program Progress.", ""]

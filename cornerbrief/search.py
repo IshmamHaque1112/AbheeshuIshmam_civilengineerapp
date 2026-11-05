@@ -1,8 +1,10 @@
 """Bounded NYC queries, shared with the existing CLI fetch/cache implementation."""
 import hashlib
 import json
+import os
 import re
 import urllib.parse
+import uuid
 from datetime import datetime, timezone
 from scripts import fetch_corners as fetch
 from .paths import DATA
@@ -35,7 +37,7 @@ def search(borough=None, street=None):
             found.setdefault(cid, dict(cornerid=cid, label=f"{r.get('stname1') or 'Street not recorded'} and {r.get('stname2') or 'street not recorded'}", borough=r.get("borough")))
     return dict(corners=list(found.values()), bounded=len(locations) > MAX_SEARCH,
                 row_limit=MAX_SEARCH, sources=[source],
-                note="First 100 ramp rows only, not every matching corner. Narrow the street to refine results. Program and complaint records are fetched on selection; missing matches stay unknown.")
+                note=("First 100 ramp rows only, not every matching corner. Narrow the street to refine results. " if len(locations) > MAX_SEARCH else "") + "Program and complaint records are fetched on selection; missing matches stay unknown.")
 
 
 def pull(cid):
@@ -54,12 +56,16 @@ def pull(cid):
     locations = groups[fetch.LOC]
     if not locations:
         raise ValueError("No ramp records found for this corner. Search again.")
+    times = [s["retrieved_at"] for s in sources if s.get("retrieved_at")]
     corner = fetch.assemble_corner(locations, groups[fetch.PROG], groups[fetch.COMP],
-                                   retrieved=datetime.now(timezone.utc).isoformat(), provenance=sources)
-    # Content-addressed snapshots prevent a subsequent pull from changing a saved run's inputs.
-    digest = hashlib.sha256(json.dumps(corner, sort_keys=True).encode()).hexdigest()[:12]
+                                   retrieved=max(times) if times else None, provenance=sources)
+    # The name comes from the records alone, so the same records reuse one snapshot and a saved run's inputs never change.
+    digest = hashlib.sha256(json.dumps(groups, sort_keys=True).encode()).hexdigest()[:12]
     key = f"real_{cid}_{digest}"
     path = DATA / "live" / f"{key}.json"
-    path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps(corner, indent=1), encoding="utf-8")
+    if not path.exists():
+        path.parent.mkdir(parents=True, exist_ok=True)
+        temporary = path.with_suffix(f".{uuid.uuid4().hex[:6]}.tmp")
+        temporary.write_text(json.dumps(corner, indent=1), encoding="utf-8")
+        os.replace(temporary, path)
     return key

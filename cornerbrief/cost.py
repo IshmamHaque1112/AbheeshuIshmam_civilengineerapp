@@ -26,10 +26,6 @@ def build_cost(takeoff: dict, rates: dict, today: date | None = None) -> dict:
                 contains_sample_rates=any(l.get("status") == "sample" for l in lines))
 
 
-def dollars_shown() -> bool:
-    return os.environ.get("SHOW_DOLLARS", "false").lower() == "true"
-
-
 def hide_dollars(cost: dict) -> dict:
     """The city demo shows quantities only, so a placeholder price can't be quoted."""
     if cost.get("hidden"):

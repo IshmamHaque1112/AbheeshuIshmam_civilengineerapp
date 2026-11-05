@@ -58,6 +58,10 @@ def join_report(corner: dict) -> list[str]:
     notes = []
     if not ids:
         notes.append("No ramp measurements were found for this corner.")
+    names = {str(r.get(f)).strip().upper() for r in corner.get("locations", []) for f in ("stname1", "stname2") if r.get(f)}
+    program_names = {str(r.get(f)).strip().upper() for r in corner.get("progress", []) for f in ("street_nam", "street_n_1") if r.get(f)}
+    if names and program_names and names != program_names:
+        notes.append(f"Confirm these records describe the same corner. Ramp records name {', '.join(sorted(names))}; Program Progress names {', '.join(sorted(program_names))}.")
     if None in ids:
         notes.append("A ramp record has no corner ID, so it did not match a corner.")
         ids = ids - {None}

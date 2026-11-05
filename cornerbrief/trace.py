@@ -36,12 +36,15 @@ class TracingClient:
             output, usage = self.client.call(agent, attempt, system, payload, schema, tier)
             if usage.get("request"):
                 event["request"]["provider_request"] = usage["request"]
-            event.update(response=usage.get("response_text", output.model_dump()), usage=usage, status="returned")
+            response = usage.get("response_text", output.model_dump())
+            usage = {k: v for k, v in usage.items() if k not in ("request", "response_text")}  # Each is stored once, on the event
+            event.update(response=response, usage=usage, status="returned")
             return output, usage
         except Exception as exc:
             if getattr(exc, "usage", None) and exc.usage.get("request"):
                 event["request"]["provider_request"] = exc.usage["request"]
-            event.update(response=getattr(exc, "response_text", None), usage=getattr(exc, "usage", None),
+            failed = {k: v for k, v in (getattr(exc, "usage", None) or {}).items() if k not in ("request", "response_text")}
+            event.update(response=getattr(exc, "response_text", None), usage=failed or None,
                          error="Agent request or response failed validation.")
             raise
         finally:

@@ -218,3 +218,88 @@ def test_city_trace_hides_costs_and_currency_even_for_legacy_saved_runs():
 def test_role_capture_requires_finite_real_elapsed_time(seconds):
     fixture=capture_fixture();fixture['sessions'][0]['elapsed_seconds']=seconds
     assert any('elapsed seconds' in issue for issue in validate(fixture))
+
+
+# Regression tests from the November 5 review
+def _real_setup(tmp_path, monkeypatch):
+    monkeypatch.setattr(search, "DATA", tmp_path)
+    monkeypatch.setattr("cornerbrief.data_loader.DATA", tmp_path)
+    monkeypatch.setattr(search.fetch, "get", fake_nyc)
+
+
+def test_pulling_a_corner_twice_reuses_its_snapshot(tmp_path, monkeypatch):
+    _real_setup(tmp_path, monkeypatch)
+    assert search.pull("1") == search.pull("1")
+    assert len(list((tmp_path / "live").glob("*.json"))) == 1
+    assert not list((tmp_path / "live").glob("*.tmp"))
+
+
+def test_unbounded_search_doesnt_claim_it_was_cut_off(monkeypatch):
+    monkeypatch.setattr(search.fetch, "get", lambda url: [dict(cornerid=1, stname1="A", stname2="B", borough="4")])
+    result = search.search("QUEENS", None)
+    assert result["bounded"] is False and "First 100" not in result["note"]
+    many = [dict(cornerid=i, stname1="A", stname2="B", borough="4") for i in range(1, 103)]
+    monkeypatch.setattr(search.fetch, "get", lambda url: many)
+    result = search.search("QUEENS", None)
+    assert result["bounded"] is True and "First 100" in result["note"]
+
+
+def test_assembled_real_corner_states_how_old_the_dataset_is():
+    assert "October 2021" in search.fetch.assemble_corner([dict(stname1="A", stname2="B")], [], [])["dataset_note"]
+
+
+def test_street_names_that_differ_are_flagged_for_confirmation():
+    from cornerbrief.evidence import join_report
+    corner = dict(locations=[dict(cornerid=1, stname1="VAN DAM STREET", stname2="THOMSON AVENUE")],
+                  progress=[dict(cornerid=1, street_nam="QUEENS BOULEVARD", street_n_1="THOMSON AVENUE")], complaints=[])
+    assert any("QUEENS BOULEVARD" in n and "VAN DAM STREET" in n for n in join_report(corner))
+    corner["progress"][0].update(street_nam="THOMSON AVENUE", street_n_1="VAN DAM STREET")
+    assert not any("QUEENS" in n or "VAN DAM" in n for n in join_report(corner))
+
+
+def test_trace_doesnt_store_the_provider_request_twice():
+    from cornerbrief.models import RecordsOutput
+    from cornerbrief.trace import TracingClient
+    class Fake:
+        mode = "live"
+        def call(self, *a, **k):
+            return RecordsOutput(summary="x", labels=[]), dict(input_tokens=1, output_tokens=2, provider="anthropic", request=dict(system="s"), response_text="{}")
+    client = TracingClient(Fake())
+    _, usage = client.call("records", 0, "s", {}, RecordsOutput)
+    assert "request" not in usage and "response_text" not in usage and usage["input_tokens"] == 1
+    event = client.calls[0]
+    assert "request" not in event["usage"] and event["request"]["provider_request"] and event["response"] == "{}"
+
+
+def test_role_capture_accepts_a_z_time_zone():
+    import importlib.util
+    from pathlib import Path
+    spec = importlib.util.spec_from_file_location("role_for_z", Path(__file__).parent.parent / "scripts" / "role_test.py")
+    role = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(role)
+    capture = role.template()
+    capture["sessions"][0].update(started_at="2026-11-01T10:00:00Z", ended_at="2026-11-01T10:10:00Z", elapsed_seconds=600)
+    assert not any("junior_engineer: record valid dated" in p for p in role.validate(capture))
+
+
+def test_fetch_cli_reports_errors_without_a_traceback(monkeypatch):
+    monkeypatch.setattr("sys.argv", ["fetch", "--save", "real_test", "abc"])
+    with pytest.raises(SystemExit) as exc:
+        search.fetch.main()
+    assert isinstance(exc.value.code, str) and "abc" in exc.value.code
+    monkeypatch.setattr("sys.argv", ["fetch", "--save", "real_test", "5"])
+    monkeypatch.setattr(search.fetch, "query", lambda *a, **k: [])
+    with pytest.raises(SystemExit) as exc:
+        search.fetch.main()
+    assert "no ramp measurements" in str(exc.value.code)
+
+
+def test_other_sites_cant_post_to_the_app(server):
+    import json, urllib.error, urllib.request
+    from test_web_and_fetch import call
+    run = json.loads(call(server + "/api/corners/standard/run", {})[1])
+    req = urllib.request.Request(f"{server}/api/runs/{run['id']}/approve", data=b'{"reviewer":"R"}', headers={"Origin": "https://evil.example", "Content-Type": "text/plain"})
+    with pytest.raises(urllib.error.HTTPError) as exc:
+        urllib.request.urlopen(req, timeout=10)
+    assert exc.value.code == 403
+    assert json.loads(call(server + f"/api/runs/{run['id']}")[1])["approval"] is None

@@ -156,7 +156,7 @@ Releasing the packet
   10. rapid switching between corners, with no state leaking from one corner to the next
 - [P1] **R29 Role test.** A junior engineer and a reviewer complete one realistic corner. Record time, corrections, missed issues, and any result misread as permission to proceed.
 
-## 5. Where the code stands (Nov 4)
+## 5. Where the code stands (Nov 5)
 
 The code now follows this version:
 
@@ -172,7 +172,7 @@ Still open:
 - Queens and Brooklyn reach "checks the evidence supports" with four corner inputs missing, and each affected check shows its own stop. `docs/P0-REVIEW.md` reads the stop wording more strictly, so the team should decide which it wants.
 - With no API key, a rerun has no Skeptic review, because the saved responses describe the original records. It can reach "checks the evidence supports," but it says the review wasn't reused, and it can't show a label or plan.
 - No named person has reviewed the rules, so every limit result stays "unknown."
-- The real corner near Thomson Ave hasn't been fetched, and R29 and the timing metrics need people.
+- Search can load real corners, and corner 1024569 (Van Dam Street and Thomson Avenue) has a saved snapshot. It isn't in the demo list yet, so the team still needs to choose the real corner. R29 and the timing metrics need people.
 - `docs/RUN-CHECK.md` (Nov 3) failed on Apple's Python 3.9. The app needs Python 3.10 or newer, and the README has Mac setup steps.
 
 ## 6. Demo plan (Nov 12)

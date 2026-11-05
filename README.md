@@ -154,6 +154,6 @@ Use **Find a real NYC corner** to choose a borough, enter a street, or combine b
 
 Expand **Agent trace** to inspect each agent's input, response and token accounting. Saved replay, deterministic offline steps and cached provider responses use zero provider tokens for that run. No live provider calls were made for this implementation's validation; SDK request/response handling is covered by mocked-provider tests. Traces redact credential-like text and dollar figures.
 
-The actual static UI and sample packets can be exported with `.venv/bin/python scripts/export_ui.py`. Helix serves `.helix/output/index.html`; search, field mutations and release/download require the local backend. The export makes no API or external resource requests.
+The actual static UI and sample packets can be exported with `python scripts/export_ui.py`. Helix serves `.helix/output/index.html`; search, field mutations and release/download require the local backend. The export makes no API or external resource requests.
 
 Real junior-engineer/reviewer participation is still pending. Follow [the R29 protocol](docs/R29-ROLE-TEST.md) and use `scripts/role_test.py` to create and check result captures. See [P1 coverage and validation](docs/P1-IMPLEMENTATION.md) for exact limits and remaining human work.

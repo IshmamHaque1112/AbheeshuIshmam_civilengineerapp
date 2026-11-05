@@ -5,3 +5,5 @@ outbox/
 cache/
 .pytest_cache/
 .venv/
+data/live/real_*.json
+r29-*.json

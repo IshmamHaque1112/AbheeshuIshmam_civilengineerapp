@@ -49,7 +49,7 @@ async function start() {
 
 async function run(key) {
   const mine = ++requestId;
-  ++searchId;
+  cancelSearch();
   latest.chosen(key);
   document.querySelectorAll("#picker button").forEach((b) => b.setAttribute("aria-current", b.dataset.key === key));
   current = null;
@@ -63,6 +63,11 @@ async function run(key) {
 }
 
 let searchId = 0;
+let searching = false;
+function cancelSearch() {
+  ++searchId; // A late search result can't appear after the person has chosen a corner
+  if (searching) { searching = false; $("#search-status").textContent = "Search canceled because you chose a corner."; }
+}
 function wireSearch() {
   if (exportedPackets) {
     $("#search-status").textContent = "This static preview includes the actual saved sample packets. Live NYC search requires the local CornerBrief backend.";
@@ -72,23 +77,24 @@ function wireSearch() {
   $("#search-form").addEventListener("submit", async (event) => {
     event.preventDefault();
     const mine = ++searchId;
-    ++requestId; // Search expresses a new selection intent; old packets cannot replace it.
     const borough = $("#borough").value, street = $("#street").value.trim();
     $("#search-results").innerHTML = "";
+    searching = true;
     $("#search-status").textContent = "Searching NYC Open Data…";
     try {
       if (!borough && !street) throw new Error("Choose a borough or enter a street.");
       const result = await api(`/api/search?${new URLSearchParams({borough, street})}`);
       if (mine !== searchId) return;
+      searching = false;
       $("#search-status").textContent = `${result.corners.length ? `${result.corners.length} corners found.` : "No corners found. Try a shorter street name or another borough."} ${result.note}`;
       $("#search-results").innerHTML = `<p>${result.sources.map(s => link(s.dataset, s.url)).join(" · ")}</p>` + result.corners.map(c => `<button class="button alt" data-real="${esc(c.cornerid)}">${esc(c.label)} · Corner ${esc(c.cornerid)}</button>`).join("");
       document.querySelectorAll("[data-real]").forEach(b => b.addEventListener("click", () => pullReal(b.dataset.real)));
-    } catch (err) { if (mine === searchId) $("#search-status").textContent = err.message; }
+    } catch (err) { if (mine === searchId) { searching = false; $("#search-status").textContent = err.message; } }
   });
 }
 async function pullReal(id) {
   const mine = ++requestId;
-  ++searchId;
+  cancelSearch();
   current = null;
   document.querySelectorAll("#picker button").forEach(b => b.setAttribute("aria-current", "false"));
   $("#main").innerHTML = `<p class="empty" role="status">Loading this corner's ramp, program and complaint records…</p>`;

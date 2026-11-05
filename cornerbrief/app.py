@@ -1,5 +1,8 @@
 """Web API and static UI."""
 from pathlib import Path
+import logging
+from urllib.parse import urlsplit
+
 from starlette.applications import Starlette
 from starlette.concurrency import run_in_threadpool
 from starlette.requests import Request
@@ -34,7 +37,14 @@ def error(message: str, status: int) -> JSONResponse:
     return JSONResponse({"error": message}, status_code=status)
 
 
+class WrongOrigin(Exception):
+    pass
+
+
 async def _body(request: Request) -> dict:
+    origin = request.headers.get("origin")
+    if origin and urlsplit(origin).netloc != request.headers.get("host"):
+        raise WrongOrigin()  # Another website can't release a packet or send email through a person's browser
     try:
         body = await request.json()
     except ValueError as exc:
@@ -54,7 +64,8 @@ async def search_corners(request: Request):
     except ValueError as exc:
         return error(str(exc), 400)
     except Exception:
-        return error("NYC Open Data could not be reached or returned invalid data. Retry, narrow your search, or use the offline samples.", 502)
+        logging.getLogger("uvicorn.error").exception("NYC search failed")
+        return error("NYC Open Data could not be reached or returned invalid data. Retry, narrow your search, or use the offline samples. The terminal has details.", 502)
 
 
 async def pull_corner(request: Request):
@@ -64,7 +75,8 @@ async def pull_corner(request: Request):
     except ValueError as exc:
         return error(str(exc), 400)
     except Exception:
-        return error("The real corner could not be loaded. Retry or use the offline samples.", 502)
+        logging.getLogger("uvicorn.error").exception("Loading a real corner failed")
+        return error("The real corner could not be loaded. Retry or use the offline samples. The terminal has details.", 502)
 
 
 async def run(request: Request):
@@ -164,4 +176,8 @@ routes = [
     Route("/api/runs/{run_id}/email", email, methods=["POST"]),
     Mount("/", StaticFiles(directory=Path(__file__).parent / "static", html=True)),
 ]
-app = Starlette(routes=routes, exception_handlers={Exception: server_error})
+async def wrong_origin(request: Request, exc: WrongOrigin):
+    return error("This request came from another website, so it was refused.", 403)
+
+
+app = Starlette(routes=routes, exception_handlers={Exception: server_error, WrongOrigin: wrong_origin})

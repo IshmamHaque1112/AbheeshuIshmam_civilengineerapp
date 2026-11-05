@@ -32,12 +32,12 @@ def validate(result):
         if session.get("actual_human") is not True or not isinstance(session.get("participant"), str) or not session["participant"].strip():
             problems.append(f"{role}: actual human participation and attribution are pending.")
         try:
-            start = datetime.fromisoformat(session["started_at"])
-            end = datetime.fromisoformat(session["ended_at"])
+            start = datetime.fromisoformat(session["started_at"].replace("Z", "+00:00"))  # Python 3.10 doesn't read a Z suffix
+            end = datetime.fromisoformat(session["ended_at"].replace("Z", "+00:00"))
             duration = session["elapsed_seconds"]
             if not start.tzinfo or not end.tzinfo or end < start or end > datetime.now(timezone.utc) or isinstance(duration, bool) or not isinstance(duration, (int, float)) or not math.isfinite(duration) or duration < 0 or abs((end - start).total_seconds() - duration) > 2:
                 raise ValueError()
-        except (ValueError, TypeError, KeyError):
+        except (ValueError, TypeError, KeyError, AttributeError):
             problems.append(f"{role}: record valid dated start/end times with timezone and matching elapsed seconds.")
         for metric in ("corrections", "missed_issues", "permission_misreads"):
             values = session.get(metric)
