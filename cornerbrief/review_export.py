@@ -92,6 +92,8 @@ def to_markdown(run: dict) -> str:
     L += [f"- Ramp {r['ramp_id']}: surveyed {r['surveyed']}; warning surface: {r['warning_surface']}; ponding: {r['ponding']}; ramp obstacles: {r['obstacles_ramp']}; landing obstacles: {r['obstacles_landing']}" for r in rec["ramps"]]
     L += [f"- Complaint {c['id']} on {c['date']}: temporary repair feasible: {c['repair_feasible']}" for c in rec["complaints"]]
     L += [f"- Join note: {x}" for x in run["join_notes"]]
+    if run.get("dot_survey"):
+        L += ["", "NYC DOT's survey map record. This is DOT's own record, last edited in December 2020, and it is not a result from this tool.", ""] + [f"- {x}" for x in run["dot_survey"]] + [""]
     L += [f"- Permit {p.get('permitnumber')}: {p.get('permittypedesc')}; work {str(p.get('issuedworkstartdate') or '')[:10]} to {str(p.get('issuedworkenddate') or '')[:10]}; {', '.join(str(x).strip() for x in (p.get('onstreetname'), p.get('fromstreetname'), p.get('tostreetname')) if x)}; status: {p.get('permitstatusshortdesc')}" for p in run.get("permits") or []] + [""]
     review = run["rule_review"]
     L += [f"Rule review: {len(review['awaiting_human_review'])} of {review['verified'] + len(review['awaiting_human_review'])} sourced rules still need a named reviewer. {len(run['rules_needing_sources'])} rules still need sources. {len(review['precedence_awaiting_review'])} which-rule-applies decisions still need review.", ""]

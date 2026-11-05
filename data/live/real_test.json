@@ -5,9 +5,7 @@
  "sources": [
   "ufzp-rrqu",
   "e7gc-ub6z",
-  "jagj-gttd",
-  "inkn-q76z",
-  "tqtj-sjs8"
+  "jagj-gttd"
  ],
  "source_provenance": [
   {
@@ -39,9 +37,27 @@
    "url": "https://data.cityofnewyork.us/resource/tqtj-sjs8.json?%24limit=51&%24where=upper%28boroughname%29%3D%27QUEENS%27+AND+issuedworkenddate%3E%3D%272018-08-08%27+AND+%28%28upper%28onstreetname%29+like+%27%25VAN+DAM+STREET%25%27+AND+%28upper%28fromstreetname%29+like+%27%25THOMSON+AVENUE%25%27+OR+upper%28tostreetname%29+like+%27%25THOMSON+AVENUE%25%27%29%29+OR+%28upper%28onstreetname%29+like+%27%25THOMSON+AVENUE%25%27+AND+%28upper%28fromstreetname%29+like+%27%25VAN+DAM+STREET%25%27+OR+upper%28tostreetname%29+like+%27%25VAN+DAM+STREET%25%27%29%29%29&%24order=issuedworkenddate+DESC&%24select=permitnumber%2Cpermittypedesc%2Cpermitstatusshortdesc%2Cpermitissuedate%2Cissuedworkstartdate%2Cissuedworkenddate%2Constreetname%2Cfromstreetname%2Ctostreetname%2Csidewalkshortdesc",
    "retrieved_at": "2026-11-05T00:00:00+00:00",
    "note": "Read from the NYC Open Data portal through a browser on November 5, 2026."
+  },
+  {
+   "dataset": "c9sj-fmsg",
+   "url": "https://data.cityofnewyork.us/resource/c9sj-fmsg.json?%24limit=51&%24where=upper%28boroughname%29%3D%27QUEENS%27+AND+issuedworkenddate%3E%3D%272018-08-08%27+AND+%28%28upper%28onstreetname%29+like+%27%25VAN+DAM+STREET%25%27+AND+%28upper%28fromstreetname%29+like+%27%25THOMSON+AVENUE%25%27+OR+upper%28tostreetname%29+like+%27%25THOMSON+AVENUE%25%27%29%29+OR+%28upper%28onstreetname%29+like+%27%25THOMSON+AVENUE%25%27+AND+%28upper%28fromstreetname%29+like+%27%25VAN+DAM+STREET%25%27+OR+upper%28tostreetname%29+like+%27%25VAN+DAM+STREET%25%27%29%29%29&%24order=issuedworkenddate+DESC&%24select=permitnumber%2Cpermittypedesc%2Cpermitstatusshortdesc%2Cpermitissuedate%2Cissuedworkstartdate%2Cissuedworkenddate%2Constreetname%2Cfromstreetname%2Ctostreetname%2Csidewalkshortdesc",
+   "retrieved_at": "2026-11-05T00:00:00+00:00",
+   "note": "Read through a browser on November 5, 2026."
+  },
+  {
+   "dataset": "CMT_SURVEY_COMPLIANCY_TOLERANCE_PROD",
+   "url": "https://services.arcgis.com/wmZOI9vyUBq1zTZx/arcgis/rest/services/CMT_SURVEY_COMPLIANCY_TOLERANCE_PROD/FeatureServer/0/query?f=json&where=RAMPID+IN+%28116252%2C116256%29&outFields=RAMPID%2CRAMP_TYPE%2CCOMPLIANCY_STATUS%2CRAMP_LENGTH%2CRAMP_LEFT_FLARE%2CSDW_APP_WIDTH1%2CSDW_APP_WIDTH2%2COBSTACLES_OTHER%2CDEFECTIVE_CURB%2CDEFECTIVE_SIDEWALK&returnGeometry=false",
+   "retrieved_at": "2026-11-05T00:00:00+00:00",
+   "note": "Read through a browser on November 5, 2026."
+  },
+  {
+   "dataset": "RoadwayData",
+   "url": "https://gisportalny.dot.ny.gov/hostingny/rest/services/Roadways/RoadwayData/MapServer/0/query?f=json&geometry=-73.93370894345186%2C40.74464324083891&geometryType=esriGeometryPoint&inSR=4326&spatialRel=esriSpatialRelIntersects&distance=100&units=esriSRUnit_Meter&outFields=Roadway_Name%2COwning_Jurisdiction%2CMaintenance_Jurisdiction%2COwning_Muni_Name&returnGeometry=false&resultRecordCount=20",
+   "retrieved_at": "2026-11-05T00:00:00+00:00",
+   "note": "Read through a browser on November 5, 2026."
   }
  ],
- "dataset_note": "Real NYC Open Data records. The ramp measurement dataset was last updated in October 2021, so its values may not describe today's corner. NYC DOT says these measurements don't by themselves show ADA compliance, because it also weighs site constraints and technical infeasibility. Its own assessment, including locations pending technical review, is at https://www.nycpedramps.info/survey. Road control is not recorded.",
+ "dataset_note": "Real NYC Open Data records. The ramp measurement dataset was last updated in October 2021, so its values may not describe today's corner. NYC DOT says these measurements don't by themselves show ADA compliance, because it also weighs site constraints and technical infeasibility. Its own assessment is at https://www.nycpedramps.info/survey, and it says some locations may be outside its jurisdiction. This app corrects the dataset's swapped ramp length and left flare columns to match DOT's survey map.",
  "context": {
   "inside_nyc": true,
   "work_type": "corner_ramp_row",
@@ -512,6 +528,75 @@
    "sidewalkshortdesc": "CONCRETE"
   },
   {
+   "permitnumber": "Q022019024A72",
+   "permittypedesc": "PLACE EQUIPMENT OTHER THAN CRANE OR SHOV",
+   "permitstatusshortdesc": "EXPIRED",
+   "permitissuedate": "2019-01-24T13:29:12.000",
+   "issuedworkstartdate": "2019-01-24T13:29:12.000",
+   "issuedworkenddate": "2019-04-17T23:59:59.000",
+   "onstreetname": "VAN DAM STREET",
+   "fromstreetname": "47 AVENUE",
+   "tostreetname": "THOMSON AVENUE"
+  },
+  {
+   "permitnumber": "Q022019024A68",
+   "permittypedesc": "OCCUPANCY OF ROADWAY AS STIPULATED",
+   "permitstatusshortdesc": "EXPIRED",
+   "permitissuedate": "2019-01-24T13:29:10.000",
+   "issuedworkstartdate": "2019-01-24T13:29:10.000",
+   "issuedworkenddate": "2019-04-17T23:59:59.000",
+   "onstreetname": "VAN DAM STREET",
+   "fromstreetname": "47 AVENUE",
+   "tostreetname": "THOMSON AVENUE",
+   "sidewalkshortdesc": "CONCRETE"
+  },
+  {
+   "permitnumber": "Q022019024A69",
+   "permittypedesc": "OCCUPANCY OF SIDEWALK AS STIPULATED",
+   "permitstatusshortdesc": "EXPIRED",
+   "permitissuedate": "2019-01-24T13:29:10.000",
+   "issuedworkstartdate": "2019-01-24T13:29:10.000",
+   "issuedworkenddate": "2019-04-17T23:59:59.000",
+   "onstreetname": "VAN DAM STREET",
+   "fromstreetname": "47 AVENUE",
+   "tostreetname": "THOMSON AVENUE",
+   "sidewalkshortdesc": "CONCRETE"
+  },
+  {
+   "permitnumber": "Q022019024A70",
+   "permittypedesc": "PLACE EQUIPMENT OTHER THAN CRANE OR SHOV",
+   "permitstatusshortdesc": "EXPIRED",
+   "permitissuedate": "2019-01-24T13:29:11.000",
+   "issuedworkstartdate": "2019-01-24T13:29:11.000",
+   "issuedworkenddate": "2019-04-17T23:59:59.000",
+   "onstreetname": "VAN DAM STREET",
+   "fromstreetname": "47 AVENUE",
+   "tostreetname": "THOMSON AVENUE"
+  },
+  {
+   "permitnumber": "Q022019024A73",
+   "permittypedesc": "PLACE EQUIPMENT OTHER THAN CRANE OR SHOV",
+   "permitstatusshortdesc": "EXPIRED",
+   "permitissuedate": "2019-01-24T13:29:12.000",
+   "issuedworkstartdate": "2019-01-24T13:29:12.000",
+   "issuedworkenddate": "2019-04-17T23:59:59.000",
+   "onstreetname": "VAN DAM STREET",
+   "fromstreetname": "47 AVENUE",
+   "tostreetname": "THOMSON AVENUE"
+  },
+  {
+   "permitnumber": "Q022019024A71",
+   "permittypedesc": "PLACE EQUIPMENT OTHER THAN CRANE OR SHOV",
+   "permitstatusshortdesc": "EXPIRED",
+   "permitissuedate": "2019-01-24T13:29:11.000",
+   "issuedworkstartdate": "2019-01-24T13:29:11.000",
+   "issuedworkenddate": "2019-04-17T23:59:59.000",
+   "onstreetname": "VAN DAM STREET",
+   "fromstreetname": "47 AVENUE",
+   "tostreetname": "THOMSON AVENUE",
+   "sidewalkshortdesc": "CONCRETE"
+  },
+  {
    "permitnumber": "Q012019032C87",
    "permittypedesc": "INSTALL TRAFFIC SIGNALS",
    "permitstatusshortdesc": "EXPIRED",
@@ -534,6 +619,169 @@
    "fromstreetname": "QUEENS BOULEVARD",
    "tostreetname": "THOMSON AVENUE",
    "sidewalkshortdesc": "CONCRETE"
+  },
+  {
+   "permitnumber": "Q022018351C21",
+   "permittypedesc": "OCCUPANCY OF SIDEWALK AS STIPULATED",
+   "permitstatusshortdesc": "EXPIRED",
+   "permitissuedate": "2018-12-17T16:43:09.000",
+   "issuedworkstartdate": "2018-12-17T16:43:09.000",
+   "issuedworkenddate": "2018-12-31T23:59:59.000",
+   "onstreetname": "VAN DAM STREET",
+   "fromstreetname": "47 AVENUE",
+   "tostreetname": "THOMSON AVENUE",
+   "sidewalkshortdesc": "CONCRETE"
+  },
+  {
+   "permitnumber": "Q022018346B17",
+   "permittypedesc": "PLACE EQUIPMENT OTHER THAN CRANE OR SHOV",
+   "permitstatusshortdesc": "EXPIRED",
+   "permitissuedate": "2018-12-12T20:11:47.000",
+   "issuedworkstartdate": "2018-12-12T20:11:47.000",
+   "issuedworkenddate": "2018-12-31T23:59:59.000",
+   "onstreetname": "VAN DAM STREET",
+   "fromstreetname": "47 AVENUE",
+   "tostreetname": "THOMSON AVENUE"
+  },
+  {
+   "permitnumber": "Q022018346B18",
+   "permittypedesc": "PLACE EQUIPMENT OTHER THAN CRANE OR SHOV",
+   "permitstatusshortdesc": "EXPIRED",
+   "permitissuedate": "2018-12-12T20:11:48.000",
+   "issuedworkstartdate": "2018-12-12T20:11:48.000",
+   "issuedworkenddate": "2018-12-31T23:59:59.000",
+   "onstreetname": "VAN DAM STREET",
+   "fromstreetname": "47 AVENUE",
+   "tostreetname": "THOMSON AVENUE"
+  },
+  {
+   "permitnumber": "Q022018346B19",
+   "permittypedesc": "PLACE EQUIPMENT OTHER THAN CRANE OR SHOV",
+   "permitstatusshortdesc": "EXPIRED",
+   "permitissuedate": "2018-12-12T20:11:48.000",
+   "issuedworkstartdate": "2018-12-12T20:11:48.000",
+   "issuedworkenddate": "2018-12-31T23:59:59.000",
+   "onstreetname": "VAN DAM STREET",
+   "fromstreetname": "47 AVENUE",
+   "tostreetname": "THOMSON AVENUE"
+  },
+  {
+   "permitnumber": "Q022018346B20",
+   "permittypedesc": "OCCUPANCY OF ROADWAY AS STIPULATED",
+   "permitstatusshortdesc": "EXPIRED",
+   "permitissuedate": "2018-12-12T20:11:48.000",
+   "issuedworkstartdate": "2018-12-12T20:11:48.000",
+   "issuedworkenddate": "2018-12-31T23:59:59.000",
+   "onstreetname": "VAN DAM STREET",
+   "fromstreetname": "47 AVENUE",
+   "tostreetname": "THOMSON AVENUE",
+   "sidewalkshortdesc": "CONCRETE"
+  },
+  {
+   "permitnumber": "Q022018351C20",
+   "permittypedesc": "PLACE EQUIPMENT OTHER THAN CRANE OR SHOV",
+   "permitstatusshortdesc": "EXPIRED",
+   "permitissuedate": "2018-12-17T16:43:08.000",
+   "issuedworkstartdate": "2018-12-17T16:43:08.000",
+   "issuedworkenddate": "2018-12-31T23:59:59.000",
+   "onstreetname": "VAN DAM STREET",
+   "fromstreetname": "47 AVENUE",
+   "tostreetname": "THOMSON AVENUE",
+   "sidewalkshortdesc": "CONCRETE"
+  },
+  {
+   "permitnumber": "Q012018304A50",
+   "permittypedesc": "INSTALL TRAFFIC SIGNALS",
+   "permitstatusshortdesc": "EXPIRED",
+   "permitissuedate": "2018-10-31T08:33:33.000",
+   "issuedworkstartdate": "2018-11-15T00:00:00.000",
+   "issuedworkenddate": "2018-12-30T23:59:59.000",
+   "onstreetname": "VAN DAM STREET",
+   "fromstreetname": "47 AVENUE",
+   "tostreetname": "THOMSON AVENUE",
+   "sidewalkshortdesc": "CONCRETE"
+  },
+  {
+   "permitnumber": "Q012018282F50",
+   "permittypedesc": "INSTALL TRAFFIC SIGNALS",
+   "permitstatusshortdesc": "EXPIRED",
+   "permitissuedate": "2018-10-09T14:37:18.000",
+   "issuedworkstartdate": "2018-10-10T00:00:00.000",
+   "issuedworkenddate": "2018-11-14T23:59:59.000",
+   "onstreetname": "VAN DAM STREET",
+   "fromstreetname": "47 AVENUE",
+   "tostreetname": "THOMSON AVENUE",
+   "sidewalkshortdesc": "CONCRETE"
+  },
+  {
+   "permitnumber": "Q012018283B10",
+   "permittypedesc": "INSTALL TRAFFIC SIGNALS",
+   "permitstatusshortdesc": "EXPIRED",
+   "permitissuedate": "2018-10-10T08:19:48.000",
+   "issuedworkstartdate": "2018-10-10T08:19:48.000",
+   "issuedworkenddate": "2018-11-14T23:59:59.000",
+   "onstreetname": "VAN DAM STREET",
+   "fromstreetname": "47 AVENUE",
+   "tostreetname": "THOMSON AVENUE",
+   "sidewalkshortdesc": "CONCRETE"
+  },
+  {
+   "permitnumber": "Q012018269D34",
+   "permittypedesc": "INSTALL TRAFFIC SIGNALS",
+   "permitstatusshortdesc": "EXPIRED",
+   "permitissuedate": "2018-09-26T14:38:24.000",
+   "issuedworkstartdate": "2018-09-29T00:00:00.000",
+   "issuedworkenddate": "2018-10-31T23:59:59.000",
+   "onstreetname": "VAN DAM STREET",
+   "fromstreetname": "QUEENS BOULEVARD",
+   "tostreetname": "THOMSON AVENUE",
+   "sidewalkshortdesc": "CONCRETE"
+  },
+  {
+   "permitnumber": "Q012018261A77",
+   "permittypedesc": "INSTALL TRAFFIC SIGNALS",
+   "permitstatusshortdesc": "EXPIRED",
+   "permitissuedate": "2018-09-18T10:55:47.000",
+   "issuedworkstartdate": "2018-09-18T10:55:47.000",
+   "issuedworkenddate": "2018-09-28T23:59:59.000",
+   "onstreetname": "VAN DAM STREET",
+   "fromstreetname": "QUEENS BOULEVARD",
+   "tostreetname": "THOMSON AVENUE",
+   "sidewalkshortdesc": "CONCRETE"
+  }
+ ],
+ "dot_survey": [
+  {
+   "RAMPID": 116252,
+   "RAMP_TYPE": "Ramp",
+   "COMPLIANCY_STATUS": "Non-Compliant",
+   "RAMP_LENGTH": 66.7,
+   "RAMP_LEFT_FLARE": -27.7,
+   "SDW_APP_WIDTH1": 999,
+   "SDW_APP_WIDTH2": 169.34,
+   "OBSTACLES_OTHER": "Bollard,FDNY Call Box",
+   "DEFECTIVE_CURB": "Yes",
+   "DEFECTIVE_SIDEWALK": "Yes, Both"
+  },
+  {
+   "RAMPID": 116256,
+   "RAMP_TYPE": "Ramp",
+   "COMPLIANCY_STATUS": "Non-Compliant",
+   "RAMP_LENGTH": 39.6,
+   "RAMP_LEFT_FLARE": -17,
+   "SDW_APP_WIDTH1": 999,
+   "SDW_APP_WIDTH2": 169.34,
+   "OBSTACLES_OTHER": "Bollard,FDNY Call Box",
+   "DEFECTIVE_CURB": "Yes",
+   "DEFECTIVE_SIDEWALK": "Yes, Both"
+  }
+ ],
+ "road_inventory": [
+  {
+   "Roadway_Name": "QUEENS BLVD",
+   "Owning_Jurisdiction": "04-City or village",
+   "Maintenance_Jurisdiction": "04-City or village",
+   "Owning_Muni_Name": "Queens"
   }
  ]
 }

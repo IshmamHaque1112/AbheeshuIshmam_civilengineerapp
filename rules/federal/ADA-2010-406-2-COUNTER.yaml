@@ -1,0 +1,22 @@
+id: ADA-2010-406-2-COUNTER
+title: ADA counter slope
+jurisdiction: federal
+authority_type: federal_standard
+applies_to:
+- corner_ramp_row
+parameter: counter_slope
+operator: max
+limit: 5
+unit: percent
+source_document: 2010 ADA Standards for Accessible Design
+edition: 2010 Standards, read on ada.gov
+effective_date: Not stated in the retrieved text
+section: §406.2
+url: https://www.ada.gov/law-and-regs/design-standards/2010-stds/
+quote: Counter slopes of adjoining gutters and road surfaces immediately adjacent to the curb ramp shall not be steeper than 1:20.
+retrieved_on: '2026-11-05'
+status: unreviewed
+reviewed_by: null
+notes: Source text checked by Claude on ada.gov on 2026-11-05. Human review is still pending. 1:20 is stored as 5%.
+stage: general
+reviewed_on: null

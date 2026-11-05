@@ -9,16 +9,14 @@ operator: min
 limit: 36
 unit: in
 source_document: 2010 ADA Standards for Accessible Design
-edition: 2010 Standards, read through the Corada reproduction
+edition: 2010 Standards, read on ada.gov
 effective_date: Not stated in the retrieved text
 section: §406.4
-url: https://www.corada.com/documents/2010ADAStandards/406
+url: https://www.ada.gov/law-and-regs/design-standards/2010-stds/
 quote: The landing clear length shall be 36 inches (915 mm) minimum.
-retrieved_on: '2026-11-03'
+retrieved_on: '2026-11-05'
 status: unreviewed
 reviewed_by: null
-notes: Source text checked by Claude through a web fetch on 2026-11-03. Human review
-  is still pending. This is a third-party reproduction, so confirm it on ada.gov.
-  Section 406.4 has an exception for some alterations.
+notes: Source text checked by Claude on ada.gov on 2026-11-05. Human review is still pending. Section 406.4 has an exception for alterations with no landing.
 stage: general
 reviewed_on: null

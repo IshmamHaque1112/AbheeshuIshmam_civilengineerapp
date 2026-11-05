@@ -1,4 +1,5 @@
 """Clean data, join datasets, detect stale measurements and validate evidence labels. No AI here."""
+import math
 import re
 from datetime import date
 from typing import Optional
@@ -75,6 +76,75 @@ def _plain_street(name) -> str:
     return " ".join(words)
 
 
+def road_owner(corner: dict):
+    """Use NYSDOT's inventory only when it names the corner's streets. A street it doesn't list stays unconfirmed."""
+    streets = {_plain_street(r.get(f)) for r in corner.get("locations", []) for f in ("stname1", "stname2") if r.get(f)}
+    listed: dict = {}
+    for row in corner.get("road_inventory") or []:
+        listed.setdefault(_plain_street(row.get("Roadway_Name")), []).append(row)
+    found = [row for street in streets for row in listed.get(street, [])]
+    if any(str(r.get(f) or "").startswith("01-") for r in found for f in ("Owning_Jurisdiction", "Maintenance_Jurisdiction")):
+        return "state"
+    if streets and streets <= set(listed) and all(str(r.get(f) or "").startswith("04-") for r in found for f in ("Owning_Jurisdiction", "Maintenance_Jurisdiction")):
+        return "city"
+    return None
+
+
+def _inventory_notes(corner: dict) -> list[str]:
+    rows = corner.get("road_inventory")
+    if rows is None:
+        return []
+    names = {(str(r.get("Roadway_Name") or "Unnamed").strip(), str(r.get("Owning_Jurisdiction") or "not listed").split("-", 1)[-1], str(r.get("Maintenance_Jurisdiction") or "not listed").split("-", 1)[-1]) for r in rows}
+    shown = "; ".join(f"{n}, owned by {o} and maintained by {m}" for n, o, m in sorted(names)) or "no road"
+    listed = {_plain_street(r.get("Roadway_Name")) for r in rows}
+    absent = sorted({str(r.get(f)).strip() for r in corner.get("locations", []) for f in ("stname1", "stname2") if r.get(f) and _plain_street(r.get(f)) not in listed})
+    notes = [f"NYSDOT's Roadway Inventory shows within 100 m: {shown}."]
+    if absent:
+        notes.append(f"It doesn't list {', '.join(absent)}, so the road owner for those streets stays unconfirmed.")
+    return notes
+
+
+def _distance_note(corner: dict) -> list[str]:
+    def point(rows):
+        for row in rows:
+            geom = row.get("the_geom")
+            if isinstance(geom, dict) and len(geom.get("coordinates") or []) == 2:
+                return geom["coordinates"]
+        return None
+    ramp, program = point(corner.get("locations", [])), point(corner.get("progress", []))
+    if not ramp or not program:
+        return []
+    meters = math.hypot((ramp[0] - program[0]) * math.cos(math.radians(ramp[1])) * 111320, (ramp[1] - program[1]) * 110540)
+    return [f"The Program Progress point for this corner is {meters:.0f} m from the first ramp."]
+
+
+def _column_notes(corner: dict) -> list[str]:
+    rows = {str(r.get("rampid")): r for r in corner.get("locations", [])}
+    notes = []
+    for dot in corner.get("dot_survey") or []:
+        row = rows.get(str(dot.get("RAMPID")))
+        try:
+            different = row and abs(float(row["ramp_left_flare"]) - float(dot["RAMP_LENGTH"])) > 0.051
+        except (KeyError, TypeError, ValueError):
+            different = False
+        if different:
+            notes.append(f"Check ramp {dot.get('RAMPID')}'s length. NYC DOT's survey map gives {dot.get('RAMP_LENGTH')} in, and the corrected dataset column gives {row.get('ramp_left_flare')} in.")
+    return notes
+
+
+def survey_lines(corner: dict) -> list[str]:
+    """Quote NYC DOT's own survey record. It stays out of the agents' inputs and is never this tool's result."""
+    lines = []
+    for dot in corner.get("dot_survey") or []:
+        widths = [str(w) for w in (dot.get("SDW_APP_WIDTH1"), dot.get("SDW_APP_WIDTH2")) if w not in (None, 999, 999.0)]
+        parts = [f"status {dot.get('COMPLIANCY_STATUS') or 'not listed'}", f"type {dot.get('RAMP_TYPE') or 'not listed'}", f"defective curb: {dot.get('DEFECTIVE_CURB') or 'not listed'}",
+                 f"defective sidewalk: {dot.get('DEFECTIVE_SIDEWALK') or 'not listed'}", f"other obstacles: {dot.get('OBSTACLES_OTHER') or 'none listed'}"]
+        if widths:
+            parts.append(f"sidewalk approach width {', '.join(widths)}, unit not documented")
+        lines.append(f"Ramp {dot.get('RAMPID')}: " + "; ".join(parts) + ".")
+    return lines
+
+
 def nearby_notes(corner: dict) -> list[str]:
     """Report what the street and permit records add. They add context only, and neither one names a road owner."""
     notes = []
@@ -90,7 +160,7 @@ def nearby_notes(corner: dict) -> list[str]:
         absent = sorted(n for n in named if _plain_street(n) not in near)
         if absent:
             notes.append(f"Confirm the corner's location. No street within 100 m has this recorded name: {', '.join(absent)}.")
-        notes.append("Centerline can't confirm the road owner, because its documentation doesn't explain its jurisdiction field.")
+        notes.append("Centerline doesn't settle the road owner, because its documentation doesn't explain its jurisdiction field.")
     elif segments == []:
         notes.append("NYC Street Centerline shows no street within 100 m of the ramp. Confirm the ramp's location.")
     if corner.get("street_segments_more"):
@@ -104,6 +174,7 @@ def nearby_notes(corner: dict) -> list[str]:
             notes.append(f"Street Construction Permits lists{more} {_count(len(later), 'permit')} for this block with work ending after the {surveys[0]} survey, including {len(ramps)} for pedestrian ramps. A permit shows work was allowed, not that it happened or touched this corner.")
         else:
             notes.append(f"Street Construction Permits lists no permit for this block with work ending after the {surveys[0]} survey. Permits that name other streets or use different spellings wouldn't appear.")
+    notes += _inventory_notes(corner) + _distance_note(corner) + _column_notes(corner)
     for name in corner.get("nearby_not_checked") or []:
         notes.append(f"{name} wasn't checked for this corner, so its records may add something.")
     return notes
@@ -171,7 +242,7 @@ def build_evidence(corner: dict, dictionary: dict, field: list[dict] | None = No
         ramp_work = ramp_permits_after(corner, survey)
         for field in CHECK_FIELDS:
             spec = dictionary["fields"][field]
-            raw = row.get(field)
+            raw = row.get(spec.get("column", field))
             value, label, reason = raw, "measured", ""
             number = None
             try:
@@ -186,7 +257,7 @@ def build_evidence(corner: dict, dictionary: dict, field: list[dict] | None = No
             elif not low <= abs(number) <= high:
                 value, label, reason = None, "missing", f"{raw} is outside the plausible range."
             elif field == "ramp_length" and number < 0:
-                value, label, reason = number, "assumed", "The official dictionary gives this in inches but doesn't explain a negative length."
+                value, label, reason = number, "assumed", "A length can't be negative, so confirm this value."
             elif uncertain:
                 value, label, reason = number, "assumed", f"Unknown whether this is current. {uncertain}"
             elif stale:

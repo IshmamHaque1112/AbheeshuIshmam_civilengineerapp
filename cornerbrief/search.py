@@ -42,23 +42,47 @@ def search(borough=None, street=None):
                 note=("First 100 ramp rows only, not every matching corner. Narrow the street to refine results. " if len(locations) > MAX_SEARCH else "") + "Program and complaint records are fetched on selection; missing matches stay unknown.")
 
 
+def esri_rows(url, params):
+    full = url + "?" + urllib.parse.urlencode(params)
+    raw = fetch.get(full)
+    if not isinstance(raw, dict) or not isinstance(raw.get("features"), list):
+        raise RuntimeError("The map service returned an unexpected response.")
+    return [f.get("attributes") or {} for f in raw["features"]], dict(dataset=url.split("/rest/services/")[1].split("/")[1], url=full, retrieved_at=datetime.now(timezone.utc).isoformat(),
+                                                                       note="Cached response when available.")
+
+
 def nearby_records(locations):
-    """Add street and permit context. A failed lookup is reported, because it must not read as "nothing found"."""
+    """Add context records. A failed lookup is reported, because it must not read as "nothing found"."""
     found, sources, failed = {}, [], []
-    lookups = (("street_segments", "NYC Street Centerline", fetch.CENTERLINE, fetch.centerline_where(locations), "full_street_name,physicalid", fetch.SEGMENT_FIELDS, fetch.SEGMENT_CAP),
-               ("permits", "Street Construction Permits", fetch.PERMITS, fetch.permits_where(locations), "issuedworkenddate DESC", fetch.PERMIT_FIELDS, fetch.PERMIT_CAP))
-    for key, name, dataset, where, order, select, cap in lookups:
-        if not where:
-            failed.append(name)
-            continue
+    centerline, permits = fetch.centerline_where(locations), fetch.permits_where(locations)
+    socrata = (("street_segments", "NYC Street Centerline", fetch.CENTERLINE, centerline, "full_street_name,physicalid", fetch.SEGMENT_FIELDS, fetch.SEGMENT_CAP),
+               ("permits", "Street Construction Permits", fetch.PERMITS, permits, "issuedworkenddate DESC", fetch.PERMIT_FIELDS, fetch.PERMIT_CAP),
+               ("permits", "Street Construction Permits 2013-2021", fetch.OLD_PERMITS, permits, "issuedworkenddate DESC", fetch.PERMIT_FIELDS, fetch.PERMIT_CAP))
+    for key, name, dataset, where, order, select, cap in socrata:
         try:
+            if not where:
+                raise ValueError("The record can't support this lookup.")
             result, source = rows(dataset, cap + 1, where, order=order, select=select)
         except Exception:
             failed.append(name)
             continue
-        found[key] = result[:cap]
+        found.setdefault(key, []).extend(result[:cap])
         if len(result) > cap:
             found[f"{key}_more"] = True
+        sources.append(source)
+    if "permits" in found:
+        unique = {str(p.get("permitnumber")): p for p in found["permits"]}
+        found["permits"] = sorted(unique.values(), key=lambda p: str(p.get("issuedworkenddate") or ""), reverse=True)
+    maps = (("dot_survey", "NYC DOT survey map", fetch.DOT_SURVEY, fetch.survey_params(locations)),
+            ("road_inventory", "NYSDOT Roadway Inventory", fetch.ROAD_INVENTORY, fetch.inventory_params(locations)))
+    for key, name, url, params in maps:
+        try:
+            if not params:
+                raise ValueError("The record can't support this lookup.")
+            found[key], source = esri_rows(url, params)
+        except Exception:
+            failed.append(name)
+            continue
         sources.append(source)
     if failed:
         found["nearby_not_checked"] = failed

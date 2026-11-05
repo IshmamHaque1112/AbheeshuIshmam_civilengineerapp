@@ -54,7 +54,7 @@ No API key is needed, and the demo stays in this mode while `DEMO_MODE=true`. Th
 
 1. **Sample corner A, Queens:** Checks the evidence supports, with the source and math for each calculation.
 2. **Sample corner B, Brooklyn:** Checks the evidence supports, with a utility vault and catch basin to review and one Skeptic rework.
-3. **Real test corner:** Corner 1024569, Van Dam Street and Thomson Avenue, from NYC Open Data. It uses saved records, so it works offline. It stops because the 2018 survey predates four pedestrian ramp permits on the block, the ramp lengths are negative and the road owner is unconfirmed.
+3. **Real test corner:** Corner 1024569, Van Dam Street and Thomson Avenue, from NYC Open Data. It uses saved records, so it works offline. It stops because the 2018 survey predates four pedestrian ramp permits on the block and the road owner is unconfirmed.
 4. **Sample corner C, Bronx:** Stop: evidence still needed, because it was rebuilt after its survey and has a placeholder value.
 
 Enter a name and select **Release packet** to turn on the download. Releasing is not approval. **Download site visit list** needs no release, because it lists only what to measure or confirm and contains no limit results.
@@ -107,13 +107,17 @@ The first command writes `docs/candidates.md`. The saved corner is added to the 
 | [Program Progress](https://data.cityofnewyork.us/d/e7gc-ub6z) | Construction status and date | Updated regularly |
 | [Complaints](https://data.cityofnewyork.us/d/jagj-gttd) | Ramp complaints and temporary repairs | Updated regularly |
 | [Street Centerline](https://data.cityofnewyork.us/d/inkn-q76z) | Streets within 100 m of the ramp and their paved width | Can't confirm the road owner, because its documentation doesn't explain the jurisdiction field |
-| [Street Construction Permits](https://data.cityofnewyork.us/d/tqtj-sjs8) | Permits for the block with work ending after the survey | Shows work was allowed, not that it happened or touched this corner. Older permits may be missing. |
+| [Street Construction Permits](https://data.cityofnewyork.us/d/tqtj-sjs8) and [2013–2021 permits](https://data.cityofnewyork.us/d/c9sj-fmsg) | Permits for the block with work ending after the survey | Shows work was allowed, not that it happened or touched this corner |
+| [NYC DOT survey map](https://www.nycpedramps.info/survey) | DOT's status, existing ramp category, defects and obstacles for each ramp | DOT's own record, last edited in December 2020. It stays out of agent inputs and isn't a result from this tool. |
+| [NYSDOT Roadway Inventory](https://www.dot.ny.gov/gisapps/roadway-inventory-system-viewer) | Who owns and maintains a road | Lists only some streets. The app accepts it only when it lists every street on the ramp record. |
 
-The official data dictionary gives lengths in inches and slopes and flares in percent, as recorded in `data/data_dictionary.yaml`. It doesn't explain negative ramp lengths, which appear in about 95% of rows, so a negative length is labeled assumed rather than made positive.
+The official data dictionary gives lengths in inches and slopes and flares in percent, as recorded in `data/data_dictionary.yaml`.
 
-A pedestrian ramp permit after the survey labels that ramp's measurements assumed. Other permits add a site-visit item. Permit holder names aren't saved. If a street or permit lookup fails, the packet says that dataset wasn't checked.
+**Swapped columns:** Open Data's `ramp_length` and `ramp_left_flare` columns are swapped. All 300 ramps sampled on November 5, 2026 matched DOT's survey map only when swapped, so the app reads them corrected. That explains the negative lengths, since negative flares are a direction. If DOT's survey map disagrees for a ramp, the packet says so.
 
-Sidewalk width, legal grade, road owner and existing ramp type still come from a person, because no dataset used here records them.
+A pedestrian ramp permit after the survey labels that ramp's measurements assumed. Other permits add a site-visit item. Permit holder names aren't saved. If a lookup fails, the packet says that dataset wasn't checked.
+
+Sidewalk width, legal grade and H-1011 ramp type still come from a person. DOT's survey map has a sidewalk approach width, but no document gives its unit, so the app shows it without using it.
 
 ## Settings
 
@@ -150,10 +154,10 @@ Regular code handles data checks, rule selection, limit checks, geometry, quanti
 ## Known limits
 
 - **Sample data:** The included corners are made up. They are not real NYC locations.
-- **Rule review:** No named person has reviewed any of the 44 sourced rules or the which-rule-applies decisions yet.
+- **Rule review:** No named person has reviewed any of the 45 sourced rules or the which-rule-applies decisions yet.
 - **User testing:** No junior engineer or reviewer has tried the app yet, and the manual timing baseline hasn't been recorded.
 - **Live agents:** The live API path hasn't been run with a real key. Tests use saved or scripted responses.
-- **Real data fetch:** The queries were checked in a browser on November 5, 2026, and the build environment still can't reach the NYC portal. Run a search on your own computer to confirm the app's connection.
+- **Real data fetch:** The queries were checked in a browser on November 5, 2026, and the build environment can't reach these services. Run a search on your own computer to confirm the app's connection.
 - **Site entries:** The newest version is remembered only in the browser tab where you entered it. Every version stays saved in `runs`.
 - **Ramp data age:** The ramp measurement dataset was last updated in October 2021.
 - **Open Library:** It's hidden until `OPEN_LIBRARY_CONTACT` is set. Its API and suggested topics were checked from a browser on November 5, 2026, but the app's own connection hasn't been confirmed. It stores citation details only, and no book text or corner details are used.
@@ -166,10 +170,10 @@ Regular code handles data checks, rule selection, limit checks, geometry, quanti
 
 These return "unknown" until a person adds the exact text and limit:
 
-- H-1011 sheets 2 to 9, so case-specific details aren't checked.
+- H-1011 sheets 2 to 9, so case-specific details aren't checked. [`docs/sources/README.md`](docs/sources/README.md) links each sheet.
 - 2025 NYS Building Code and Residential Code limits. These don't apply to NYC corners.
 
-H-1011 Table 1 and its general notes come from `docs/sources/H-1011-1.pdf`. Surveyed ramps are compared with its work acceptance limits. Its stricter design limits appear only under "If this corner is rebuilt." The ADA rules use a third-party reproduction of the text, so confirm them on ada.gov.
+H-1011 Table 1 and its general notes come from `docs/sources/H-1011-1.pdf`. Surveyed ramps are compared with its work acceptance limits. Its stricter design limits appear only under "If this corner is rebuilt." The ADA rules quote ada.gov.
 
 
 ## P1 search and review

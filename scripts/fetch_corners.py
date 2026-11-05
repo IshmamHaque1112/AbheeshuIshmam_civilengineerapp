@@ -19,7 +19,11 @@ except ImportError:
 ROOT = Path(__file__).resolve().parent.parent
 PORTAL = os.environ.get("CB_PORTAL", "https://data.cityofnewyork.us")
 LOC, PROG, COMP = "ufzp-rrqu", "e7gc-ub6z", "jagj-gttd"
-CENTERLINE, PERMITS = "inkn-q76z", "tqtj-sjs8"
+CENTERLINE, PERMITS, OLD_PERMITS = "inkn-q76z", "tqtj-sjs8", "c9sj-fmsg"
+DOT_SURVEY = "https://services.arcgis.com/wmZOI9vyUBq1zTZx/arcgis/rest/services/CMT_SURVEY_COMPLIANCY_TOLERANCE_PROD/FeatureServer/0/query"
+DOT_SURVEY_FIELDS = "RAMPID,RAMP_TYPE,COMPLIANCY_STATUS,RAMP_LENGTH,RAMP_LEFT_FLARE,SDW_APP_WIDTH1,SDW_APP_WIDTH2,OBSTACLES_OTHER,DEFECTIVE_CURB,DEFECTIVE_SIDEWALK"
+ROAD_INVENTORY = "https://gisportalny.dot.ny.gov/hostingny/rest/services/Roadways/RoadwayData/MapServer/0/query"
+ROAD_INVENTORY_FIELDS = "Roadway_Name,Owning_Jurisdiction,Maintenance_Jurisdiction,Owning_Muni_Name"
 NEARBY_METERS = 100
 SEGMENT_CAP, PERMIT_CAP = 30, 50
 SEGMENT_FIELDS = "physicalid,full_street_name,rw_type,status,streetwidth,trafdir,rwjurisdiction"
@@ -148,7 +152,8 @@ def list_candidates(limit, borough=None, street=None):
 
 DATASET_NOTE = ("Real NYC Open Data records. The ramp measurement dataset was last updated in October 2021, so its values may not describe today's corner. "
                 "NYC DOT says these measurements don't by themselves show ADA compliance, because it also weighs site constraints and technical infeasibility. "
-                "Its own assessment, including locations pending technical review, is at https://www.nycpedramps.info/survey. Road control is not recorded.")
+                "Its own assessment is at https://www.nycpedramps.info/survey, and it says some locations may be outside its jurisdiction. "
+                "This app corrects the dataset's swapped ramp length and left flare columns to match DOT's survey map.")
 
 
 def _street(value):
@@ -156,13 +161,32 @@ def _street(value):
     return re.sub(r"\s+", " ", str(value or "").replace("%", "").replace("_", " ")).strip().upper().replace("'", "''")
 
 
-def centerline_where(locations):
-    """Find street segments near the first ramp with a location. Returns None when no ramp has one."""
+def ramp_point(locations):
+    """Return the longitude and latitude of the first ramp with a location."""
     for row in locations:
         point = (row.get("the_geom") or {}).get("coordinates") if isinstance(row.get("the_geom"), dict) else None
         if point and len(point) == 2:
-            return f"within_circle(the_geom,{float(point[1])},{float(point[0])},{NEARBY_METERS})"
+            return float(point[0]), float(point[1])
     return None
+
+
+def centerline_where(locations):
+    """Find street segments near the first ramp with a location. Returns None when no ramp has one."""
+    point = ramp_point(locations)
+    return f"within_circle(the_geom,{point[1]},{point[0]},{NEARBY_METERS})" if point else None
+
+
+def survey_params(locations):
+    """Find NYC DOT's survey map records by ramp ID. IDs must be whole numbers."""
+    ids = sorted({int(r["rampid"]) for r in locations if str(r.get("rampid") or "").isdigit()})
+    return dict(f="json", where=f"RAMPID IN ({','.join(map(str, ids))})", outFields=DOT_SURVEY_FIELDS, returnGeometry="false") if ids else None
+
+
+def inventory_params(locations):
+    """Find roads near the ramp in NYSDOT's Roadway Inventory."""
+    point = ramp_point(locations)
+    return dict(f="json", geometry=f"{point[0]},{point[1]}", geometryType="esriGeometryPoint", inSR="4326", spatialRel="esriSpatialRelIntersects",
+                distance=str(NEARBY_METERS), units="esriSRUnit_Meter", outFields=ROAD_INVENTORY_FIELDS, returnGeometry="false", resultRecordCount="20") if point else None
 
 
 def permits_where(locations):
@@ -183,13 +207,15 @@ def assemble_corner(locations, progress, complaints, retrieved=None, provenance=
     """One real-record shape for the CLI and application; never infer units or ownership."""
     first = locations[0]
     corner = dict(label=f"{first.get('stname1') or 'Street not recorded'} and {first.get('stname2') or 'street not recorded'}",
-                  data_kind="NYC Open Data", retrieved=retrieved or date.today().isoformat(), sources=[LOC, PROG, COMP] + ([CENTERLINE] if "street_segments" in (nearby or {}) else []) + ([PERMITS] if "permits" in (nearby or {}) else []),
+                  data_kind="NYC Open Data", retrieved=retrieved or date.today().isoformat(), sources=[LOC, PROG, COMP],
                   dataset_note=DATASET_NOTE,
                   context=dict(inside_nyc=True, work_type="corner_ramp_row", road_control="not_recorded"),
                   locations=locations, progress=progress, complaints=complaints)
     if provenance is not None:
         corner["source_provenance"] = provenance
     corner.update(nearby or {})
+    from cornerbrief.evidence import road_owner
+    corner["context"]["road_control"] = road_owner(corner) or "not_recorded"
     return corner
 
 
@@ -199,14 +225,9 @@ def save(role, cid):
     complaints = num(query(COMP, where=f"cmt_corner_id={cid}", limit=50))
     if not locations:
         raise ValueError("it has no ramp measurements.")
-    nearby = {}
-    where = centerline_where(locations)
-    if where:
-        nearby["street_segments"] = query(CENTERLINE, select=SEGMENT_FIELDS, where=where, order="full_street_name,physicalid", limit=SEGMENT_CAP)
-    where = permits_where(locations)
-    if where:
-        nearby["permits"] = query(PERMITS, select=PERMIT_FIELDS, where=where, order="issuedworkenddate DESC", limit=PERMIT_CAP)
-    corner = assemble_corner(locations, progress, complaints, nearby=nearby)
+    from cornerbrief.search import nearby_records
+    nearby, sources = nearby_records(locations)
+    corner = assemble_corner(locations, progress, complaints, provenance=sources, nearby=nearby)
     out = ROOT / "data" / "live"
     out.mkdir(exist_ok=True, parents=True)
     path = out / f"{role}.json"

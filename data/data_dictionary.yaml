@@ -3,7 +3,9 @@
 # Read on 2026-11-05. Lengths are in inches and slopes and flares are in percent.
 # Running slope and roadway slope read from the road toward the landing. The other slopes and flares read
 # left to right when facing the ramp from the road, so a negative slope is a direction, not a bad value.
-# The dictionary doesn't explain a negative ramp length, and most rows have one. evidence.py labels it "assumed".
+# Open Data's ramp_length and ramp_left_flare columns are swapped. On 2026-11-05, 300 of 300 sampled ramps matched
+# NYC DOT's survey map service only when swapped, so "column" below names where each value really is.
+# The service is CMT_SURVEY_COMPLIANCY_TOLERANCE_PROD, which feeds https://www.nycpedramps.info/survey.
 # The dictionary doesn't define 999 either. It's treated as a placeholder because no measurement could be that large.
 placeholder_values: [999, 999.0, -999, 9999]
 fields:
@@ -15,7 +17,7 @@ fields:
   ramp_width: {unit: in, unit_status: documented, plausible: [1, 400]}
   lnd_width: {unit: in, unit_status: documented, plausible: [1, 400]}
   lnd_length: {unit: in, unit_status: documented, plausible: [1, 400]}
-  ramp_length: {unit: in, unit_status: documented, plausible: [0.1, 400]}
+  ramp_length: {column: ramp_left_flare, unit: in, unit_status: documented, plausible: [0.1, 400]}
   curb_reveal: {unit: in, unit_status: documented, plausible: [0, 12]}
   ramp_right_flare: {unit: percent, unit_status: documented, plausible: [0, 40]}
-  ramp_left_flare: {unit: percent, unit_status: documented, plausible: [0, 40]}
+  ramp_left_flare: {column: ramp_length, unit: percent, unit_status: documented, plausible: [0, 40]}
