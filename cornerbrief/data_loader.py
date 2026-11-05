@@ -1,5 +1,6 @@
 """Load saved corner records. Sample corners never change. A saved real corner is an extra, labeled test."""
 import json
+import re
 import yaml
 from .paths import DATA
 
@@ -9,9 +10,10 @@ KEYS = SAMPLE_KEYS + [REAL_KEY]
 
 
 def load_corner(key: str) -> dict:
-    if key not in KEYS:
+    live = bool(re.fullmatch(r"real_[1-9][0-9]{0,9}_[a-f0-9]{12}", key))
+    if key not in KEYS and not live:
         raise KeyError(key)
-    path = DATA / "live" / f"{key}.json" if key == REAL_KEY else DATA / "corners" / f"{key}.json"
+    path = DATA / "live" / f"{key}.json" if key == REAL_KEY or live else DATA / "corners" / f"{key}.json"
     if not path.exists():
         raise KeyError(key)
     corner = json.loads(path.read_text(encoding="utf-8"))

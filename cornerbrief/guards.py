@@ -18,6 +18,8 @@ def allowed_numbers(payload) -> set[str]:
 
 def check_text(text: str, payload, labels_off: bool = False) -> list[str]:
     problems = []
+    if re.search(r"\$\s*\d|\bUSD\s*\d", text, re.I):
+        problems.append("Dollar figures are withheld in the city demo.")
     if FORBIDDEN.search(text):
         problems.append("Uses a banned approval or permission word. Describe the evidence instead.")
     if labels_off and LABEL_CLAIM.search(text):

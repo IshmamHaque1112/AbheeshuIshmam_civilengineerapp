@@ -68,20 +68,26 @@ class LiveClient:
         path = CACHE / "agents" / f"{key}.json"
         if path.exists():
             saved = json.loads(path.read_text(encoding="utf-8"))
-            return parse_output(saved["text"], schema), {"input_tokens": 0, "output_tokens": 0, "cached": True}
+            return parse_output(saved["text"], schema), {"input_tokens": 0, "output_tokens": 0, "cached": True, "model": model, "response_text": saved["text"]}
         schema_text = json.dumps(schema.model_json_schema())
+        request = dict(model=model, max_tokens=4000,
+                       system=f"{system}\nReturn only JSON matching this schema, with no other fields:\n{schema_text}",
+                       messages=[{"role": "user", "content": content}])
         try:
-            response = self.client.messages.create(
-                model=model, max_tokens=4000,
-                system=f"{system}\nReturn only JSON matching this schema, with no other fields:\n{schema_text}",
-                messages=[{"role": "user", "content": content}])
+            response = self.client.messages.create(**request)
         except Exception as exc:  # A failed call counts as an unfinished review, not a crash
             raise AgentOutputError(f"The call to the {agent} agent failed ({type(exc).__name__}).") from exc
         text = "".join(b.text for b in response.content if b.type == "text")
-        output = parse_output(text, schema)  # Only valid output is saved, so a bad reply can be retried
+        usage = {"input_tokens": response.usage.input_tokens, "output_tokens": response.usage.output_tokens,
+                 "provider": "anthropic", "model": model, "response_text": text, "request": request}
+        try:
+            output = parse_output(text, schema)
+        except AgentOutputError as exc:
+            exc.usage, exc.response_text = usage, text
+            raise
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(json.dumps({"text": text}), encoding="utf-8")
-        return output, {"input_tokens": response.usage.input_tokens, "output_tokens": response.usage.output_tokens}
+        return output, usage
 
 
 def get_client(corner: dict, inputs_changed: bool = False):

@@ -1,0 +1,65 @@
+"""Bounded NYC queries, shared with the existing CLI fetch/cache implementation."""
+import hashlib
+import json
+import re
+import urllib.parse
+from datetime import datetime, timezone
+from scripts import fetch_corners as fetch
+from .paths import DATA
+
+MAX_SEARCH = 100
+CAPS = {fetch.LOC: 20, fetch.PROG: 20, fetch.COMP: 50}
+
+
+def rows(dataset, limit, where):
+    params = {"$limit": limit, "$where": where, "$order": "cornerid" if dataset != fetch.COMP else "cmt_corner_id"}
+    url = f"{fetch.PORTAL}/resource/{dataset}.json?" + urllib.parse.urlencode(params)
+    raw = fetch.get(url)
+    if not isinstance(raw, list) or any(not isinstance(r, dict) for r in raw):
+        raise RuntimeError("NYC returned an unexpected dataset response. Try again later.")
+    cache = fetch.ROOT / "cache" / "nyc" / (hashlib.sha256(url.encode()).hexdigest() + ".json")
+    timestamp = datetime.fromtimestamp(cache.stat().st_mtime, timezone.utc).isoformat() if cache.exists() else None
+    return fetch.num(raw), dict(dataset=dataset, url=url, retrieved_at=timestamp,
+                               note="Cached response when available; retrieval time is the cache file timestamp.")
+
+
+def search(borough=None, street=None):
+    where = fetch.build_where(borough, street)
+    if not (borough and borough.strip()) and not (street and street.strip()):
+        raise ValueError("Choose a borough or enter a street.")
+    locations, source = rows(fetch.LOC, MAX_SEARCH + 1, where)
+    found = {}
+    for r in locations[:MAX_SEARCH]:
+        cid = r.get("cornerid")
+        if cid is not None:
+            found.setdefault(cid, dict(cornerid=cid, label=f"{r.get('stname1') or 'Street not recorded'} and {r.get('stname2') or 'street not recorded'}", borough=r.get("borough")))
+    return dict(corners=list(found.values()), bounded=len(locations) > MAX_SEARCH,
+                row_limit=MAX_SEARCH, sources=[source],
+                note="First 100 ramp rows only, not every matching corner. Narrow the street to refine results. Program and complaint records are fetched on selection; missing matches stay unknown.")
+
+
+def pull(cid):
+    if not re.fullmatch(r"[1-9][0-9]{0,9}", str(cid)):
+        raise ValueError("Corner ID must be a positive integer of at most 10 digits.")
+    groups, sources = {}, []
+    for dataset, cap in CAPS.items():
+        field = "cmt_corner_id" if dataset == fetch.COMP else "cornerid"
+        result, source = rows(dataset, cap + 1, f"{field}={cid}")
+        if len(result) > cap:
+            raise ValueError("This corner exceeds the bounded record limit; no partial packet was created.")
+        if any(r.get(field) != int(cid) for r in result):
+            raise ValueError("NYC returned mismatched corner IDs; no packet was created.")
+        groups[dataset] = result
+        sources.append(source)
+    locations = groups[fetch.LOC]
+    if not locations:
+        raise ValueError("No ramp records found for this corner. Search again.")
+    corner = fetch.assemble_corner(locations, groups[fetch.PROG], groups[fetch.COMP],
+                                   retrieved=datetime.now(timezone.utc).isoformat(), provenance=sources)
+    # Content-addressed snapshots prevent a subsequent pull from changing a saved run's inputs.
+    digest = hashlib.sha256(json.dumps(corner, sort_keys=True).encode()).hexdigest()[:12]
+    key = f"real_{cid}_{digest}"
+    path = DATA / "live" / f"{key}.json"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(corner, indent=1), encoding="utf-8")
+    return key

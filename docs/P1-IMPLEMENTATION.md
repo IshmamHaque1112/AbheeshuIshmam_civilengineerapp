@@ -1,0 +1,75 @@
+# P1 implementation and evidence
+
+Implemented against **current `docs/PRD.md`, v3**, with `docs/P0-REVIEW.md` as regression context, and the historical Nov 3 `docs/CornerBrief-PRD.txt` definitions of R11/R14/R21–R25. The PDF is the retained historical counterpart. Existing working modules were reused. No applicable filesystem AGENTS.md/CLAUDE.md was found in the worktree or its ancestors; the session's supplied AGENTS.md handoff instruction applies, but no AO handoff was requested or sent.
+
+## Base, ownership and delivery
+
+Implementation directory: this Helix session's isolated worktree, not the main checkout. Branch: `helix/implement-cornerbrief-prd-p1-on-a-separate-branc`. Starting HEAD and origin/main: `bbcf2ae71e78306219d7aad3eaaf0fe3ab3dbe7f`. Helix recorded the first implementation commit as `a0f61ba`. Its adapter then failed during the final approval/validation flow. The supervising agent completed scope corrections and final validation on the same branch. Push and draft PR target only `IshmamHaque1112/AbheeshuIshmam_civilengineerapp`; main is not modified or merged. No deployment is authorized by this work.
+
+
+This direct UI task is the sole owner of `.helix/output/**`; no workers were spawned. The actual source HTML/CSS/JS and Python-produced sample packets are exported by `scripts/export_ui.py`. There is no separate mock application or preview server. The static export disables live queries, field mutations, packet release/download and email with explicit backend-required wording. Local backend functionality remains available in the application. Preview storage is not required, and the export requests no backend, fonts or external resources. No credentials, private source maps or unrelated files are exported.
+
+## Requirement-to-file/test mapping
+
+| Requirement | Implementation and reused behavior | Verification and limits |
+| --- | --- | --- |
+| R26: find real corners by borough/street | `cornerbrief/search.py`; shared `scripts/fetch_corners.py` filter, HTTP/cache, ID normalization and real-corner assembly; `cornerbrief/data_loader.py`; `/api/search` and `/api/real/{id}/run` in `cornerbrief/app.py`; existing `static/app.js`, `index.html`, `style.css` | `tests/test_p1.py`: invalid/empty filters, bounded search, escaped apostrophes, invalid/fractional/nonfinite IDs, cap overflow, mismatched IDs, immutable corner snapshots, unknown real units, reruns, HTTP empty/error/search/pull/release restrictions and source export. Browser tests cover selection/reload, loading, errors, empty results, stale searches and pulls, and text escaping. Live fetch confirmed separately below. |
+| R11: simple 3D from checked dimensions | Existing `parts_kit.checked_ramps`, `model_3d.build_scene`, canvas rotation in `static/app.js` reused; existing measured/current/documented-unit gates retained | Existing planning dimension-change and missing-dimension tests in `tests/test_flow.py`; `tests/test_v3.py` R28 and `tests/test_bugfixes.py` gate regressions. Canvas is never shown by the shipped settings. |
+| R21: area, volume, length, counts from one takeoff | Existing `takeoff.py`, `parts_kit.py` and `planning.py` reused | Existing hand-calculation, count and dimension-propagation tests in `tests/test_flow.py`. No second takeoff implementation. |
+| R22: code-calculated costs/labor from dated sourced rates | Existing `cost.py`, `crew_sequence.py`, `rates/` reused; `review_export.py` and public presentation now always hide dollar figures, including with the legacy switch set; trace redaction withholds currency/cost details | Existing hand-checked cost and labor, missing-rate, sample/stale-rate and dimension-propagation tests retained. Download dollar expectations were deliberately tightened. Provider prompts do not receive cost figures. Rates remain placeholders; no prices or reviewed rates were invented. |
+| R23: trades/equipment/sequence | Existing `crew_sequence.py`, `equipment_types.py`, `planning.py` and existing UI/export presentation reused | Existing trade totals, sequence, equipment and no-crane tests in `tests/test_flow.py`. All concept outputs remain gated. |
+| R24: questions for a professional | Existing `safety_questions.py`, planning presentation and export reused | Existing tests for sourced questions and absence of crane/final-PPE advice retained. These do not become a safety plan. |
+| R25: Class 5 label, exclusions, skip unchecked dimensions | Existing concept label, assumptions, exclusions and missing-dimension checks retained; the existing default-off `SHOW_LABELS_AND_PLANS` opt-in is retained; current per-corner gates in `orchestrator.provisional_label` remain in force | Existing enabled/disabled/saved-run gating tests remain. New P1 coverage checks default-off behavior and confirms that an explicit opt-in cannot bypass missing evidence/review requirements. Passing tests do not enable output. No new manual approval-file workflow is required. |
+| R14: inspect each agent input/output/actual usage | `trace.py`, `llm.py`, `orchestrator.py`, `app.public`, expandable Agent trace in existing UI | Tests exercise `LiveClient.call` with a mocked SDK transport: actual serialized request/system/schema, response, provider-reported counts, cache reuse and malformed responses. Malformed billable replies retain usage in totals; failed calls without usage remain unavailable. Replay/offline/cached origins report zero new provider tokens. Redaction is applied before trace/run persistence and again for presentation; legacy traces are labeled incomplete. No live paid provider call was made. |
+| R29: realistic junior/reviewer test protocol and capture | `docs/R29-ROLE-TEST.md`; executable `scripts/role_test.py init/check`; README links | Tests cover pending defaults, exclusive initialization, CLI rejection of incomplete capture, roles, timing/metrics, human attribution and permission-misread follow-up. **Actual participation remains pending.** Script validation cannot attest that participants are human or certify an engineering decision. |
+
+## Search bounds, provenance and isolation
+
+Search requires a borough or a 2–80 character street name. Borough names are an allowlist. Street punctuation supports names such as O'Brien, with doubled SoQL quotes; wildcard/control/query punctuation is rejected. Search requests 101 ramp rows to detect overflow and presents at most the first 100, grouped by corner ID. Borough-only search is supported but intentionally a bounded window, not a citywide listing. Records without survey dates are excluded by the existing candidate filter; a pull preserves any missing dates and lets P0 evidence gates stop them.
+
+A selected corner separately requests at most 21 locations, 21 program rows and 51 complaint rows, using the extra row to reject anything over caps of 20/20/50. No truncated packet is created. Missing program or complaint matches remain empty, not synthesized. Returned IDs must match the selected corner. Each request has a 15-second timeout, two attempts and one two-second backoff, so three sequential datasets can take about 96 seconds on repeated timeout. Search/pull errors keep sample selection usable.
+
+Responses use the existing on-disk NYC cache, now atomically written. Source URLs, dataset IDs and cache-file retrieval timestamps are shown and retained in downloads. Cache reuse is disclosed; these are not claims of fresh survey dates or fresh network retrieval on every run. The CLI's `--refresh` can refresh its responses; the application does not claim cached data is current. Snapshots are stored under `data/live/real_<id>_<digest>.json`; later pulls cannot replace an earlier packet's corner data. Site reruns load that packet's snapshot. Browser generation counters discard old search/pull responses after a newer search or corner selection, while existing immutable photo/run handling and release/rerun serialization remain intact.
+
+Official primary references consulted: [Socrata text/string escaping and uppercase filters](https://dev.socrata.com/docs/datatypes/text), [NYC Pedestrian Ramp Locations](https://data.cityofnewyork.us/d/ufzp-rrqu), [NYC Program Progress column definitions](https://data.cityofnewyork.us/Transportation/Pedestrian-Ramp-Program-Progress/e7gc-ub6z). The documentation informed query construction and joins; it was not used to assert measurement units or mark rules reviewed.
+
+## Actual live fetch
+
+The first `.venv/bin/python scripts/check_live.py` attempt in the sandbox failed with `URLError`. Repeating with narrow network permission **succeeded**, independently of mocked tests. See `docs/P1-LIVE-FETCH.json` and `data/live/real_1024569_c83661efedaa.json` for the recorded public data and exact source queries/timestamps.
+
+- Filter: QUEENS / THOMSON; 29 unique corner candidates, below the search cap.
+- Selected corner: **1024569, VAN DAM STREET and THOMSON AVENUE**.
+- Loaded 2 location rows, 1 program row, 0 complaint rows. An empty complaint result is not evidence that no complaints ever existed.
+- Result: **stop: evidence still needed**, all final limit results unknown/not applicable, no concept plan, deterministic offline mode with no provider call.
+- Survey dates are from 2018; the program row has no construction completion date and names Queens Boulevard / Thomson Avenue. The records are preserved as returned, not reconciled by invention. Units and ownership remain unconfirmed.
+
+This is a saved search-selected snapshot. The existing three-sample demo list is unchanged; `real_test` is not fabricated or silently substituted. The actual corner is selectable through search in the backend app, and its saved snapshot can be run via `/api/corners/real_1024569_c83661efedaa/run`. A live API/network dependency remains for new searches and records not cached.
+
+## Planning authorization and human dependencies
+
+Optional labels and concepts remain off by default. Run the adversarial suite before deciding to set `SHOW_LABELS_AND_PLANS=true`, as required by the existing PRD. An extra named-release JSON-file requirement introduced during the implementation was removed in review because it added an unrequested approval workflow.
+
+Even after explicit opt-in, each packet still needs complete measured evidence, documented units, a finished consistent Skeptic review, reviewed applicable rules and precedence, resolved numeric checks and no exceeded limit. Turning the switch off hides saved labels/plans too. City-demo presentation/downloads/traces withhold dollar figures. Internal deterministic calculation functions remain available for testing; their existence does not expose a plan or authorize work.
+
+No rule, precedence, data-unit documentation or placeholder rate was promoted to reviewed. The existing P0 per-check unknown/stop semantics, sample labels, field inputs, fresh rerun release, download restrictions and no-compliance/no-affiliation wording remain. P2 email and background-reading features were not extended; existing code is retained.
+
+R29 requires the user to recruit one actual junior engineer and one actual reviewer, freeze one realistic corner packet, facilitate both timed tasks, record corrections/missed issues/permission misreads, and retain attributable consented observations. Use `scripts/role_test.py init /tmp/r29-capture.json`, follow the protocol, then run `check` and have the facilitator review/sign the capture. No participants, timings or human results were invented. Manual speed comparisons and human rule/unit review also remain pending. A passing validator only means capture fields are present; any permission misread requires remediation and real-person retesting.
+
+## Validation commands and observed results
+
+All Python commands use the session-created Python 3.12 `.venv`, inside this worktree. No other checkout was used for test writes.
+
+1. `/opt/homebrew/bin/python3.12 -m venv .venv`: succeeded.
+2. `.venv/bin/pip install -r requirements.txt`: initial sandbox DNS failure. Retried as `.venv/bin/pip install -r requirements.txt playwright` with narrow approval: succeeded. `.venv/bin/python -m playwright install chromium`: succeeded with browser-install permission.
+3. Initial baseline `.venv/bin/python -m pytest -q`: **226 passed, 8 skipped, 20 errors** in 7.22 seconds. Errors were the existing localhost fixture binding restriction; browser skips were missing Chromium. The first localhost-permitted run after initial P1 changes was **246 passed, 8 skipped**. This is not presented as a pristine-baseline rerun.
+4. New P1 HTTP tests initially hit the same socket restriction. Approved repeat `.venv/bin/python -m pytest tests/test_p1.py -q`: **27 passed** at that milestone.
+5. Expanded full suite after browser installation: **285 passed**. During subsequent hardening, internal cost tests caught overly broad cost filtering; internal values were restored and public presentation remained filtered. Full suite then passed **294 tests** in 22.65 seconds before the final complete selection/reload cases and scope correction.
+6. `.venv/bin/python scripts/check_live.py`: sandbox unavailable; approved live retry passed as described above. No paid AI/provider call or credential was required.
+7. `.venv/bin/python scripts/export_ui.py`: succeeded at each meaningful UI milestone. The self-contained export is the actual source application with Python-generated sample packets and explicit static limitations. Chromium test `test_static_export_is_actual_ui_without_backend_calls` opens the file, switches samples and inspects traces with no API/external requests or page errors. A separate file-based screenshot was visually inspected at 1440 × 1000; no separate server was started.
+8. The full suite includes existing local HTTP smoke fixtures plus `test_search_http_flow_and_errors`, source-preserving packet release/download, role-test CLI execution, provider-request/response handling with a fake transport, all P0 regression tests, and real Chromium flows. Fixture servers are temporary test servers only.
+9. `git diff --check`: passed. Final full-suite result is recorded below.
+
+
+## Adapter recovery and finalization
+
+The final combined edit/test tool approval received `changes_requested`, after which Helix committed the existing work and reported an adapter failure. Follow-up messages were accepted but did not restart execution. Finalization therefore used the same preserved worktree without starting a competing worker. Browser-pull snapshot writes were redirected into pytest temporary data. Test-generated duplicate real-corner snapshots were removed; the actual live-fetch evidence snapshot remains. Final full validation: `.venv/bin/python -m pytest -q` passed **299 tests in 23.56 seconds**, with Chromium/browser tests executed and no skipped tests. `git diff --check` passed. The live NYC fetch evidence remains in `docs/P1-LIVE-FETCH.json`. The supervising agent pushes this branch to the explicitly verified Ishmam origin; review the draft PR for final commit identities.

@@ -1,0 +1,197 @@
+{
+  "attempted_at": "2026-11-05T15:48:58.881957+00:00",
+  "filter": {
+    "borough": "QUEENS",
+    "street": "THOMSON"
+  },
+  "status": "live fetch passed",
+  "search": {
+    "corners": [
+      {
+        "cornerid": 1024569,
+        "label": "VAN DAM STREET and THOMSON AVENUE",
+        "borough": "4"
+      },
+      {
+        "cornerid": 1024570,
+        "label": "VAN DAM STREET and THOMSON AVENUE",
+        "borough": "4"
+      },
+      {
+        "cornerid": 1024615,
+        "label": "30 STREET and THOMSON AVENUE",
+        "borough": "4"
+      },
+      {
+        "cornerid": 1024617,
+        "label": "THOMSON AVENUE and SKILLMAN AVENUE",
+        "borough": "4"
+      },
+      {
+        "cornerid": 1024618,
+        "label": "THOMSON AVENUE and 30 STREET",
+        "borough": "4"
+      },
+      {
+        "cornerid": 1024619,
+        "label": "SKILLMAN AVENUE and THOMSON AVENUE",
+        "borough": "4"
+      },
+      {
+        "cornerid": 1024620,
+        "label": "SKILLMAN AVENUE and THOMSON AVENUE",
+        "borough": "4"
+      },
+      {
+        "cornerid": 1024621,
+        "label": "THOMSON AVENUE and SKILLMAN AVENUE",
+        "borough": "4"
+      },
+      {
+        "cornerid": 1057245,
+        "label": "THOMSON AVENUE and 31 STREET",
+        "borough": "4"
+      },
+      {
+        "cornerid": 1057248,
+        "label": "31 STREET and THOMSON AVENUE",
+        "borough": "4"
+      },
+      {
+        "cornerid": 1058705,
+        "label": "THOMSON AVENUE and 44 DRIVE",
+        "borough": "4"
+      },
+      {
+        "cornerid": 1058706,
+        "label": "44 DRIVE and THOMSON AVENUE",
+        "borough": "4"
+      },
+      {
+        "cornerid": 1058707,
+        "label": "THOMSON AVENUE and 44 DRIVE",
+        "borough": "4"
+      },
+      {
+        "cornerid": 1058709,
+        "label": "COURT SQUARE and THOMSON AVENUE",
+        "borough": "4"
+      },
+      {
+        "cornerid": 1058711,
+        "label": "THOMSON AVENUE and COURT SQUARE",
+        "borough": "4"
+      },
+      {
+        "cornerid": 1058712,
+        "label": "JACKSON AVENUE and THOMSON AVENUE",
+        "borough": "4"
+      },
+      {
+        "cornerid": 1058713,
+        "label": "JACKSON AVENUE and THOMSON AVENUE",
+        "borough": "4"
+      },
+      {
+        "cornerid": 1058714,
+        "label": "THOMSON AVENUE and JACKSON AVENUE",
+        "borough": "4"
+      },
+      {
+        "cornerid": 1067126,
+        "label": "JACKSON AVENUE and THOMSON AVENUE",
+        "borough": "4"
+      },
+      {
+        "cornerid": 1199713,
+        "label": "THOMSON AVENUE and 30 PLACE",
+        "borough": "4"
+      },
+      {
+        "cornerid": 1199714,
+        "label": "THOMSON AVENUE and 30 PLACE",
+        "borough": "4"
+      },
+      {
+        "cornerid": 1199717,
+        "label": "THOMSON AVENUE and 30 PLACE",
+        "borough": "4"
+      },
+      {
+        "cornerid": 1200562,
+        "label": "SKILLMAN AVENUE and THOMSON AVENUE",
+        "borough": "4"
+      },
+      {
+        "cornerid": 1204295,
+        "label": "THOMSON AVENUE and JACKSON AVENUE",
+        "borough": "4"
+      },
+      {
+        "cornerid": 1204296,
+        "label": "THOMSON AVENUE and JACKSON AVENUE",
+        "borough": "4"
+      },
+      {
+        "cornerid": 1370284,
+        "label": "THOMSON AVENUE and street not recorded",
+        "borough": "4"
+      },
+      {
+        "cornerid": 1370285,
+        "label": "THOMSON AVENUE and street not recorded",
+        "borough": "4"
+      },
+      {
+        "cornerid": 1370286,
+        "label": "THOMSON AVENUE and street not recorded",
+        "borough": "4"
+      },
+      {
+        "cornerid": 1370287,
+        "label": "THOMSON AVENUE and street not recorded",
+        "borough": "4"
+      }
+    ],
+    "bounded": false,
+    "row_limit": 100,
+    "sources": [
+      {
+        "dataset": "ufzp-rrqu",
+        "url": "https://data.cityofnewyork.us/resource/ufzp-rrqu.json?%24limit=101&%24where=geocyclora+IS+NOT+NULL+AND+borough%3D4+AND+%28upper%28stname1%29+like+%27%25THOMSON%25%27+OR+upper%28stname2%29+like+%27%25THOMSON%25%27%29&%24order=cornerid",
+        "retrieved_at": "2026-11-05T15:48:59.353999+00:00",
+        "note": "Cached response when available; retrieval time is the cache file timestamp."
+      }
+    ],
+    "note": "First 100 ramp rows only, not every matching corner. Narrow the street to refine results. Program and complaint records are fetched on selection; missing matches stay unknown."
+  },
+  "corner_key": "real_1024569_c83661efedaa",
+  "sources": [
+    {
+      "dataset": "ufzp-rrqu",
+      "url": "https://data.cityofnewyork.us/resource/ufzp-rrqu.json?%24limit=21&%24where=cornerid%3D1024569&%24order=cornerid",
+      "retrieved_at": "2026-11-05T15:48:59.602519+00:00",
+      "note": "Cached response when available; retrieval time is the cache file timestamp."
+    },
+    {
+      "dataset": "e7gc-ub6z",
+      "url": "https://data.cityofnewyork.us/resource/e7gc-ub6z.json?%24limit=21&%24where=cornerid%3D1024569&%24order=cornerid",
+      "retrieved_at": "2026-11-05T15:49:04.627305+00:00",
+      "note": "Cached response when available; retrieval time is the cache file timestamp."
+    },
+    {
+      "dataset": "jagj-gttd",
+      "url": "https://data.cityofnewyork.us/resource/jagj-gttd.json?%24limit=51&%24where=cmt_corner_id%3D1024569&%24order=cmt_corner_id",
+      "retrieved_at": "2026-11-05T15:49:04.926854+00:00",
+      "note": "Cached response when available; retrieval time is the cache file timestamp."
+    }
+  ],
+  "counts": {
+    "locations": 2,
+    "progress": 1,
+    "complaints": 0
+  },
+  "state": "stop: evidence still needed",
+  "all_limits_unknown": true,
+  "mode": "offline, no agents"
+}

@@ -4,8 +4,6 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>CornerBrief</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600&family=Barlow+Semi+Condensed:wght@600;700&display=swap">
 <link rel="stylesheet" href="/style.css">
 </head>
 <body>
@@ -14,6 +12,11 @@
   <p>Assembles a traceable packet for a NYC street corner and shows what evidence is still needed. Demo only, with no affiliation to NYC. Pre-design support, not a compliance decision.</p>
 </header>
 <nav class="picker" aria-label="Demo corners" id="picker"></nav>
+<section class="search panel" aria-labelledby="search-title">
+<h2 id="search-title">Find a real NYC corner</h2>
+<form id="search-form"><label for="borough">Borough</label><select id="borough"><option value="">Any borough</option><option>MANHATTAN</option><option>BRONX</option><option>BROOKLYN</option><option>QUEENS</option><option>STATEN ISLAND</option></select>
+<label for="street">Street name</label><input id="street" maxlength="80" placeholder="e.g. THOMSON"><button class="button" type="submit">Search NYC records</button></form>
+<p id="search-status" role="status">Choose a borough or enter a street. The sample demo above works without NYC access.</p><div id="search-results"></div></section>
 <main id="main"><p class="empty">Choose a corner to prepare its packet.</p></main>
 <script src="/app.js"></script>
 </body>
