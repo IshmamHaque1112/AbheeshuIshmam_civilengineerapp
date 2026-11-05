@@ -15,7 +15,8 @@ November 5, 2026 · Helix session `session_2bfbe6adcd8845e59048b81823259626` · 
 3. **Input provenance.** A new "What the model is built from" panel lists synthetic inputs (typed in), assumed values (sample assumptions with units) and what isn't modeled (left unknown).
 4. **Revision change.** After an edit, the page names the superseded revision and says that estimates or schedules built on it must be recalculated.
 5. **Takeoff bug.** For a ramp shorter than the assumed 2 ft warning-surface depth, the takeoff counted more warning surface than the ramp could hold (10 sf on a 1.5 × 5 ft ramp), even though the model drew 7.5 sf. `parts_kit.build_parts` now caps it at the ramp length, so the model and quantities agree.
-6. **Live Output.** `scripts/export_ui.py` now also writes `.helix/output/preview.html`, the real preview page with its default model built by the app's Python code. Orbit, zoom and pan work there. Editing dimensions is disabled with a note, because each edit needs the local backend.
+6. **Revision basis** (from review). The revision used to hash only the typed dimensions, so a changed sample assumption could change quantities under the same revision. It now hashes the dimensions, the assumptions actually used and `preview.BASIS_VERSION` (now 2, for the warning-surface fix). The revision IDs quoted below were observed before this change, so current IDs differ.
+7. **Live Output.** `scripts/export_ui.py` now also writes `.helix/output/preview.html`, the real preview page with its default model built by the app's Python code. Orbit, zoom and pan work there. Editing dimensions is disabled with a note, because each edit needs the local backend.
 
 ## Observed verification
 

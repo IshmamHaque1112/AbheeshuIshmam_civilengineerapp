@@ -62,6 +62,39 @@ def test_every_output_states_its_units_and_source():
     assert all("ft" in d["label"] or "in" in d["label"] for d in result["dimensions"])
 
 
+def _with_assumption(monkeypatch, tmp_path, key, value):
+    """Point the parts kit at a copy of the assumptions file with one value changed."""
+    import yaml
+    from cornerbrief import parts_kit
+    data = yaml.safe_load((parts_kit.DATA / "kit_assumptions.yaml").read_text(encoding="utf-8"))
+    data[key]["value"] = value
+    (tmp_path / "kit_assumptions.yaml").write_text(yaml.safe_dump(data), encoding="utf-8")
+    monkeypatch.setattr(parts_kit, "DATA", tmp_path)
+
+
+@pytest.mark.parametrize("key,value,item", [
+    ("slab_thickness_in", 6, "concrete_volume"),
+    ("dws_depth_ft", 1, "dws_area"),
+    ("curb_extra_length_ft", 6, "curb_length"),
+    ("removal_factor", 1.5, "removal_area"),
+])
+def test_changed_assumption_changes_quantities_and_revision(monkeypatch, tmp_path, key, value, item):
+    # Same dimensions, different assumption: the old revision must not keep pointing at new quantities
+    before = preview.build_preview(GOOD)
+    _with_assumption(monkeypatch, tmp_path, key, value)
+    after = preview.build_preview(GOOD)
+    assert quantity(after, item) != quantity(before, item)
+    assert after["revision"] != before["revision"] and after["inputs"] == before["inputs"]
+    assert after["revision"] == preview.build_preview(GOOD)["revision"]
+
+
+def test_basis_version_is_part_of_the_revision(monkeypatch):
+    before = preview.build_preview(GOOD)
+    assert before["basis_version"] == preview.BASIS_VERSION
+    monkeypatch.setattr(preview, "BASIS_VERSION", preview.BASIS_VERSION + 1)
+    assert preview.build_preview(GOOD)["revision"] != before["revision"]
+
+
 def test_input_basis_separates_synthetic_assumed_and_unknown():
     basis = preview.build_preview({**GOOD, "width_ft": 7.5})["input_basis"]
     assert "Ramp width 7.5 ft" in basis["synthetic"] and "Running slope 6 %" in basis["synthetic"]

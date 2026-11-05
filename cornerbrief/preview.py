@@ -1,10 +1,13 @@
 """Synthetic 3D exploration. Nothing here is evidence, and nothing here reaches a packet, a label or a plan."""
 import hashlib, json, math
 from .model_3d import build_scene
-from .parts_kit import assumptions, build_parts
+from .parts_kit import build_parts
 from .takeoff import build_takeoff
 
-NOTICE = "Synthetic exploration: these dimensions were typed in, not measured. This isn't field evidence, a design or a rule check."
+# Bump when the geometry or takeoff math changes, so the same inputs then get a new revision.
+# 2: the warning surface is capped at the ramp length.
+BASIS_VERSION = 2
+NOTICE ="Synthetic exploration: these dimensions were typed in, not measured. This isn't field evidence, a design or a rule check."
 FIELDS = {
     "width_ft": dict(label="Ramp width", unit="ft", low=1, high=20, default=5),
     "length_ft": dict(label="Ramp length", unit="ft", low=1, high=30, default=6),
@@ -72,18 +75,20 @@ def build_preview(raw) -> dict:
         error.problems = problems
         raise error
     ramp = dict(ramp_id="synthetic", **values)
-    a = assumptions()
     takeoff = build_takeoff(build_parts([ramp]))
-    scene = build_scene([ramp], a["curb_extra_length_ft"]["value"])
+    used = {x["id"]: x["value"] for x in takeoff["assumptions"]}
+    scene = build_scene([ramp], used["curb_extra_length_ft"])
     width = max(values["width_ft"], values["landing_width_ft"])
     depth = values["length_ft"] + values["landing_length_ft"]
     scene["center"], scene["radius"] = [values["width_ft"] / 2, depth / 2, 0], max(width, depth) + 8
-    # The revision comes from the inputs, so the same dimensions always give the same revision.
-    revision = hashlib.sha256(json.dumps(values, sort_keys=True).encode()).hexdigest()[:8]
+    # The revision covers everything the quantities depend on: the dimensions, the assumptions
+    # actually used and the version of the geometry and takeoff code. Same basis, same revision.
+    fingerprint = dict(basis_version=BASIS_VERSION, inputs=values, assumptions=used)
+    revision = hashlib.sha256(json.dumps(fingerprint, sort_keys=True).encode()).hexdigest()[:8]
     basis = dict(synthetic=[f"{FIELDS[k]['label']} {values[k]:g} {FIELDS[k]['unit']}" for k in FIELDS],
                  assumed=[ASSUMED.get(x["id"], x["id"].replace("_", " ") + " {:g}").format(x["value"]) for x in takeoff["assumptions"]],
                  unknown=list(NOT_MODELED))
-    return dict(input_basis=basis,kind="synthetic exploration", notice=NOTICE, revision=revision, scene=scene, dimensions=_dimensions(values),
+    return dict(input_basis=basis, basis_version=BASIS_VERSION, kind="synthetic exploration", notice=NOTICE, revision=revision, scene=scene, dimensions=_dimensions(values),
                 rise_in=round(values["length_ft"] * values["slope_pct"] / 100 * 12, 1),
                 inputs=[dict(id=k, label=FIELDS[k]["label"], value=values[k], unit=FIELDS[k]["unit"], provenance="synthetic, typed in") for k in FIELDS],
                 quantities=[dict(i, basis="provisional, from synthetic inputs and sample assumptions") for i in takeoff["items"]],

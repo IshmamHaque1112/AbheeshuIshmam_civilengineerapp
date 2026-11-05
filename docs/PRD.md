@@ -151,7 +151,7 @@ This journey lives on a separate page. It isn't part of a packet and needs no re
 - [P1] R32 User can edit ramp width, ramp length, landing width and landing length (ft) and running slope (%), and the 3D geometry, dimension labels and provisional quantities change to match.
 - [P1] R33 User can orbit, zoom and pan the model with mouse, buttons or keys, and the dimension labels stay readable.
 - [P1] R34 A missing or invalid dimension names the field and its valid range. Nothing is invented, and the last valid model is marked "not updated."
-- [P1] R35 Every output shows its unit, whether each input is synthetic, assumed or unknown, and a revision. A new revision says that estimates or schedules built on the old one must be recalculated.
+- [P1] R35 Every output shows its unit, whether each input is synthetic, assumed or unknown, and a revision covering the dimensions, the assumptions used and the model version. A new revision says that estimates or schedules built on the old one must be recalculated.
 - [P0] R36 Synthetic values never become field evidence, never reach a packet, label, plan or rule check, and never show dollars, crew hours or permission words.
 
 ### Testing *(new in v3)*
