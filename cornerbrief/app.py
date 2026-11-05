@@ -14,6 +14,7 @@ from .data_loader import list_corners
 from .email_delivery import EmailBlocked, allowlist, send_brief
 from . import field as field_module
 from . import library
+from . import preview as preview_module
 from . import search as search_module
 from .trace import public_trace, redact
 from .cost import hide_dollars
@@ -74,6 +75,16 @@ async def reading(request: Request):
         return JSONResponse(await run_in_threadpool(library.search_books, request.query_params.get("q")))
     except ValueError as exc:
         return error(str(exc), 400)
+
+
+async def preview(request: Request):
+    """Synthetic only. This never reads or writes a corner, a run or a saved file."""
+    if request.method == "GET":
+        return JSONResponse(preview_module.defaults())
+    try:
+        return JSONResponse(preview_module.build_preview(await _body(request)))
+    except ValueError as exc:
+        return JSONResponse({"error": str(exc), "problems": getattr(exc, "problems", None)}, status_code=400)
 
 
 async def pull_corner(request: Request):
@@ -184,6 +195,7 @@ routes = [
     Route("/api/corners", corners),
     Route("/api/search", search_corners),
     Route("/api/reading", reading),
+    Route("/api/preview", preview, methods=["GET", "POST"]),
     Route("/api/real/{corner_id}/run", pull_corner, methods=["POST"]),
     Route("/api/corners/{key}/run", run, methods=["POST"]),
     Route("/api/runs/{run_id}", get_run),

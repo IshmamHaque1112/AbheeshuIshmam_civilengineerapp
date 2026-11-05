@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CornerBrief 3D Preview</title>
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+<header class="top">
+  <h1>CornerBrief</h1>
+  <p>3D preview. Demo only, with no affiliation to NYC. Not a design or a compliance decision. <a class="toplink" href="/">Back to corner packets</a></p>
+</header>
+<div class="synthetic" id="notice" role="note"></div>
+<main class="sheet preview">
+  <section class="panel" aria-labelledby="controls-title">
+    <h2 id="controls-title">Dimensions</h2>
+    <p class="hint">The model and quantities update as you type. There are no rule checks on this page.</p>
+    <form id="dims" novalidate></form>
+    <button class="button alt" id="reset" type="button">Reset dimensions</button>
+    <p id="status" role="status"></p>
+  </section>
+  <div>
+    <div class="viewer">
+      <canvas id="scene" tabindex="0" role="img" aria-label="Synthetic 3D model of a corner ramp and landing"></canvas>
+      <div class="viewbuttons" aria-label="View controls">
+        <button type="button" id="zoom-in" aria-label="Zoom in">+</button>
+        <button type="button" id="zoom-out" aria-label="Zoom out">−</button>
+        <button type="button" id="view-reset">Reset view</button>
+      </div>
+    </div>
+    <p class="hint">Drag to rotate. Scroll to zoom. Shift-drag or right-drag to pan. Arrow keys, + and − also work.</p>
+    <label class="inline"><input type="checkbox" id="exaggerate" checked> Show height at 3×</label>
+    <section aria-labelledby="quantities-title">
+      <h2 id="quantities-title">Provisional quantities</h2>
+      <p id="revision" class="hint"></p>
+      <div class="wrap"><table><thead><tr><th>Item</th><th>Quantity</th><th>Change</th></tr></thead><tbody id="quantities"></tbody></table></div>
+      <details><summary>Assumptions and exclusions</summary><div class="detailbody"><h3>Sample assumptions</h3><ul class="plain" id="assumptions"></ul><h3>Not included</h3><ul class="plain" id="exclusions"></ul></div></details>
+    </section>
+  </div>
+</main>
+<script src="/preview.js"></script>
+</body>
+</html>

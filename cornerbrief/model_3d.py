@@ -21,9 +21,13 @@ def build_scene(ramps: list[dict], curb_extra_ft: float = 4) -> dict:
         x0, x1 = cursor, cursor + w
         lx0 = cursor + (w - lw) / 2
         lx1 = lx0 + lw
-        faces.append({"p": [[x0, 0, 0], [x1, 0, 0], [x1, l, rise], [x0, l, rise]], "c": COLORS["ramp"]})
         dws = min(2, l)
-        faces.append({"p": [[x0, 0, 0], [x1, 0, 0], [x1, dws, rise * dws / l], [x0, dws, rise * dws / l]], "c": COLORS["dws"]})
+        dws_rise = rise * dws / l
+        if dws < l:  # The warning surface and ramp don't overlap, so neither can hide the other
+            faces.append({"p": [[x0, dws, dws_rise], [x1, dws, dws_rise], [x1, l, rise], [x0, l, rise]], "c": COLORS["ramp"]})
+        faces.append({"p": [[x0, 0, 0], [x1, 0, 0], [x1, dws, dws_rise], [x0, dws, dws_rise]], "c": COLORS["dws"]})
+        faces.append({"p": [[x0, 0, 0], [x0, l, 0], [x0, l, rise]], "c": COLORS["side"]})
+        faces.append({"p": [[x1, 0, 0], [x1, l, 0], [x1, l, rise]], "c": COLORS["side"]})
         faces += _box(lx0, lx1, l, l + ll, 0, rise, COLORS["landing"], COLORS["side"])
         faces += _box(x0 - side, x0, -0.5, 0, 0, curb_h, COLORS["curb"], COLORS["curb"])
         faces += _box(x1, x1 + side, -0.5, 0, 0, curb_h, COLORS["curb"], COLORS["curb"])

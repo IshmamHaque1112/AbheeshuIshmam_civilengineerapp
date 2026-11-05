@@ -347,3 +347,90 @@ def test_demo_list_shows_the_real_corner_in_order(page):
     page.click('#picker button[data-key="real_test"]')
     page.wait_for_selector(".status.stop")
     assert "VAN DAM" in page.inner_text("#main") and "Real test corner" in page.inner_text("#main")
+
+
+@pytest.fixture
+def preview_page(browser, base):
+    context = browser.new_context(viewport=dict(width=1280, height=900))
+    pg = context.new_page()
+    pg.errors = []
+    pg.on("pageerror", lambda e: pg.errors.append(str(e)))
+    pg.goto(base + "/preview.html")
+    pg.wait_for_selector("#quantities tr")
+    yield pg
+    assert pg.errors == []
+    context.close()
+
+
+def pixels(page):
+    return page.evaluate("document.querySelector('#scene').toDataURL()")
+
+
+def test_preview_renders_and_is_labeled_synthetic(preview_page):
+    assert "Synthetic exploration" in preview_page.inner_text("#notice")
+    filled = preview_page.evaluate("""() => { const c = document.querySelector('#scene'); const d = c.getContext('2d').getImageData(0, 0, c.width, c.height).data; let n = 0; for (let i = 3; i < d.length; i += 4) if (d[i]) n++; return n / (d.length / 4); }""")
+    assert filled > 0.2
+    assert "Rise 4.3 in" in preview_page.get_attribute("#scene", "aria-label")
+
+
+def test_preview_edit_updates_model_and_quantities(preview_page):
+    before, revision = pixels(preview_page), preview_page.inner_text("#revision")
+    assert "55 sf" in preview_page.inner_text("#quantities")
+    preview_page.fill("#length_ft", "8")
+    preview_page.wait_for_function("document.querySelector('#quantities').innerText.includes('65 sf')")
+    assert pixels(preview_page) != before and preview_page.inner_text("#revision") != revision
+    assert "+10" in preview_page.inner_text("#quantities")
+    assert "Ramp length 8 ft" in preview_page.get_attribute("#scene", "aria-label")
+
+
+def test_preview_slider_updates_the_model(preview_page):
+    preview_page.evaluate("""() => { const r = document.querySelector('#width_ft-range'); r.value = 8; r.dispatchEvent(new Event('input', {bubbles: true})); }""")
+    preview_page.wait_for_function("document.querySelector('#scene').getAttribute('aria-label').includes('Ramp width 8 ft')")
+    assert preview_page.input_value("#width_ft") == "8"
+
+
+def test_preview_invalid_dimension_keeps_the_last_model_and_explains(preview_page):
+    before, numbers = pixels(preview_page), preview_page.inner_text("#quantities")
+    preview_page.fill("#width_ft", "-3")
+    preview_page.wait_for_selector("#error-width_ft:not(:empty)")
+    assert "from 1 to 20" in preview_page.inner_text("#error-width_ft") and "nothing was guessed" in preview_page.inner_text("#status")
+    assert pixels(preview_page) == before and preview_page.inner_text("#quantities") == numbers
+    preview_page.fill("#width_ft", "")
+    preview_page.wait_for_function("document.querySelector('#error-width_ft').innerText.includes('must be a number')")
+    preview_page.click("#reset")
+    preview_page.wait_for_function("document.querySelector('#status').innerText.includes('up to date')")
+    assert preview_page.input_value("#width_ft") == "5"
+
+
+def test_preview_orbit_zoom_and_pan_change_the_view(preview_page):
+    box = preview_page.locator("#scene").bounding_box()
+    cx, cy = box["x"] + box["width"] / 2, box["y"] + box["height"] / 2
+    start = pixels(preview_page)
+    preview_page.mouse.move(cx, cy); preview_page.mouse.down(); preview_page.mouse.move(cx + 70, cy + 25); preview_page.mouse.up()
+    orbit = pixels(preview_page); assert orbit != start
+    preview_page.mouse.wheel(0, -400); preview_page.wait_for_timeout(100)
+    zoom = pixels(preview_page); assert zoom != orbit
+    preview_page.mouse.move(cx, cy); preview_page.mouse.down(button="right"); preview_page.mouse.move(cx + 60, cy - 40); preview_page.mouse.up(button="right")
+    pan = pixels(preview_page); assert pan != zoom
+    preview_page.click("#view-reset")
+    assert pixels(preview_page) == start
+    preview_page.click("#zoom-in"); assert pixels(preview_page) != start
+    preview_page.click("#exaggerate")
+
+
+def test_preview_makes_no_packet_requests_and_main_page_links_to_it(browser, base):
+    context = browser.new_context()
+    pg = context.new_page()
+    urls = []
+    pg.on("request", lambda r: urls.append(r.url))
+    pg.goto(base + "/preview.html")
+    pg.wait_for_selector("#quantities tr")
+    pg.fill("#length_ft", "9")
+    pg.wait_for_function("document.querySelector('#scene').getAttribute('aria-label').includes('Ramp length 9 ft')")
+    assert not [u for u in urls if "/api/" in u and "/api/preview" not in u]
+    assert not [u for u in urls if not u.startswith(base)]
+    pg.click("text=Back to corner packets")
+    pg.wait_for_selector("#preview-link")
+    pg.click("#preview-link")
+    pg.wait_for_selector("#notice")
+    context.close()

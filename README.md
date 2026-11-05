@@ -67,6 +67,10 @@ Under **Add site measurements**, enter who measured, the date and any values you
 
 Each rerun creates a new packet that needs its own release. The tab keeps showing the newest version when you switch corners or reload, and **Start over from the original records** clears it. A new tab starts from the original records. In demo mode, a rerun still runs every Python check, but the Skeptic review doesn't run, because the saved responses describe the original records. No label or plan can appear until a review finishes.
 
+## 3D preview
+
+Select **3D preview (synthetic)** at the top of the app, or open `/preview.html`. Change the ramp and landing dimensions to update the model and provisional quantities, then drag to rotate, scroll to zoom, and shift-drag or right-drag to pan. These dimensions are made up. They aren't saved, can't reach a packet, label or plan, and get no rule check.
+
 ## Background reading
 
 Set `OPEN_LIBRARY_CONTACT` in `.env` to a shared team address, then restart the app. Each packet then shows suggested books on architecture, accessibility, streets and drainage, plus a search box. Results are saved in `cache/open_library` for 30 days to stay within Open Library's limits. Reading can't change a rule, rate or result, and a released packet lists the suggested books already saved. To test the connection, open `http://127.0.0.1:8000/api/reading?q=architecture` while the app is running.

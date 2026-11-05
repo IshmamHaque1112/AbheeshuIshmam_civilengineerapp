@@ -167,6 +167,7 @@ The code now follows this version:
 
 - **R28 follow-up:** Most cases from `docs/P0-REVIEW.md` now have fixes and tests, including the label gate, permission language, unit validation and browser races. Cases run with labels off and on.
 
+- **Synthetic 3D preview (from issue #7):** A separate page has editable dimensions, orbit, zoom, pan and provisional quantities. It reads and saves no corner data and can't turn on labels or plans, so the concept plans in the non-goals stay off. This is an optional preview, not a change to the demo's promise.
 - **R13:** Open Library search and suggested books are built, off by default and separate from the checks. It remains a P2 non-goal for the demo unless the team changes that.
 
 Still open:
