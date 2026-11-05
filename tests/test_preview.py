@@ -62,6 +62,33 @@ def test_every_output_states_its_units_and_source():
     assert all("ft" in d["label"] or "in" in d["label"] for d in result["dimensions"])
 
 
+def test_input_basis_separates_synthetic_assumed_and_unknown():
+    basis = preview.build_preview({**GOOD, "width_ft": 7.5})["input_basis"]
+    assert "Ramp width 7.5 ft" in basis["synthetic"] and "Running slope 6 %" in basis["synthetic"]
+    assert "Slab thickness 4 in" in basis["assumed"]
+    # Inputs the sandbox doesn't model are listed as unknown, never given a value
+    assert "Sidewalk width" in basis["unknown"] and not any(ch.isdigit() for item in basis["unknown"] for ch in item)
+
+
+@pytest.mark.parametrize("field,value,item,expected", [
+    ("width_ft", 8, "slab_area", 73.0),           # 8 x 6 + 5 x 5
+    ("width_ft", 8, "dws_area", 16.0),            # 8 x 2
+    ("width_ft", 8, "curb_length", 12.0),         # 8 + 4 extra
+    ("landing_width_ft", 7, "slab_area", 65.0),   # 5 x 6 + 7 x 5
+    ("landing_length_ft", 3, "slab_area", 45.0),  # 5 x 6 + 5 x 3
+    ("length_ft", 1.5, "dws_area", 7.5),          # The warning surface can't be deeper than the ramp
+])
+def test_each_dimension_moves_its_own_quantities(field, value, item, expected):
+    assert quantity(preview.build_preview({**GOOD, field: value}), item) == expected
+
+
+def test_slope_changes_rise_and_geometry_but_not_plan_area():
+    flat, steep = preview.build_preview(GOOD), preview.build_preview({**GOOD, "slope_pct": 12})
+    assert steep["rise_in"] == 8.6 and quantity(steep, "slab_area") == quantity(flat, "slab_area")
+    top = lambda r: max(z for f in r["scene"]["faces"] for _, _, z in f["p"])
+    assert top(steep) == pytest.approx(2 * top(flat))
+
+
 def test_preview_has_no_dollars_crew_rule_results_or_permission():
     text = json.dumps(preview.build_preview(GOOD)).lower()
     for word in ("$", "cost", "crew", "labor", "probably", "limit exceeded", "no conflict", "compliant", "approved"):

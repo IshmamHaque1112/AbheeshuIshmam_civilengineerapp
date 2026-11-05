@@ -224,6 +224,26 @@ def test_static_export_is_actual_ui_without_backend_calls(browser):
     context.close()
 
 
+def test_static_export_preview_orbits_the_python_built_model(browser):
+    from pathlib import Path
+    context=browser.new_context(viewport=dict(width=1280,height=900))
+    pg=context.new_page();errors=[];requests=[]
+    pg.on('pageerror',lambda e:errors.append(str(e)))
+    pg.on('console',lambda m:errors.append(m.text) if m.type=='error' else None)
+    pg.on('request',lambda r:requests.append(r.url))
+    pg.goto((Path(__file__).resolve().parent.parent/'.helix/output/index.html').as_uri())
+    pg.wait_for_selector('.status')
+    pg.click('#preview-link');pg.wait_for_selector('#quantities tr')
+    assert '55 sf' in pg.inner_text('#quantities') and 'Editing dimensions needs the local' in pg.inner_text('#status')
+    assert pg.locator('#width_ft').is_disabled() and 'Synthetic exploration' in pg.inner_text('#notice')
+    box=pg.locator('#scene').bounding_box();before=pixels(pg)
+    pg.mouse.move(box['x']+200,box['y']+200);pg.mouse.down();pg.mouse.move(box['x']+300,box['y']+230);pg.mouse.up()
+    assert pixels(pg)!=before
+    pg.click('text=Back to corner packets');pg.wait_for_selector('.status')
+    assert not errors and all(url.startswith('file:') for url in requests)
+    context.close()
+
+
 def test_selecting_real_corner_renders_saved_actual_data_and_provenance(page, monkeypatch, tmp_path):
     # The pull endpoint writes a snapshot; keep browser-test writes outside source data.
     import shutil
@@ -355,10 +375,11 @@ def preview_page(browser, base):
     pg = context.new_page()
     pg.errors = []
     pg.on("pageerror", lambda e: pg.errors.append(str(e)))
+    pg.on("console", lambda m: pg.errors.append(m.text) if m.type == "error" else None)
     pg.goto(base + "/preview.html")
     pg.wait_for_selector("#quantities tr")
     yield pg
-    assert pg.errors == []
+    assert pg.errors == []  # Includes console errors, so a routine typing mistake mustn't log a failed request
     context.close()
 
 
@@ -390,16 +411,48 @@ def test_preview_slider_updates_the_model(preview_page):
 
 
 def test_preview_invalid_dimension_keeps_the_last_model_and_explains(preview_page):
-    before, numbers = pixels(preview_page), preview_page.inner_text("#quantities")
+    numbers, revision = preview_page.inner_text("#quantities"), preview_page.inner_text("#revision")
     preview_page.fill("#width_ft", "-3")
     preview_page.wait_for_selector("#error-width_ft:not(:empty)")
     assert "from 1 to 20" in preview_page.inner_text("#error-width_ft") and "nothing was guessed" in preview_page.inner_text("#status")
-    assert pixels(preview_page) == before and preview_page.inner_text("#quantities") == numbers
+    assert preview_page.inner_text("#quantities") == numbers and preview_page.inner_text("#revision") == revision
+    # The old model and quantities stay, but they're clearly marked as not matching the inputs
+    assert "Not updated: fix Ramp width" in preview_page.inner_text("#stale")
+    assert preview_page.get_attribute("#scene", "aria-label").startswith("Not updated. Fix Ramp width")
+    assert "isstale" in preview_page.get_attribute("#quantity-section", "class")
     preview_page.fill("#width_ft", "")
     preview_page.wait_for_function("document.querySelector('#error-width_ft').innerText.includes('must be a number')")
     preview_page.click("#reset")
     preview_page.wait_for_function("document.querySelector('#status').innerText.includes('up to date')")
-    assert preview_page.input_value("#width_ft") == "5"
+    assert preview_page.input_value("#width_ft") == "5" and preview_page.is_hidden("#stale")
+    assert preview_page.get_attribute("#scene", "aria-label").startswith("Synthetic 3D model")
+
+
+def test_preview_revision_change_flags_dependent_estimates(preview_page):
+    first = preview_page.inner_text("#revision").split()[1].rstrip(".")
+    preview_page.fill("#landing_length_ft", "7")
+    preview_page.wait_for_function("document.querySelector('#scene').getAttribute('aria-label').includes('Landing length 7 ft')")
+    text = preview_page.inner_text("#revision")
+    assert f"Changed from revision {first}" in text and f"built on {first} must be recalculated" in text
+
+
+def test_preview_shows_what_is_synthetic_assumed_and_unknown(preview_page):
+    basis = preview_page.inner_text("#basis")
+    assert "Ramp width 5 ft" in preview_page.inner_text("#basis-synthetic")
+    assert "Slab thickness 4 in" in preview_page.inner_text("#basis-assumed")
+    assert "Sidewalk width" in preview_page.inner_text("#basis-unknown") and "Not modeled" in basis
+
+
+def test_preview_dimension_labels_stay_readable_while_orbiting(preview_page):
+    box = preview_page.locator("#scene").bounding_box()
+    cx, cy = box["x"] + box["width"] / 2, box["y"] + box["height"] / 2
+    overlap = """() => { const b = document.querySelector('#scene').labelBoxes, c = document.querySelector('#scene'); let n = 0;
+      for (const p of b) { if (p.x < 0 || p.y < 0 || p.x + p.w > c.clientWidth || p.y + p.h > c.clientHeight) n++;
+        for (const q of b) if (p !== q && p.x < q.x + q.w && q.x < p.x + p.w && p.y < q.y + q.h && q.y < p.y + p.h) n++; }
+      return [b.length, n]; }"""
+    for step in range(10):
+        preview_page.mouse.move(cx, cy); preview_page.mouse.down(); preview_page.mouse.move(cx + 55, cy + (12 if step % 2 else -12)); preview_page.mouse.up()
+        assert preview_page.evaluate(overlap) == [5, 0]
 
 
 def test_preview_orbit_zoom_and_pan_change_the_view(preview_page):

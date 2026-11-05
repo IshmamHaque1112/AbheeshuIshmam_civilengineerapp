@@ -4,6 +4,7 @@ import json
 import sys
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+from cornerbrief import preview
 from cornerbrief.app import public
 from cornerbrief.data_loader import SAMPLE_KEYS, load_corner
 from cornerbrief.llm import ReplayClient
@@ -27,7 +28,15 @@ def build():
     out = source.parent.parent / ".helix" / "output"
     out.mkdir(parents=True, exist_ok=True)
     (out / "index.html").write_text(html, encoding="utf-8")
-    print("Exported actual UI and saved sample packets to .helix/output/index.html. Live search, measurements and release require the local backend.")
+    # The 3D preview's default model comes from the same Python code the local app uses. Editing needs the backend.
+    defaults = preview.defaults()
+    first = preview.build_preview({f["id"]: f["default"] for f in defaults["fields"]})
+    payload = json.dumps(dict(defaults=defaults, model=first), ensure_ascii=True).replace("<", "\\u003c")
+    page = (source / "preview.html").read_text(encoding="utf-8")
+    page = page.replace('<link rel="stylesheet" href="/style.css">', f"<style>{css}</style>")
+    page = page.replace('<script src="/preview.js"></script>', f"<script>window.CORNERBRIEF_PREVIEW_EXPORT = {payload};</script>\n<script>{(source / 'preview.js').read_text(encoding='utf-8')}</script>")
+    (out / "preview.html").write_text(page, encoding="utf-8")
+    print("Exported actual UI, saved sample packets and the default 3D preview to .helix/output/. Live search, measurements, release and dimension edits require the local backend.")
 
 
 if __name__ == "__main__":

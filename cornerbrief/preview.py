@@ -12,6 +12,11 @@ FIELDS = {
     "landing_length_ft": dict(label="Landing length", unit="ft", low=1, high=20, default=5),
     "slope_pct": dict(label="Running slope", unit="%", low=0, high=15, default=6),
 }
+ASSUMED = {"slab_thickness_in": "Slab thickness {:g} in", "dws_depth_ft": "Warning surface depth {:g} ft",
+           "curb_extra_length_ft": "Extra curb length {:g} ft", "removal_factor": "Removal area factor {:g}×"}
+# Inputs a real corner needs that this sandbox doesn't model. They stay unknown, never filled in.
+NOT_MODELED = ["Sidewalk width", "Ramp and landing cross slope", "Side flares", "Gutter and roadway slope",
+               "Lip height at the gutter", "Legal grade", "Utilities, vaults and catch basins", "Road ownership"]
 
 
 def defaults() -> dict:
@@ -75,7 +80,10 @@ def build_preview(raw) -> dict:
     scene["center"], scene["radius"] = [values["width_ft"] / 2, depth / 2, 0], max(width, depth) + 8
     # The revision comes from the inputs, so the same dimensions always give the same revision.
     revision = hashlib.sha256(json.dumps(values, sort_keys=True).encode()).hexdigest()[:8]
-    return dict(kind="synthetic exploration", notice=NOTICE, revision=revision, scene=scene, dimensions=_dimensions(values),
+    basis = dict(synthetic=[f"{FIELDS[k]['label']} {values[k]:g} {FIELDS[k]['unit']}" for k in FIELDS],
+                 assumed=[ASSUMED.get(x["id"], x["id"].replace("_", " ") + " {:g}").format(x["value"]) for x in takeoff["assumptions"]],
+                 unknown=list(NOT_MODELED))
+    return dict(input_basis=basis,kind="synthetic exploration", notice=NOTICE, revision=revision, scene=scene, dimensions=_dimensions(values),
                 rise_in=round(values["length_ft"] * values["slope_pct"] / 100 * 12, 1),
                 inputs=[dict(id=k, label=FIELDS[k]["label"], value=values[k], unit=FIELDS[k]["unit"], provenance="synthetic, typed in") for k in FIELDS],
                 quantities=[dict(i, basis="provisional, from synthetic inputs and sample assumptions") for i in takeoff["items"]],

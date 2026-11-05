@@ -2,6 +2,8 @@
 
 Version 3 · November 4, 2026 · Owners: Abheeshu Dhungana and Ishmam Haque · Demo: November 12, 2026
 
+Nov 5 addendum: section 8 and Journey 3 add the product direction from [issue #7](https://github.com/IshmamHaque1112/AbheeshuIshmam_civilengineerapp/issues/7) as a staged roadmap. The promise and the Nov 12 demo scope are unchanged.
+
 This is the current PRD. It replaces `docs/CornerBrief-PRD.txt` and `docs/CornerBrief-PRD.pdf` (the Nov 3 version, kept for history). Version 3 folds in the Nov 3 audit, PRD v2, the Product PRD template work and Wil Sheppard's Nov 4 review.
 
 ## The promise
@@ -28,6 +30,7 @@ If the record gathering is done for them, a junior engineer walks into every sit
 - **Primary user:** a Junior Engineer (Design), Pedestrian Ramps Program, NYC DDC Division of Infrastructure, 30-30 Thomson Ave, Queens. Early career, doing "civil engineering tasks of moderate complexity under supervision": research studies, engineering investigations, field surveys and design-related site inspections.
 - **Secondary user:** the Engineer-In-Charge, who reviews and signs off and needs every number sourced and every assumption flagged.
 - **Not the user:** the public or the city officials at the demo. They are the audience.
+- **Hypothesis user (not validated):** an estimator or project engineer at a NYC union contractor. This persona and workflow come from issue #7 and need real-user interviews before anything is built for them. See section 8.
 
 Needs:
 
@@ -61,7 +64,7 @@ Goals:
 
 Non-goals until Nov 12:
 
-- **"Probably standard" and "probably custom" labels, and concept plans (3D view, takeoff, labor, equipment).** These stay off by default until the adversarial suite (R28) passes. Reason: Wil's review showed they can appear before the evidence supports them.
+- **"Probably standard" and "probably custom" labels, and concept plans (3D view, takeoff, labor, equipment).** These stay off by default until the adversarial suite (R28) passes. Reason: Wil's review showed they can appear before the evidence supports them. The separate synthetic 3D sandbox (Journey 3) doesn't change this, because it never reads or writes packet evidence.
 - Dollar figures or cost estimates. The rates are placeholders.
 - Final designs, drawings or compliance decisions. That is the Engineer-In-Charge's job.
 - Citywide or batch processing, live AI agents, email and Open Library reading.
@@ -141,6 +144,16 @@ Releasing the packet
 - [P1] R14 User can see each agent's input, output and token use.
 - [P2] R13 Cited background reading, kept apart from the checks.
 
+### Journey 3: Exploring a synthetic 3D concept *(new Nov 5, issue #7)*
+
+This journey lives on a separate page. It isn't part of a packet and needs no release.
+
+- [P1] R32 User can edit ramp width, ramp length, landing width and landing length (ft) and running slope (%), and the 3D geometry, dimension labels and provisional quantities change to match.
+- [P1] R33 User can orbit, zoom and pan the model with mouse, buttons or keys, and the dimension labels stay readable.
+- [P1] R34 A missing or invalid dimension names the field and its valid range. Nothing is invented, and the last valid model is marked "not updated."
+- [P1] R35 Every output shows its unit, whether each input is synthetic, assumed or unknown, and a revision. A new revision says that estimates or schedules built on the old one must be recalculated.
+- [P0] R36 Synthetic values never become field evidence, never reach a packet, label, plan or rule check, and never show dollars, crew hours or permission words.
+
 ### Testing *(new in v3)*
 
 - [P0] **R28 Adversarial suite.** Each case must end in "unknown" or "stop," never a label or plan:
@@ -167,7 +180,7 @@ The code now follows this version:
 
 - **R28 follow-up:** Most cases from `docs/P0-REVIEW.md` now have fixes and tests, including the label gate, permission language, unit validation and browser races. Cases run with labels off and on.
 
-- **Synthetic 3D preview (from issue #7):** A separate page has editable dimensions, orbit, zoom, pan and provisional quantities. It reads and saves no corner data and can't turn on labels or plans, so the concept plans in the non-goals stay off. This is an optional preview, not a change to the demo's promise.
+- **Synthetic 3D preview (R32–R36, issue #7):** A separate page has editable dimensions, orbit, zoom, pan and provisional quantities. It reads and saves no corner data and can't turn on labels or plans, so the concept plans in the non-goals stay off. A bad dimension now marks the model and quantities "not updated." The page lists which inputs are synthetic, assumed or not modeled, and says which revision a change supersedes. Helix's static copy includes the page with its default model, and editing there needs the local app. The warning-surface takeoff no longer exceeds a ramp shorter than 2 ft, so it now matches the model. This is an optional preview, not a change to the demo's promise. See `docs/3D-SLICE-VERIFICATION.md`.
 - **R13:** Open Library search and suggested books are built, off by default and separate from the checks. It remains a P2 non-goal for the demo unless the team changes that.
 
 Still open:
@@ -197,10 +210,34 @@ Still open:
 | H-1011 sheets 2–9 and ADA sections on ada.gov | Ishmam |
 | Manual-check baseline time | Both, this week |
 | R28 adversarial suite and the R4 change | Ishmam (code), to agree |
+| Which real estimators or project engineers can test the contractor persona (section 8)? | Abheeshu, to agree |
+
+## 8. Product direction and staged roadmap *(proposal, issue #7)*
+
+Long-term direction: help a construction team turn a job opportunity into a traceable site investigation, an editable 3D concept and a resource-backed execution proposal for professional review. Today's corner packet is the site-investigation step of that workflow. Full milestones and acceptance criteria are in [`docs/ROADMAP.md`](ROADMAP.md).
+
+| Milestone | Scope | Status |
+| --- | --- | --- |
+| M0 | Current corner investigation demo (sections 2–6) | Built |
+| M1 | Synthetic 3D sandbox for corner ramps and landings (Journey 3) | Built, except that saved estimates and schedules to invalidate arrive in M2 |
+| M2 | Documented geometry, shared-revision quantities and a draft small-concrete sequence, with missing resources shown as missing | Proposed next |
+| M3 | Opportunity brief, capability match, logistics, crew and equipment sequencing, reviewable RFIs, daily reports and payroll checks | Proposed, after validating the contractor persona |
+| M4 | Specialist structure modules. The bridge, tower, dome and gear-train demos set the bar for breadth and interaction quality only. | Future research, not a supported domain |
+
+Rules for every milestone:
+
+- The estimator or project engineer persona is a hypothesis until real users are interviewed.
+- Union membership doesn't establish access to crews, equipment, bidding authority or credentials. Resources and authority come from company records and the agreements that actually apply.
+- Rates and durations are never invented. Missing inputs and conflicts are shown.
+- Labor, permit and payroll rules come from the actual contract and jurisdiction, verified and sourced as in section 3. One agreement is never generalized to every union job.
+- Bidding, hiring, purchasing, permit submission and payroll submission need their own authorization.
+- No output claims structural safety, compliance or approval. The existing evidence and rule gates, the off-by-default concept outputs, the city-demo dollar ban and the placeholder-rate disclosures stay.
 
 ## Sources
 
 - Wil Sheppard's review, Nov 4, 2026 (shared with the team)
+- [Issue #7: Product direction, editable 3D concepts and contractor logistics](https://github.com/IshmamHaque1112/AbheeshuIshmam_civilengineerapp/issues/7)
+- Research starting points for section 8, not yet used for any rule: [NYC project labor agreements](https://www.nyc.gov/site/mocs/regulations/project-labor-agreements.page), [DDC prequalification](https://www.nyc.gov/site/ddc/contracts/rfqpql.page), [DOT street-work permits](https://www.nyc.gov/html/dot/html/infrastructure/permits.shtml), [NYSDOL certified payroll](https://dol.ny.gov/node/64811), [New York 811](https://newyork-811.com/about/how-we-work/)
 - `docs/PRD-evaluation.md` (Helix review of the repo against the Nov 3 PRD)
 - [NYC DDC Junior Engineer (Design) posting](https://cityjobs.nyc.gov/job/junior-engineer-design-in-queens-jid-48620)
 - [NYC DOT H-1011-1](https://www.nycstreetdesign.info/sites/default/files/specs/H-1011-1.pdf)

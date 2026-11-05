@@ -69,7 +69,7 @@ Each rerun creates a new packet that needs its own release. The tab keeps showin
 
 ## 3D preview
 
-Select **3D preview (synthetic)** at the top of the app, or open `/preview.html`. Change the ramp and landing dimensions to update the model and provisional quantities, then drag to rotate, scroll to zoom, and shift-drag or right-drag to pan. These dimensions are made up. They aren't saved, can't reach a packet, label or plan, and get no rule check.
+Select **3D preview (synthetic)** at the top of the app, or open `/preview.html`. Change the ramp and landing dimensions to update the model and provisional quantities, then drag to rotate, scroll to zoom, and shift-drag or right-drag to pan. These dimensions are made up. They aren't saved, can't reach a packet, label or plan, and get no rule check. If a value is missing or out of range, the model and quantities stay at the last valid revision and are marked **Not updated** until you fix it. The page also lists which inputs are synthetic, which are assumed and what isn't modeled. Where this is headed is in [the roadmap](docs/ROADMAP.md).
 
 ## Background reading
 
