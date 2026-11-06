@@ -1,0 +1,51 @@
+{
+  "source": "Helix Round 2 CornerBrief design session",
+  "session_id": "session_02e5af12a1c04136ad18ea720f168c1c",
+  "snapshot_event_at": "2026-11-06T00:07:19.203Z",
+  "exported_at": "2026-11-06T00:10:06.470389+00:00",
+  "latest_revision": 3,
+  "latest_status": "ready",
+  "implementation_status": "Planned; Round 2 workflow not implemented in this export",
+  "rounds": [
+    {
+      "revision": 1,
+      "concepts": [
+        {
+          "title": "Editorial direction",
+          "file": "concepts/revision-1-concept-1.png",
+          "sha256": "d64a58ba6453ea3b2b1548ebb7635c7e1ba5dbb3e8ad020ce092d44e77ddc1f0"
+        },
+        {
+          "title": "Immersive direction",
+          "file": "concepts/revision-1-concept-2.png",
+          "sha256": "63c69d5f5e7e5dde0a6d97e2a6dd1f213e69813b0682821b1d251e140b5dee6c"
+        },
+        {
+          "title": "Graphic direction",
+          "file": "concepts/revision-1-concept-3.png",
+          "sha256": "dbbcdc5cc306f6d0136026db000375926ce1a8eac36fe119f6763c81473b15b8"
+        }
+      ]
+    },
+    {
+      "revision": 3,
+      "concepts": [
+        {
+          "title": "Editorial direction",
+          "file": "concepts/revision-3-concept-1.png",
+          "sha256": "d56113039e129735ce7d22ca8f0d847f0a5a4306998ad220f8f273442f682bf9"
+        },
+        {
+          "title": "Immersive direction",
+          "file": "concepts/revision-3-concept-2.png",
+          "sha256": "ed52aa5cfecc5403ae3165000fa6664aa924d2a699d0f2b2c61ee9276b4aa855"
+        },
+        {
+          "title": "Graphic direction",
+          "file": "concepts/revision-3-concept-3.png",
+          "sha256": "8adcb8159874d6c222cf30a9ed081a2b01d477bbc063842281a82f83dd58ef81"
+        }
+      ]
+    }
+  ]
+}

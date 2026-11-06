@@ -1,0 +1,171 @@
+{
+  "id": "plan_c091921a7a2146cf9f2b85c5ba480857",
+  "projectId": "project_095a5d19aeed498c85dbb0abb1e1754d",
+  "orchestratorSessionId": "session_02e5af12a1c04136ad18ea720f168c1c",
+  "goal": "Round 2 CornerBrief design: an interactive corner-to-work-package demonstrator that guides an engineer from corner evidence and per-dimension measurement status, through eligible geometry, revision-linked quantities, draft work packages and matched or missing company resources, to recalculation flags. It reuses the existing evidence, parts_kit, takeoff, model_3d and synthetic preview services, keeps actual field evidence visibly separate from labeled demonstration data, and never weakens the evidence, rule, release or off-by-default concept-output gates.",
+  "nodes": [
+    {
+      "id": "r2-design-spec",
+      "title": "Round 2 workflow design spec and data contract",
+      "description": "Write docs/ROUND2-DESIGN.md, the agreed design and interface contract for the Round 2 corner-to-work-package demonstrator. Base it on the current code: cornerbrief/evidence.py labels (measured, assumed, missing, stale; unit_documented), parts_kit.checked_ramps (all-or-nothing, returns [] for the whole corner if any ramp dimension fails), planning.run_planning (no revision; gated in orchestrator.py to label probably standard, which is off by default via SHOW_LABELS_AND_PLANS), crew_sequence.SEQUENCE (fixed list), rates/*.yaml (all status sample placeholders) and preview.py (synthetic sandbox with a sha256 revision over basis_version, inputs and assumptions). Read docs/PRD.md, docs/ROADMAP.md (M2) and README.md first. The doc must contain: (1) the six-step engineer journey: confirm corner and per-dimension measurement status; geometry eligibility; revision-linked quantities; draft work packages (demolition, excavation, forming, concrete, warning_surface, restoration); company resource matching; change and recalculation flags. (2) A current-versus-proposed table for each step, naming the module and the gap it closes. (3) An implements-versus-demonstrates table: the actual path uses real or saved corner evidence and reaches geometry, quantities and packages only when the existing planning gate already produced run planning; otherwise it stops after readiness and names each unresolved dimension. The demonstration path uses the existing synthetic preview inputs and a fictional, labeled sample company register, and every demonstration output is stamped DEMONSTRATION, is never saved and never reaches a run, packet, label, plan, rule check, field measurement, release, download or email. (4) Behavior for missing measurement, unit not documented or not convertible to feet, stale evidence, assumed evidence (for example the real corner 1024569 ramp permit), revised assumption, revised dimension, missing company record and unknown availability or production rate. Rates are never substituted from rates/*.yaml. (5) The JSON contract, with exact field names, for: readiness rows (ramp_id, field, label, status in documented, assumed, unresolved, stale; value, unit, unit_documented, value_ft or null, source, date, reason); the revision basis (basis_version, inputs, assumptions, revision); work packages (id, title, quantities [{item_id, qty, unit}], unresolved_quantities [{name, reason}], depends_on, needs [{kind in crew, equipment, supplier; type}], duration always unknown, review_status, basis_revision); resource matches (need, status in matched, missing record; record_id, source, as_of, availability, production_rate, each unknown when absent, demonstration flag); the workflow response (mode actual or demonstration, data_kind, notice, stages, recalc {superseded_revision, changed_inputs, changed_quantities, packages_needing_review}); and the POST /api/workflow request (run_id or scenario demonstration, inputs, assumptions, previous_basis). (6) A visual design brief for the page: a six-stage rail, a persistent mode banner that distinguishes Actual records from DEMONSTRATION sample data, provenance badges, Not generated and Needs recalculation states, desktop and phone layouts and reduced-motion behavior, with no dollar figures, crew hours or permission words. (7) Milestones: M2a readiness plus shared revision is the first small independently reviewable milestone; then packages and resources, the service, the scaffold, the prototype and docs. (8) Explicit non-goals: the bridge, tower, dome and gear demos stay future examples, the contractor persona is a hypothesis, and no measured time savings are claimed. Do not edit any other file.",
+      "acceptance": [
+        "docs/ROUND2-DESIGN.md exists and covers all eight numbered sections in the description",
+        "The JSON contract names every field that later tasks use for readiness rows, revision basis, work packages, resource matches, the workflow response and the POST /api/workflow request",
+        "The doc states that actual-corner geometry, quantities and packages appear only when run planning already exists under the existing gate, and that demonstration output never reaches a run, packet, label, plan, rule check, release, download or email",
+        "The doc defines behavior for missing, undocumented-unit, non-feet unit, stale, assumed, revised-assumption, revised-dimension, missing-record and unknown-rate cases",
+        "No dollar figures, invented production rates, or claims of validation, compliance or time savings appear in the doc",
+        "Only docs/ROUND2-DESIGN.md is changed"
+      ],
+      "files": [
+        "docs/ROUND2-DESIGN.md"
+      ],
+      "dependsOn": [],
+      "agent": "claude-code",
+      "rationale": "All later tasks share one journey and JSON contract, so it is defined once, up front, by its own owner."
+    },
+    {
+      "id": "r2-readiness-revision",
+      "title": "M2a: per-dimension readiness and shared revision basis",
+      "description": "First small milestone. Follow the contract in docs/ROUND2-DESIGN.md. (a) Add cornerbrief/readiness.py with dimension_status(evidence) that returns one row per ramp per required dimension (ramp_width, ramp_length, lnd_width, lnd_length, ramp_running_slope_total), mapping evidence labels to statuses: measured with a documented in or ft unit becomes documented with value_ft; measured with an undocumented unit, or a unit that cannot be converted to feet or percent, becomes unresolved with a reason naming the unit; missing (including 999 placeholders and absent fields) becomes unresolved; assumed stays assumed; stale stays stale. Each row keeps source, date and reason, and nothing is filled in. Also add eligible_ramps(evidence), which returns parts_kit.checked_ramps(evidence) unchanged, plus a list of blocking rows. Do not change parts_kit.checked_ramps or weaken any gate. (b) Add cornerbrief/revision.py with basis_revision(basis_version, inputs, assumptions), which returns the revision basis dict, using the exact hashing preview.py uses now (sha256 over sorted JSON, first 8 hex chars). Refactor preview.py to call it so every existing preview revision stays byte-identical. (c) In planning.run_planning, add a revision basis built from the eligible ramp dimensions, the kit assumptions used and a planning basis version, exposed as planning['basis'] and planning['revision']. Do not change when planning runs. (d) Add tests/test_readiness.py with regression tests that reproduce each gap: a corner with one stale ramp_length still reports the other four dimensions as documented, names the stale one and its reason, and checked_ramps still returns []; an undocumented unit gives unresolved with a unit reason; a 999 placeholder gives unresolved; the saved real corner real_test reports its ramp dimensions as assumed, with the post-survey ramp permit reason; sample corner C reports stale rows; run_planning output now carries a revision that changes when one dimension changes or when kit assumption slab_thickness_in is monkeypatched, and stays the same for identical inputs; the preview revision for the existing GOOD inputs is unchanged from before the refactor (assert the same value the old inline formula gives). The full suite python -m pytest -q must pass.",
+      "acceptance": [
+        "dimension_status returns per-dimension rows with status documented, assumed, unresolved or stale, plus source, unit, date and reason, and never invents a value",
+        "checked_ramps behavior and every existing planning or label gate are unchanged: existing tests in tests/test_flow.py, test_v3.py, test_p1.py and test_bugfixes.py pass unmodified",
+        "run_planning output includes basis and revision; the revision changes on a dimension or assumption change and is stable for identical inputs",
+        "Preview revisions are identical before and after the refactor, and tests/test_preview.py passes unmodified",
+        "tests/test_readiness.py contains a failing-before, passing-after regression for the all-or-nothing gap and the missing planning revision gap",
+        "python -m pytest -q passes"
+      ],
+      "files": [
+        "cornerbrief/readiness.py",
+        "cornerbrief/revision.py",
+        "cornerbrief/preview.py",
+        "cornerbrief/planning.py",
+        "tests/test_readiness.py"
+      ],
+      "dependsOn": [
+        "r2-design-spec"
+      ],
+      "agent": "codex",
+      "rationale": "This is the smallest independently reviewable milestone and closes the per-dimension uncertainty and revision-basis gaps that every later stage needs."
+    },
+    {
+      "id": "r2-work-packages-resources",
+      "title": "Draft work packages and company resource matching",
+      "description": "Follow the contract in docs/ROUND2-DESIGN.md. (a) Add cornerbrief/work_packages.py with build_packages(takeoff, basis_revision), which returns six draft packages (demolition, excavation, forming, concrete, warning_surface, restoration) built from takeoff item ids (removal_area, slab_area, curb_length, concrete_volume, dws_area and so on), with explicit quantities and units, depends_on ordering, needs (crew, equipment or supplier types), duration always unknown and review_status draft, needs engineer review. Quantities the takeoff does not model, such as excavation depth or volume, base material and restoration extent, go in unresolved_quantities with a reason, never a number. Do not edit crew_sequence.py; it stays for the existing gated planning path. (b) Add cornerbrief/resources.py with load_register(path) and match_resources(packages, register). A register record has id, kind, provides, source, as_of, an optional availability, an optional production_rate and a demonstration flag. Each need returns matched with its record or missing record. availability and production_rate are unknown when absent. The module must never read rates/*.yaml or call rules.load_rates. No register means every need is missing record. (c) Add data/demo/company_resources_demo.yaml, a fictional sample register marked demonstration: true on every record and labeled DEMONSTRATION SAMPLE, not a real company. Its coverage is deliberately partial: at least one need per kind is missing, and no record has a production rate. (d) Add tests/test_work_packages.py: packages come from the takeoff, not a fixed list, so changing slab_area changes the concrete and forming quantities, while warning_surface follows dws_area only; every package has duration unknown, a draft review status and the basis revision; excavation reports unresolved quantities; a missing register gives all missing records; monkeypatching rules.load_rates to raise proves rates are never read; a demo record without a rate reports unknown; every demo match carries demonstration true; the output has no dollar signs, crew hours or permission words (compliant, approved, allowed, safe). The full suite python -m pytest -q must pass.",
+      "acceptance": [
+        "build_packages returns the six named packages with quantities from the takeoff, dependencies, unknown durations, draft review status and the basis revision",
+        "Unmodeled quantities appear as unresolved with reasons, not numbers",
+        "match_resources never reads rates/*.yaml, and missing records, availability and production rates show as missing or unknown",
+        "The demo register is fictional, every record is flagged demonstration, and it leaves at least one crew, equipment and supplier need unmatched",
+        "tests/test_work_packages.py reproduces the fixed-sequence gap and the placeholder-rate gap",
+        "python -m pytest -q passes"
+      ],
+      "files": [
+        "cornerbrief/work_packages.py",
+        "cornerbrief/resources.py",
+        "data/demo/company_resources_demo.yaml",
+        "tests/test_work_packages.py"
+      ],
+      "dependsOn": [
+        "r2-design-spec"
+      ],
+      "agent": "claude-code",
+      "rationale": "This closes the fixed-sequence and placeholder-rate gaps, and it can run in parallel with M2a because it only consumes a takeoff dict and a revision string."
+    },
+    {
+      "id": "r2-workflow-service",
+      "title": "Read-only workflow service and API",
+      "description": "Follow the contract in docs/ROUND2-DESIGN.md. Add cornerbrief/workflow.py, which assembles the six stages from the existing services: readiness.dimension_status and eligible_ramps, revision.basis_revision, takeoff and model_3d through the existing planning output, work_packages.build_packages and resources.match_resources. Actual mode takes a run (load_run or a sample analyzed in memory). It always shows readiness rows, data_kind (SAMPLE DATA or NYC Open Data, as stored) and geometry eligibility. It shows geometry, quantities, packages and resources only when run['planning'] exists, so the existing SHOW_LABELS_AND_PLANS, review and evidence gates decide. Otherwise it returns not_generated reasons that name each unresolved, assumed or stale dimension, or say that concept outputs are off by default. Actual mode uses no company register, so every need is missing record. Demonstration mode takes synthetic dimensions validated by preview.check_inputs, plus optional overrides of kit assumption ids that are validated, positive and finite. It builds parts, takeoff and a revision basis with the same code and uses data/demo/company_resources_demo.yaml. Every demonstration stage carries mode demonstration and a notice. Add recalc(previous_basis, current), which lists changed inputs, changed quantity item ids, and the packages whose quantities depend on them as needs recalculation and renewed review, with the superseded revision. Add POST /api/workflow to cornerbrief/app.py using _body origin checks, plus GET /api/workflow/scenarios listing the available corners and the demonstration. The service must be read-only: it writes no files, saves no run, changes no evidence, label, planning or approval, and its output can't be used to release or download. Apply redact(hide_cost=True) and hide dollars. Add tests/test_workflow.py: real_test reports blocked geometry that names its assumed dimensions; sample C names stale and placeholder dimensions; with the existing fully_reviewed style setup (labels on), sample A reaches packages whose quantities match its planning takeoff; demonstration with slab_thickness_in changed flags concrete_volume and the concrete package but not warning_surface; a ramp width change flags every dependent package; a missing company record is reported; a demonstration call leaves the runs directory and every run byte-identical; demonstration values never appear as measured; responses contain no dollars or permission words; invalid input gives 400 with field problems; a cross-origin POST gives 403. The full suite python -m pytest -q must pass.",
+      "acceptance": [
+        "Actual corners show per-dimension readiness, and they show geometry, quantities and packages only when run planning exists under the existing gate",
+        "The real corner 1024569 and sample corner C show not-generated geometry, naming each blocking dimension and its reason",
+        "Demonstration responses are stamped demonstration at every stage and use only synthetic inputs and the fictional demo register",
+        "Changing one assumption or dimension returns the superseded revision and exactly the affected quantity ids and packages",
+        "The API is read-only, origin-checked, redacted and dollar-free; tests prove that runs and evidence are unchanged after demonstration calls",
+        "python -m pytest -q passes"
+      ],
+      "files": [
+        "cornerbrief/workflow.py",
+        "cornerbrief/app.py",
+        "tests/test_workflow.py"
+      ],
+      "dependsOn": [
+        "r2-readiness-revision",
+        "r2-work-packages-resources"
+      ],
+      "agent": "codex",
+      "rationale": "One Python service connects the stages and enforces the actual-versus-demonstration boundary before any UI consumes it."
+    },
+    {
+      "id": "r2-workflow-scaffold",
+      "title": "Visual scaffold for the workflow page",
+      "description": "Implement only after the Round 2 visual design revision is approved in Helix; follow the approved design and the visual brief in docs/ROUND2-DESIGN.md. Add cornerbrief/static/workflow.html, the static structure of the corner-to-work-package page: a header that matches index.html, a persistent mode banner region with distinct Actual records and DEMONSTRATION sample data treatments, a six-stage rail (Corner evidence, Geometry eligibility, Quantities and revision, Draft work packages, Company resources, Changes and recalculation), and a section per stage with empty and Not generated states and aria labels. Add a provenance legend (documented, assumed, unresolved, stale, synthetic, demonstration sample), a recalculation-flag region with role alert, and a script tag for /workflow.js (the file is created by a later task; do not create it). Extend cornerbrief/static/style.css with the workflow styles and a prefers-reduced-motion block, and do not change existing selectors' appearance on index.html or preview.html. Add a link from cornerbrief/static/index.html to workflow.html, beside the existing 3D preview link. Add tests/test_workflow_page.py, which serves the page through the Starlette app with no browser and asserts the stage rail, mode banner, legend, reduced-motion CSS and index link exist, and that the page contains no dollar signs or permission words. The full suite python -m pytest -q must pass, including the existing browser tests if Playwright is installed.",
+      "acceptance": [
+        "workflow.html shows the six named stages, a mode banner with distinct actual and demonstration styles, a provenance legend and a recalculation alert region",
+        "The main page links to the workflow page, and existing index.html and preview.html styles and browser tests are unchanged",
+        "style.css includes a prefers-reduced-motion rule for the workflow page",
+        "tests/test_workflow_page.py passes, and python -m pytest -q passes",
+        "The work follows the approved Helix design revision, with no implementation before that approval"
+      ],
+      "files": [
+        "cornerbrief/static/workflow.html",
+        "cornerbrief/static/style.css",
+        "cornerbrief/static/index.html",
+        "tests/test_workflow_page.py"
+      ],
+      "dependsOn": [
+        "r2-design-spec"
+      ],
+      "agent": "claude-code",
+      "rationale": "Under the visual-first workflow, an approved visual scaffold comes before the interactive implementation, and it only needs the design spec."
+    },
+    {
+      "id": "r2-workflow-prototype",
+      "title": "Interactive Round 2 prototype, Output export and browser evidence",
+      "description": "Sole owner of .helix/output/**. Add cornerbrief/static/workflow.js, which renders /api/workflow responses into the scaffold. The engineer chooses an actual corner (sample A, B and C labeled SAMPLE DATA; real corner 1024569 labeled NYC Open Data, saved records) or the Demonstration. The page shows per-dimension status rows with source, unit and reason; not-generated geometry, naming the blocking dimensions; the 3D model drawn with the existing preview renderer approach (reuse the projection code pattern from preview.js without editing preview.js), stamped DEMONSTRATION or showing revision; a quantities table with revision; package cards with quantities, unresolved quantities, dependencies, unknown durations and the draft review status; resource matches with matched or missing record and unknown availability or rate; and, after an edit to a demonstration dimension or assumption, a recalculation panel listing the superseded revision, changed inputs, changed quantities and packages needing renewed review. Include late-response guards like app.js, keyboard access, readable errors and reduced-motion support. Update scripts/export_ui.py so that, besides the existing index.html and preview.html, it writes .helix/output/workflow.html: the actual workflow.html with style.css and workflow.js inlined, and window.CORNERBRIEF_WORKFLOW_EXPORT holding Python-built snapshots from cornerbrief.workflow (each actual corner, the demonstration baseline, a demonstration with slab_thickness_in revised, one with ramp width revised, and their recalc results against the baseline). In the export, edits switch only between these precomputed revisions and say that live edits need the local backend. The export makes no network requests, the exported index links to workflow.html with a relative URL, and it contains no credentials or source maps. Run python scripts/export_ui.py and include the regenerated .helix/output files. Add tests/test_browser_workflow.py (Playwright and Chromium, like tests/test_browser.py): stage navigation; the real corner shows blocked geometry, naming its assumed dimensions; demonstration edits update the model, quantities and recalc flags; an invalid value is named and keeps the last revision as Not updated; the DEMONSTRATION banner is visible on every demonstration stage; no request reaches /api/runs/*/approve, field, download or email from the workflow page; the static export loads with no backend requests and switches precomputed revisions; there are no console errors; reduced motion is emulated; and there are desktop and phone layouts. Install Playwright and Chromium so these tests run rather than skip, and report the counts. Save screenshots to docs/evidence/round2-workflow/ (actual real corner readiness, blocked geometry, demonstration packages and resources, recalculation after an assumption change, invalid input, phone, and the static export) and list them in docs/evidence/round2-workflow/README.md. Then publish a Helix design checkpoint for the committed worker turn with a recommendation and a reducedMotion note.",
+      "acceptance": [
+        "In a real browser, an engineer can step through all six stages for the real corner 1024569 and the Demonstration",
+        "Demonstration dimension and assumption edits update the model, quantities, packages and a recalculation panel that names the superseded revision, changed inputs, quantities and packages",
+        "Every demonstration stage shows the DEMONSTRATION banner, and the browser tests prove that no approve, field, download or email request is made from the workflow page",
+        ".helix/output/workflow.html is generated by scripts/export_ui.py from the actual app sources and Python-built snapshots, loads with no network requests, and index.html and preview.html exports still work",
+        "tests/test_browser_workflow.py runs (not skipped) in Chromium and passes, and python -m pytest -q passes",
+        "docs/evidence/round2-workflow/ contains the listed screenshots, including phone and reduced-motion runs, with a README describing each"
+      ],
+      "files": [
+        "cornerbrief/static/workflow.js",
+        "scripts/export_ui.py",
+        ".helix/output/**",
+        "tests/test_browser_workflow.py",
+        "docs/evidence/round2-workflow/**"
+      ],
+      "dependsOn": [
+        "r2-workflow-service",
+        "r2-workflow-scaffold"
+      ],
+      "agent": "claude-code",
+      "rationale": "The user asked for one task owning the interactive prototype, its actual-source Output export, real browser verification and screenshot evidence."
+    },
+    {
+      "id": "r2-docs-status",
+      "title": "Update README, roadmap and PRD status for Round 2",
+      "description": "After the prototype merges, update README.md with a short Corner-to-work-package workflow section: how to open it, what is actual and what is demonstration, and its limits (the demo register is fictional, durations and rates are unknown, actual-corner geometry stays behind the existing gate, and no user validation has been done). Update the M2 table in docs/ROADMAP.md, and the section 8 milestone row in docs/PRD.md, with the status of each M2 criterion (met, partly met or proposed) and the test names and screenshot paths that support it, as M1 does. Do not claim time savings, contractor validation, compliance or real company data. Edit only these three files.",
+      "acceptance": [
+        "README.md describes how to use the workflow page and its actual-versus-demonstration boundary and limits",
+        "In docs/ROADMAP.md, every M2 row has a status and evidence that names actual test functions or screenshot files that exist",
+        "docs/PRD.md section 8 reflects the new M2 status without changing any requirement gate",
+        "No claim of time savings, persona validation, compliance or real company resources is made"
+      ],
+      "files": [
+        "README.md",
+        "docs/ROADMAP.md",
+        "docs/PRD.md"
+      ],
+      "dependsOn": [
+        "r2-workflow-prototype"
+      ],
+      "agent": "codex",
+      "rationale": "User-facing docs and the roadmap should describe only what was actually built and verified."
+    }
+  ],
+  "createdAt": "2026-11-06T00:00:06.874Z"
+}
