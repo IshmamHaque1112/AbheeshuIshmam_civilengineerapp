@@ -1,12 +1,11 @@
 """Synthetic 3D exploration. Nothing here is evidence, and nothing here reaches a packet, a label or a plan."""
-import hashlib, json, math
+import math
 from .model_3d import build_scene
 from .parts_kit import build_parts
+from .revision import MODEL_VERSION, revision as make_revision
 from .takeoff import build_takeoff
 
-# Bump when the geometry or takeoff math changes, so the same inputs then get a new revision.
-# 2: the warning surface is capped at the ramp length.
-BASIS_VERSION = 2
+BASIS_VERSION = MODEL_VERSION
 NOTICE ="Synthetic exploration: these dimensions were typed in, not measured. This isn't field evidence, a design or a rule check."
 FIELDS = {
     "width_ft": dict(label="Ramp width", unit="ft", low=1, high=20, default=5),
@@ -81,10 +80,7 @@ def build_preview(raw) -> dict:
     width = max(values["width_ft"], values["landing_width_ft"])
     depth = values["length_ft"] + values["landing_length_ft"]
     scene["center"], scene["radius"] = [values["width_ft"] / 2, depth / 2, 0], max(width, depth) + 8
-    # The revision covers everything the quantities depend on: the dimensions, the assumptions
-    # actually used and the version of the geometry and takeoff code. Same basis, same revision.
-    fingerprint = dict(basis_version=BASIS_VERSION, inputs=values, assumptions=used)
-    revision = hashlib.sha256(json.dumps(fingerprint, sort_keys=True).encode()).hexdigest()[:8]
+    revision = make_revision(BASIS_VERSION, values, used)
     basis = dict(synthetic=[f"{FIELDS[k]['label']} {values[k]:g} {FIELDS[k]['unit']}" for k in FIELDS],
                  assumed=[ASSUMED.get(x["id"], x["id"].replace("_", " ") + " {:g}").format(x["value"]) for x in takeoff["assumptions"]],
                  unknown=list(NOT_MODELED))
