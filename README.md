@@ -63,7 +63,7 @@ To print the results without the browser, run `python scripts/run_demo.py`.
 
 ## Add site measurements and rerun
 
-Under **Add site measurements**, enter who measured, the date and any values you have, with an optional photo for each. **Rerun the check** then shows what changed. Each value is labeled as measured on site. A value measured before the corner's latest construction stays stale.
+Under **Add site measurements**, enter who measured, the date and any values you have, with an optional photo for each. **Rerun the check** then shows what changed. Each value is labeled as measured on site. A value measured before the corner's latest construction, before ramp permit work at that ramp could end, or before the survey it replaces stays stale.
 
 Each rerun creates a new packet that needs its own release. The tab keeps showing the newest version when you switch corners or reload, and **Start over from the original records** clears it. A new tab starts from the original records. In demo mode, a rerun still runs every Python check, but the Skeptic review doesn't run, because the saved responses describe the original records. No label or plan can appear until a review finishes.
 
@@ -116,7 +116,7 @@ The official data dictionary gives lengths in inches and slopes and flares in pe
 
 **Swapped columns:** Open Data's `ramp_length` and `ramp_left_flare` columns are swapped. All 300 ramps sampled on November 5, 2026 matched DOT's survey map only when swapped, so the app reads them corrected. That explains the negative lengths, since negative flares are a direction. If DOT's survey map disagrees for a ramp, the packet says so.
 
-A pedestrian ramp permit after the survey labels that ramp's measurements assumed only when its location ties it to the ramp: its point is within 30 m and its corner note, such as SW, fits. Other permits, including ramp permits that only share the block's street names, add a site-visit item. Permit holder names aren't saved. If a lookup fails, the packet says that dataset wasn't checked.
+A pedestrian ramp permit after the survey labels that ramp's measurements assumed only when its location ties it to the ramp: its point is within 30 m and its corner note, such as SW, fits. Other permits, including ramp permits that only share the block's street names, add a site-visit item. Permit holder names aren't saved. If a lookup fails, the packet says that dataset wasn't checked. NYC responses are saved in `cache/nyc` for 7 days. With no connection, an older saved response is used, and the packet shows when it was retrieved.
 
 Legal grade and H-1011 ramp type still come from a person. Sidewalk width starts from DOT's approach width, read as inches and labeled assumed, because no document gives its unit. A site measurement replaces it.
 

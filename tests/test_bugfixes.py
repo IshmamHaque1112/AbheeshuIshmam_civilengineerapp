@@ -302,3 +302,21 @@ def test_fetch_handles_text_in_number_fields():
     assert fetch.classify([dict(ramp_width="n/a", geocyclora="2020-01-01")], []) == "missing_or_stale"
     rows = fetch.num([dict(cornerid="", rampid="7")])
     assert rows[0]["cornerid"] is None and rows[0]["rampid"] == 7
+
+
+def test_banner_matches_when_one_rule_is_reviewed(monkeypatch):
+    import cornerbrief.orchestrator as orchestrator
+    from cornerbrief.data_loader import load_corner
+    from cornerbrief.llm import ReplayClient
+    original = orchestrator.load_rules
+
+    def one_reviewed(*args, **kwargs):
+        rules = original(*args, **kwargs)
+        for rule in rules:
+            if rule["id"] == "NYC-ADMIN-19-112-SLOPE":
+                rule.update(status="verified", reviewed_by="Test Person")
+        return rules
+
+    monkeypatch.setattr(orchestrator, "load_rules", one_reviewed)
+    run = orchestrator.analyze(load_corner("standard"), client=ReplayClient("standard"), save=False)
+    assert "every limit result stays unknown" not in run["state_reason"] and "marked unreviewed" in run["state_reason"]

@@ -350,3 +350,45 @@ def test_ada_rules_quote_ada_gov_and_stay_unreviewed():
 
 def test_sample_corners_do_not_change():
     assert not [n for n in join_report(copy.deepcopy(load_corner("standard"))) if "Centerline" in n or "Permits" in n]
+
+
+def test_old_site_measurement_stays_stale():
+    corner = real(permits=[ramp_permit("SW")], the_geom=RAMP_NEAR)
+    for when, words in (("2020-01-01", "before work under a pedestrian ramp permit"), ("2022-12-31", "before the 2023-01-01 survey")):
+        width = item(evidence_of(corner if "permit" in words else real(), [dict(key="2:ramp_width", value=60, unit="in", date=when, by="A B")]), "ramp_width")
+        assert width.label == "stale" and words in width.reason
+    width = item(evidence_of(corner, [dict(key="2:ramp_width", value=60, unit="in", date="2024-05-01", by="A B")]), "ramp_width")
+    assert width.label == "measured" and width.reason == "Measured on site."
+
+
+def test_map_service_sources_are_named():
+    get = search.fetch.get
+    try:
+        search.fetch.get = lambda url: {"features": []}
+        assert search.esri_rows(search.fetch.DOT_SURVEY, {"f": "json"})[1]["dataset"] == "CMT_SURVEY_COMPLIANCY_TOLERANCE_PROD"
+        assert search.esri_rows(search.fetch.ROAD_INVENTORY, {"f": "json"})[1]["dataset"] == "RoadwayData"
+    finally:
+        search.fetch.get = get
+
+
+def test_saved_responses_expire_but_cover_an_outage(tmp_path, monkeypatch):
+    import os, time
+    monkeypatch.setattr(search.fetch, "ROOT", tmp_path)
+    calls = []
+    def download(url):
+        calls.append(url)
+        if len(calls) > 1:
+            raise OSError("offline")
+        return [1]
+    monkeypatch.setattr(search.fetch, "_download", download)
+    assert search.fetch.get("u") == [1] and search.fetch.get("u") == [1] and len(calls) == 1
+    path = next((tmp_path / "cache" / "nyc").iterdir())
+    old = time.time() - 8 * 86400
+    os.utime(path, (old, old))
+    assert search.fetch.get("u") == [1] and len(calls) == 2
+
+
+def test_field_errors_use_plain_names():
+    from cornerbrief.field import _value
+    with pytest.raises(ValueError, match="running slope"):
+        _value("ramp_running_slope_total", "abc")

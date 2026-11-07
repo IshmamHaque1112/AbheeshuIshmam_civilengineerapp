@@ -1,7 +1,7 @@
 """Check and store what an engineer measured on site. No AI here."""
 import base64, math, uuid
 from datetime import date
-from .evidence import NOT_IN_DATASETS, parse_date
+from .evidence import NOT_IN_DATASETS, input_name, parse_date
 from .paths import RUNS
 
 # These units are fixed for entries made on site, so they don't depend on the dataset's undocumented units.
@@ -48,21 +48,22 @@ def save_photo(photo: dict) -> str:
 
 
 def _value(field: str, raw):
+    name = input_name(field).lower()
     if field in CHOICES:
         if raw not in CHOICES[field]:
-            raise ValueError(f"{raw} isn't one of the choices for {field}.")
+            raise ValueError(f"{raw} isn't one of the choices for {name}.")
         return raw
     if isinstance(raw, bool):
-        raise ValueError(f"The value for {field} must be a number.")
+        raise ValueError(f"The value for {name} must be a number.")
     try:
         number = float(raw)
     except (TypeError, ValueError) as exc:
-        raise ValueError(f"The value for {field} must be a number.") from exc
+        raise ValueError(f"The value for {name} must be a number.") from exc
     if not math.isfinite(number) or number in PLACEHOLDERS:
-        raise ValueError(f"{raw} is outside the plausible range for {field}.")
+        raise ValueError(f"{raw} is outside the plausible range for {name}.")
     low, high = LENGTH_RANGES.get(field, SLOPE_RANGE)
     if not low <= (number if field in LENGTH_RANGES else abs(number)) <= high:
-        raise ValueError(f"{raw} is outside the plausible range for {field}.")
+        raise ValueError(f"{raw} is outside the plausible range for {name}.")
     return number
 
 

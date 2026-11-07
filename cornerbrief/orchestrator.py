@@ -54,6 +54,8 @@ def decide_state(sufficient, corner, outcomes, review_status) -> tuple[str, str]
         return STOP, "A calculated value is above a limit, and no recorded constraint explains why. An engineer should look at this corner."
     note = " The saved agent review wasn't reused, because the inputs changed." if review_status == "not run" else ""
     if any(o.preview for o in outcomes):
+        if any(o.result in ("no conflict found", "limit exceeded") for o in outcomes):
+            return CHECKS, f"The records support these calculations. Results marked unreviewed stay unknown until a named person reviews their rules. This isn't permission to proceed.{note}"
         return CHECKS, f"The records support these calculations, but no named person has reviewed the rules, so every limit result stays unknown. This isn't permission to proceed.{note}"
     return CHECKS, f"The evidence supports the checks below. An engineer still decides what they mean, so this isn't permission to proceed.{note}"
 

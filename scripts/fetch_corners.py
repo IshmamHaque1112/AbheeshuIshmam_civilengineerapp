@@ -35,12 +35,23 @@ REFRESH = {"on": False}
 REQUIRED = ["ramp_running_slope_total", "ramp_cross_slope", "ramp_width", "ramp_length", "lnd_width", "lnd_length", "lnd_cross_slope", "curb_reveal"]
 
 
+CACHE_DAYS = 7
+
+
 def get(url):
+    """Use a saved response for up to a week, then download again. With no connection, an older saved response is used
+    rather than failing, and the packet's retrieval time still shows when it was saved."""
     key = hashlib.sha256(url.encode()).hexdigest()
     path = ROOT / "cache" / "nyc" / f"{key}.json"
-    if path.exists() and not REFRESH["on"]:
+    fresh = path.exists() and time.time() - path.stat().st_mtime < CACHE_DAYS * 86400
+    if fresh and not REFRESH["on"]:
         return json.loads(path.read_text(encoding="utf-8"))
-    data = _download(url)
+    try:
+        data = _download(url)
+    except Exception:
+        if path.exists() and not REFRESH["on"]:
+            return json.loads(path.read_text(encoding="utf-8"))
+        raise
     path.parent.mkdir(parents=True, exist_ok=True)
     # Concurrent browser requests must never read a half-written cache entry.
     with tempfile.NamedTemporaryFile(mode="w", encoding="utf-8", dir=path.parent, delete=False) as temporary:

@@ -48,7 +48,7 @@ def esri_rows(url, params):
     raw = fetch.get(full)
     if not isinstance(raw, dict) or not isinstance(raw.get("features"), list):
         raise RuntimeError("The map service returned an unexpected response.")
-    return [f.get("attributes") or {} for f in raw["features"]], dict(dataset=url.split("/rest/services/")[1].split("/")[1], url=full, retrieved_at=datetime.now(timezone.utc).isoformat(),
+    return [f.get("attributes") or {} for f in raw["features"]], dict(dataset=re.search(r"/rest/services/(?:[^/]+/)*?([^/]+)/(?:FeatureServer|MapServer)/", url).group(1), url=full, retrieved_at=datetime.now(timezone.utc).isoformat(),
                                                                        note="Cached response when available.")
 
 

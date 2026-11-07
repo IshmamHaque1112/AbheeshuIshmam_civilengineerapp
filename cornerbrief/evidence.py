@@ -275,12 +275,20 @@ def input_name(field: str, ramp_id=None) -> str:
     return f"Ramp {ramp_id} {name}" if ramp_id else name[0].upper() + name[1:]
 
 
-def _on_site(item: EvidenceItem, entry: dict, built) -> EvidenceItem:
-    """Replace a record with what a person measured. A measurement from before the latest construction is still stale."""
-    stale = is_stale(entry["date"], built)
+def _on_site(item: EvidenceItem, entry: dict, built, survey=None, permit_end=None) -> EvidenceItem:
+    """Replace a record with what a person measured. A measurement older than the record it replaces, the latest
+    construction or the end of ramp work at this ramp can't show the ramp as it is now, so it stays stale."""
+    measured = entry["date"]
+    reason = None
+    if is_stale(measured, built):
+        reason = f"Measured on site {measured}, but construction finished {built}."
+    elif is_stale(measured, permit_end):
+        reason = f"Measured on site {measured}, before work under a pedestrian ramp permit at this ramp could end on {permit_end}."
+    elif is_stale(measured, survey):
+        reason = f"Measured on site {measured}, before the {survey} survey it would replace."
     return item.model_copy(update=dict(value=entry["value"], unit=entry["unit"], unit_documented=True, on_site=True, photo=entry.get("photo"),
-                                       label="stale" if stale else "measured", source=f"Measured on site by {entry['by']}", date=entry["date"],
-                                       reason=f"Measured on site {entry['date']}, but construction finished {built}." if stale else "Measured on site."))
+                                       label="stale" if reason else "measured", source=f"Measured on site by {entry['by']}", date=measured,
+                                       reason=reason or "Measured on site."))
 
 
 def build_evidence(corner: dict, dictionary: dict, field: list[dict] | None = None) -> list[EvidenceItem]:
@@ -326,7 +334,8 @@ def build_evidence(corner: dict, dictionary: dict, field: list[dict] | None = No
                                 unit=spec["unit"], unit_documented=spec["unit_status"] == "documented",
                                 label=label, source=f"Pedestrian Ramp Locations, ramp {ramp}", date=survey,
                                 reason=reason)
-            items.append(_on_site(item, entries[item.key], built) if item.key in entries else item)
+            permit_end = max((str(p.get("issuedworkenddate"))[:10] for p in ramp_work), default=None)
+            items.append(_on_site(item, entries[item.key], built, survey, permit_end) if item.key in entries else item)
     for row in rows:
         ramp = str(row.get("rampid"))
         fields = {e.field: e for e in items if e.ramp_id == ramp}
