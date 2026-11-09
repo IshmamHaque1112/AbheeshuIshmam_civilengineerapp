@@ -3,6 +3,7 @@ uvicorn>=0.27
 pydantic>=2.6
 pyyaml>=6.0
 pytest>=8.0
+httpx2>=2.0  # starlette's TestClient needs this for tests/test_m3_m4.py
 truststore  # Lets Python use the system certificate store, which NYC data needed on Windows
 # Optional packages:
 # anthropic   needed for live agents
