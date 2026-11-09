@@ -1,0 +1,24 @@
+id: H1011-S3-GUTTER-MIN
+title: H-1011 parallel ramp gutter flow slope minimum
+jurisdiction: nyc
+authority_type: agency_standard
+applies_to:
+- corner_ramp_row
+parameter: null
+operator: reference
+limit: null
+unit: null
+stage: general
+source_document: NYC DOT Standard Details of Construction, Drawings H-1011-3, H-1011-4 and H-1011-5
+edition: Drawings H-1011-3 to H-1011-5, issued 6/06/2022
+effective_date: Issued 6/06/2022
+section: Sheet 3 note 8, sheet 4 note 9, sheet 5 note 6
+url: https://www.nycstreetdesign.info/sites/default/files/specs/H-1011-3.pdf
+quote: CASE C3 GUTTER FLOW SLOPE SHALL NOT BE LESS THAN 0.5%
+retrieved_on: '2026-11-09'
+status: unreviewed
+reviewed_by: null
+notes: Read by Claude from the PDF in docs/sources on 2026-11-09; see docs/sources/H-1011-sheets-2-9.md.
+  Human review is still pending. Cases C3, C4 and M2 need a gutter flow slope of at least 0.5%. The dataset's
+  gutter slope is not tied to a case drawing, so this is not checked as a number.
+reviewed_on: null

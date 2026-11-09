@@ -214,7 +214,7 @@ Still open:
 | Queens section map for legal grade (718-286-2930) | Ishmam |
 | Should the packet show DOT's survey status? It is labeled as DOT's own record. | Both |
 | Which civil engineer reviews the rules and packets before Nov 12? | Abheeshu |
-| H-1011 sheets 2–9 and ADA sections on ada.gov | Ishmam |
+| Check the H-1011 sheets 2–9 transcription (`docs/sources/H-1011-sheets-2-9.md`) and decide which details become checks | Ishmam, then the reviewer |
 | Manual-check baseline time | Both, this week |
 | R28 adversarial suite and the R4 change | Ishmam (code), to agree |
 | Which real estimators or project engineers can test the contractor persona (section 8)? | Abheeshu, to agree |

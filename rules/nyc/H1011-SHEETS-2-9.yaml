@@ -19,4 +19,8 @@ retrieved_on: null
 status: needs_source
 reviewed_by: null
 reviewed_on: null
-notes: All sheets are listed with their links in docs/sources/README.md. They have not been transcribed, because the PDFs hold drawings without readable text, so case-specific details are not checked.
+notes: Sheets 2 to 9 were transcribed by Claude on 2026-11-09 in docs/sources/H-1011-sheets-2-9.md, and
+  four reference rules (H1011-S2-C2-TABLE2, H1011-S4-C4-C5-APPROVAL, H1011-S3-GUTTER-MIN, H1011-S9-DWS-LENGTH)
+  now cite them. No person has checked the transcription, and the case-by-case dimensions are not yet
+  turned into checks, so this rule stays open and keeps the label off until a reviewer confirms the transcription
+  and decides which details become checks.

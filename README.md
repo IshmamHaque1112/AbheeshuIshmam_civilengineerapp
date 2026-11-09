@@ -181,7 +181,7 @@ Regular code handles data checks, rule selection, limit checks, geometry, quanti
 
 These return "unknown" until a person adds the exact text and limit:
 
-- H-1011 sheets 2 to 9, so case-specific details aren't checked. [`docs/sources/README.md`](docs/sources/README.md) links each sheet.
+- H-1011 sheets 2 to 9. They are saved and transcribed in [`docs/sources/H-1011-sheets-2-9.md`](docs/sources/H-1011-sheets-2-9.md), but no person has checked the transcription, and their case-specific details aren't checked as numbers. Four unreviewed reference rules cite them.
 - 2025 NYS Building Code and Residential Code limits. These don't apply to NYC corners.
 
 H-1011 Table 1 and its general notes come from `docs/sources/H-1011-1.pdf`. Surveyed ramps are compared with its work acceptance limits. Its stricter design limits appear only under "If this corner is rebuilt." The ADA rules quote ada.gov.

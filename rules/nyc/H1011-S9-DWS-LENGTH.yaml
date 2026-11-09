@@ -1,0 +1,25 @@
+id: H1011-S9-DWS-LENGTH
+title: H-1011 detectable warning surface size and placement
+jurisdiction: nyc
+authority_type: agency_standard
+applies_to:
+- corner_ramp_row
+parameter: null
+operator: reference
+limit: null
+unit: null
+stage: general
+source_document: NYC DOT Standard Details of Construction, Drawing H-1011-9
+edition: Drawing H-1011-9, issued 6/06/2022
+effective_date: Issued 6/06/2022
+section: Sheet 9, notes 3, 5 and 7, Detail Z
+url: https://www.nycstreetdesign.info/sites/default/files/specs/H-1011-9.pdf
+quote: D.W.S. MUST BE INSTALLED FOR A MINIMUM LENGTH OF 24 INCHES IN THE DIRECTION OF PEDESTRIAN TRAVEL
+retrieved_on: '2026-11-09'
+status: unreviewed
+reviewed_by: null
+notes: Read by Claude from the PDF in docs/sources on 2026-11-09; see docs/sources/H-1011-sheets-2-9.md.
+  Human review is still pending. The surface must span the full flush curb width, run at least 24 inches
+  deep and sit within 2 inches of the back of curb. The dataset records whether a surface exists but not
+  its size or offset, so this needs a site check.
+reviewed_on: null

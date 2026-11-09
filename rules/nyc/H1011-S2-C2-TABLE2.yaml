@@ -1,0 +1,27 @@
+id: H1011-S2-C2-TABLE2
+title: H-1011 Case C2 directional ramp selection
+jurisdiction: nyc
+authority_type: agency_standard
+applies_to:
+- corner_ramp_row
+parameter: null
+operator: reference
+limit: null
+unit: null
+stage: general
+source_document: NYC DOT Standard Details of Construction, Drawing H-1011-2
+edition: Drawing H-1011-2, issued 6/06/2022
+effective_date: Issued 6/06/2022
+section: Sheet 2, note 11 and Table 2
+url: https://www.nycstreetdesign.info/sites/default/files/specs/H-1011-2.pdf
+quote: CASE C2 SHOULD BE CONSIDERED FOR DESIGN AND LAYOUT IF THE SELECTION CRITERIA IN TABLE 2 BELOW ARE
+  APPLICABLE
+retrieved_on: '2026-11-09'
+status: unreviewed
+reviewed_by: null
+notes: Read by Claude from the PDF in docs/sources on 2026-11-09; see docs/sources/H-1011-sheets-2-9.md.
+  Human review is still pending. For a 5 foot ramp at a 12 foot curb return radius, Table 2 asks for a
+  minimum sidewalk width of 222 minus the angle in inches for angles of 75 to under 96 degrees, and 126
+  inches for 96 to under 120 degrees. The dataset has neither the angle nor the sidewalk width at the
+  ramp, so this needs a site check.
+reviewed_on: null

@@ -1,0 +1,24 @@
+id: H1011-S4-C4-C5-APPROVAL
+title: H-1011 Cases C4 and C5 need NYC DOT approval
+jurisdiction: nyc
+authority_type: agency_standard
+applies_to:
+- corner_ramp_row
+parameter: null
+operator: reference
+limit: null
+unit: null
+stage: general
+source_document: NYC DOT Standard Details of Construction, Drawing H-1011-4
+edition: Drawing H-1011-4, issued 6/06/2022
+effective_date: Issued 6/06/2022
+section: Sheet 4, notes 4 to 6
+url: https://www.nycstreetdesign.info/sites/default/files/specs/H-1011-4.pdf
+quote: WRITTEN APPROVAL MUST BE OBTAINED FROM NYC DOT TO USE CASE C4 OR CASE C5
+retrieved_on: '2026-11-09'
+status: unreviewed
+reviewed_by: null
+notes: Read by Claude from the PDF in docs/sources on 2026-11-09; see docs/sources/H-1011-sheets-2-9.md.
+  Human review is still pending. A shared parallel or blended transition ramp needs written NYC DOT approval,
+  and bollards may be required. No approval record is in the packet, so a C4 or C5 design needs that record.
+reviewed_on: null
