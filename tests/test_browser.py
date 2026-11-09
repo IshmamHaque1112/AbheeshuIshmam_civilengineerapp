@@ -501,21 +501,35 @@ def test_preview_draft_needs_recalculation_until_rebuilt(preview_page):
     assert preview_page.inner_text("#draft-status") != first and "Unknown" in preview_page.inner_text("#draft-steps")
 
 
-def test_contractor_demo_page_is_stamped_and_lists_conflicts(browser, base):
+def test_roadmap_demos_are_hidden_by_default(browser, base):
     pg = browser.new_page(viewport=dict(width=1280, height=900))
+    pg.goto(base + "/")
+    pg.wait_for_selector("#picker button")
+    pg.wait_for_timeout(300)
+    assert pg.locator("#demo-links").is_hidden()
+    assert pg.goto(base + "/demo/contractor.html").status == 404 and pg.goto(base + "/contractor.html").status == 404
+
+
+def test_contractor_demo_page_is_stamped_and_lists_conflicts(browser, base, monkeypatch):
+    monkeypatch.setenv("SHOW_ROADMAP_DEMOS", "true")
+    pg = browser.new_page(viewport=dict(width=1280, height=900))
+    pg.goto(base + "/")
+    pg.wait_for_function("!document.querySelector('#demo-links').hidden")
     errors = []
     pg.on("pageerror", lambda e: errors.append(str(e)))
-    pg.goto(base + "/contractor.html")
+    pg.goto(base + "/demo/contractor.html")
     pg.wait_for_selector("text=4. Team and equipment sequence")
     assert pg.inner_text("#notice").startswith("DEMONSTRATION") and "Conflicts, not resolved" in pg.inner_text("#out")
+    assert pg.locator("#out .demo-chip").count() == 6 and pg.locator("#out .kind.k-fictional").count() > 5 and pg.locator("#out .kind.k-real").count() > 3
     assert "$" not in pg.inner_text("body") and not errors
 
 
-def test_structures_sandbox_draws_every_model(browser, base):
+def test_structures_sandbox_draws_every_model(browser, base, monkeypatch):
+    monkeypatch.setenv("SHOW_ROADMAP_DEMOS", "true")
     pg = browser.new_page(viewport=dict(width=1280, height=900))
     errors = []
     pg.on("pageerror", lambda e: errors.append(str(e)))
-    pg.goto(base + "/structures.html")
+    pg.goto(base + "/demo/structures.html")
     pg.wait_for_selector("#fact-list li")
     for model, word in (("truss", "diagonals"), ("tower", "braces"), ("dome", "65 struts"), ("gears", "not involute")):
         pg.select_option("#model-choice", model)

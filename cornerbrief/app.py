@@ -9,7 +9,7 @@ from starlette.requests import Request
 from starlette.responses import FileResponse, JSONResponse, PlainTextResponse
 from starlette.routing import Mount, Route
 from starlette.staticfiles import StaticFiles
-from .config import labels_enabled, load_env
+from .config import labels_enabled, load_env, roadmap_demos_enabled
 from .data_loader import list_corners
 from .email_delivery import EmailBlocked, allowlist, send_brief
 from . import field as field_module
@@ -88,8 +88,25 @@ async def preview(request: Request):
         return JSONResponse({"error": str(exc), "problems": getattr(exc, "problems", None)}, status_code=400)
 
 
+DEMO_PAGES = {"contractor.html", "contractor.js", "structures.html", "structures.js"}
+
+
+async def demo_status(request: Request):
+    return JSONResponse({"enabled": roadmap_demos_enabled()})
+
+
+async def demo_page(request: Request):
+    """Roadmap demonstration pages exist only while SHOW_ROADMAP_DEMOS=true."""
+    name = request.path_params["name"]
+    if not roadmap_demos_enabled() or name not in DEMO_PAGES:
+        return error("Not found.", 404)
+    return FileResponse(Path(__file__).parent / "static" / "demo" / name)
+
+
 async def contractor(request: Request):
     """Demonstration only (roadmap M3). It reads a corner and never writes a run or a file."""
+    if not roadmap_demos_enabled():
+        return error("Not found.", 404)
     q = request.query_params
     try:
         out = await run_in_threadpool(contractor_demo.build, q.get("corner", "standard"), q.get("start") or None)
@@ -102,6 +119,8 @@ async def contractor(request: Request):
 
 async def structure(request: Request):
     """Illustrative geometry only (roadmap M4). No loads, member sizes or structural checks."""
+    if not roadmap_demos_enabled():
+        return error("Not found.", 404)
     if request.method == "GET":
         return JSONResponse(structures.catalog())
     try:
@@ -219,6 +238,7 @@ routes = [
     Route("/api/search", search_corners),
     Route("/api/reading", reading),
     Route("/api/preview", preview, methods=["GET", "POST"]),
+    Route("/api/demo", demo_status),
     Route("/api/demo/contractor", contractor),
     Route("/api/demo/structures", structure, methods=["GET", "POST"]),
     Route("/api/real/{corner_id}/run", pull_corner, methods=["POST"]),
@@ -230,6 +250,7 @@ routes = [
     Route("/api/runs/{run_id}/download", download),
     Route("/api/runs/{run_id}/site-visit", site_visit),
     Route("/api/runs/{run_id}/email", email, methods=["POST"]),
+    Route("/demo/{name}", demo_page),
     Mount("/", StaticFiles(directory=Path(__file__).parent / "static", html=True)),
 ]
 async def wrong_origin(request: Request, exc: WrongOrigin):

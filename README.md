@@ -73,10 +73,12 @@ Select **3D preview (synthetic)** at the top of the app, or open `/preview.html`
 
 ## Contractor demonstration and structures sandbox
 
-These are roadmap demonstrations, not part of a corner packet.
+These are roadmap demonstrations, not part of a corner packet. They're off by default. Set `SHOW_ROADMAP_DEMOS=true` in `.env` and restart to show them; otherwise their pages and links don't exist.
 
-- **Contractor demonstration** (`/contractor.html`, roadmap M3): an opportunity brief, capability match, draft logistics, a team and equipment sequence with conflicts, labor-agreement handling and draft paperwork. It uses a corner's real records, synthetic quantities and a fictional company in `data/demo/sample_company.yaml`. Everything is stamped DEMONSTRATION, nothing is saved or submitted, and the contractor persona is unvalidated.
-- **Structures sandbox** (`/structures.html`, roadmap M4): parameter-driven Pratt truss, lattice tower, geodesic dome and gear train geometry. There are no loads, member sizes or structural checks, and gear teeth are simplified shapes.
+Tests keep fiction and reality apart: demonstration code can't import anything that saves, releases or emails a packet; no real packet may contain a fictional company value; the fictional register must start with `fictional: true`; and packets can't load files from `data/demo/`.
+
+- **Contractor demonstration** (`/demo/contractor.html`, roadmap M3): an opportunity brief, capability match, draft logistics, a team and equipment sequence with conflicts, labor-agreement handling and draft paperwork. It uses a corner's real records, synthetic quantities and a fictional company in `data/demo/sample_company.yaml`. Every section is stamped DEMONSTRATION, and every value is labeled Real record, Synthetic, Fictional or Unknown. Nothing is saved or submitted, and the contractor persona is unvalidated.
+- **Structures sandbox** (`/demo/structures.html`, roadmap M4): parameter-driven Pratt truss, lattice tower, geodesic dome and gear train geometry. There are no loads, member sizes or structural checks, and gear teeth are simplified shapes.
 
 ## Background reading
 
@@ -138,6 +140,7 @@ Each person keeps their own `.env` file in the project folder. Git ignores it, s
 | Show cited background reading | Set `OPEN_LIBRARY_CONTACT` to a shared team address |
 | Dollar figures | Always withheld in the city-demo UI, traces and downloads; the legacy switch cannot expose them |
 | Show labels and concept plans | Set `SHOW_LABELS_AND_PLANS=true`, subject to the conditions above |
+| Show the roadmap demonstrations | Set `SHOW_ROADMAP_DEMOS=true`. Leave it off for the city demo. |
 
 A person must release each packet before it can be emailed, and every recipient must be on the allowlist. The email form stays hidden until `EMAIL_ALLOWLIST` is set.
 

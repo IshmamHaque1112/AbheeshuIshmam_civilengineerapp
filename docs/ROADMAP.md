@@ -74,7 +74,7 @@ Known limits of M1: the renderer is a lightweight 2D-canvas projection with flat
 
 ### M3: Contractor workflow (later, after validating the persona)
 
-Only after interviews and a role test with real estimators or project engineers. As of Nov 9, `/contractor.html` demonstrates every criterion with a fictional sample company (`data/demo/sample_company.yaml`), synthetic quantities and a real corner's records. It's stamped DEMONSTRATION, saves nothing and submits nothing, so none of these criteria is met with real company data yet.
+Only after interviews and a role test with real estimators or project engineers. As of Nov 9, `/demo/contractor.html` (off unless `SHOW_ROADMAP_DEMOS=true`) demonstrates every criterion with a fictional sample company (`data/demo/sample_company.yaml`), synthetic quantities and a real corner's records. It's stamped DEMONSTRATION, saves nothing and submits nothing, so none of these criteria is met with real company data yet.
 
 | # | Acceptance criterion | Status |
 | --- | --- | --- |
@@ -89,7 +89,7 @@ Only after interviews and a role test with real estimators or project engineers.
 
 The four earlier interactive demos (Pratt truss bridge, lattice transmission tower, geodesic dome and animated gear train) set the long-term bar for **breadth and interaction quality**: procedural geometry from named parameters, smooth orbit, zoom and pan, and readable structure.
 
-As of Nov 9, `/structures.html` is a geometry-only sandbox for all four: Pratt truss, lattice tower, geodesic dome and a three-gear train, with named parameters, orbit, zoom and pan. It draws shapes only. They are not supported engineering domains. Each would need its own feasibility research, a qualified engineer, domain rules and validation before any work starts. CornerBrief does not design bridges, towers, domes or mechanisms. The sandbox applies no loads or checks, and CornerBrief makes no claim about structural safety, compliance or approval for anything it draws.
+As of Nov 9, `/demo/structures.html` (off unless `SHOW_ROADMAP_DEMOS=true`) is a geometry-only sandbox for all four: Pratt truss, lattice tower, geodesic dome and a three-gear train, with named parameters, orbit, zoom and pan. It draws shapes only. They are not supported engineering domains. Each would need its own feasibility research, a qualified engineer, domain rules and validation before any work starts. CornerBrief does not design bridges, towers, domes or mechanisms. The sandbox applies no loads or checks, and CornerBrief makes no claim about structural safety, compliance or approval for anything it draws.
 
 ## Research references to follow up
 

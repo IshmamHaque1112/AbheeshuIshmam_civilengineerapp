@@ -43,6 +43,7 @@ async function start() {
   $("#picker").innerHTML = corners.map((c) => `<button data-key="${esc(c.key)}"><span>${esc(c.label)}</span><small>${c.data_kind === "SAMPLE DATA" ? "Sample data" : "Real test, NYC Open Data"}</small></button>`).join("");
   document.querySelectorAll("#picker button").forEach((b) => b.addEventListener("click", () => run(b.dataset.key)));
   if (exportedPackets) $("#preview-link").href = "preview.html"; // The static copy has the default model only
+  else fetch("/api/demo").then((r) => r.json()).then((d) => { if (d.enabled) $("#demo-links").hidden = false; }).catch(() => {}); // Roadmap demos show only when turned on
   wireSearch();
   const chosen = latest.chosen();
   run(corners.some((c) => c.key === chosen) || (/^real_[0-9]+_[a-f0-9]{12}$/.test(chosen || "") && latest.get(chosen)) ? chosen : corners[0].key);

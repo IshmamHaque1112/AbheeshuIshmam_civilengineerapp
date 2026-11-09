@@ -34,8 +34,16 @@ STEP_NEEDS = {"sawcut": ["Concrete saw"], "demolition": ["Compact excavator or s
 TRAFFIC = {"FT": "one-way", "TF": "one-way", "TW": "two-way", "NV": "non-vehicular"}
 
 
+# Every value this page returns says where it came from, so a copied row or a cropped screenshot still says what it is.
+KINDS = {"real": "Real record", "synthetic": "Synthetic", "fictional": "Fictional", "unknown": "Unknown"}
+
+
 def load_company() -> dict:
-    return yaml.safe_load((DATA / "demo" / "sample_company.yaml").read_text(encoding="utf-8"))
+    """Load the fictional register. A file that doesn't declare itself fictional is refused, so real records can't be mixed in here."""
+    data = yaml.safe_load((DATA / "demo" / "sample_company.yaml").read_text(encoding="utf-8"))
+    if not isinstance(data, dict) or data.get("fictional") is not True:
+        raise ValueError("The demonstration register must start with fictional: true.")
+    return data
 
 
 def _source(corner: dict, dataset: str) -> str | None:
@@ -48,12 +56,12 @@ def opportunity_brief(corner: dict, run: dict) -> list[dict]:
     streets = sorted({str(r.get(f)).strip() for r in rows for f in ("stname1", "stname2") if r.get(f)}) or [corner["label"]]
     ramp_source = _source(corner, "ufzp-rrqu") or "https://data.cityofnewyork.us/d/ufzp-rrqu"
     return [
-        dict(item="Location", value=" and ".join(streets), source=ramp_source),
-        dict(item="Scope", value=f"Replace {len({r.get('rampid') for r in rows})} pedestrian ramp(s) and landings at this corner, per the draft sequence below", source="This corner's packet"),
-        dict(item="Deadline", value="unknown", source=None, note="No solicitation is attached to this demonstration."),
-        dict(item="Required qualifications", value="unknown", source=LINKS["ddc"], note="Check the actual solicitation and DDC's prequalified lists."),
-        dict(item="Documents", value="Corner packet, site visit list, H-1011 sheets", source="https://www.nycstreetdesign.info/specifications?keysspec=&field_specification_name_value=Pedestrian+Ramps"),
-        dict(item="Open questions", value=f"{len(run['site_visit'])} site visit items from the packet", source="This corner's packet"),
+        dict(item="Location", value=" and ".join(streets), source=ramp_source, kinds=["real"]),
+        dict(item="Scope", value=f"Replace {len({r.get('rampid') for r in rows})} pedestrian ramp(s) and landings at this corner, per the draft sequence below", source="This corner's packet", kinds=["real", "synthetic"]),
+        dict(item="Deadline", value="unknown", source=None, note="No solicitation is attached to this demonstration.", kinds=["unknown"]),
+        dict(item="Required qualifications", value="unknown", source=LINKS["ddc"], note="Check the actual solicitation and DDC's prequalified lists.", kinds=["unknown"]),
+        dict(item="Documents", value="Corner packet, site visit list, H-1011 sheets", source="https://www.nycstreetdesign.info/specifications?keysspec=&field_specification_name_value=Pedestrian+Ramps", kinds=["real"]),
+        dict(item="Open questions", value=f"{len(run['site_visit'])} site visit items from the packet", source="This corner's packet", kinds=["real"]),
     ]
 
 
@@ -64,11 +72,12 @@ def capability_match(company: dict, steps: list[dict]) -> list[dict]:
     for s in steps:
         c = caps.get(s["id"])
         if c and c.get("verified") and c.get("record"):
-            out.append(dict(step=s["name"], status="matched", record=c["record"]))
+            out.append(dict(step=s["name"], status="matched", record=c["record"], kinds=["fictional"]))
         else:
-            out.append(dict(step=s["name"], status="unknown", record=None, note="No verified company record for this capability."))
+            out.append(dict(step=s["name"], status="unknown", record=None, note="No verified company record for this capability.", kinds=["unknown"]))
     for p in company.get("prequalification", []):
-        out.append(dict(step=p["list"], status="matched" if p.get("record") else "unknown", record=p.get("record"), note=None if p.get("record") else "No prequalification record in the register.", url=p.get("url")))
+        out.append(dict(step=p["list"], status="matched" if p.get("record") else "unknown", record=p.get("record"), note=None if p.get("record") else "No prequalification record in the register.", url=p.get("url"),
+                        kinds=["fictional"] if p.get("record") else ["unknown"]))
     return out
 
 
@@ -82,18 +91,18 @@ def logistics(corner: dict, run: dict, preview: dict, company: dict, start: date
     access = "; ".join(f"{n}: {', '.join(f'{w} ft paved, {d}' for w, d in sorted(v, key=str))}" for n, v in sorted(streets.items())) or "unknown"
     suppliers = {s["material"]: s for s in company.get("suppliers", [])}
     active = [p for p in corner.get("permits") or [] if (parse_date(p.get("issuedworkenddate")) or date.min) >= start]
+    staging = f"unknown. The packet's sidewalk width is {width['value']} {width['unit']} ({width['label']})" if width and width.get("value") is not None else "unknown"
     return [
-        dict(item="Staging area", value=f"unknown. The packet's sidewalk width is {width['value']} {width['unit']} ({width['label']})" if width and width.get("value") is not None else "unknown",
-             source=None, status="unknown"),
-        dict(item="Delivery access", value=access, source=_source(corner, "inkn-q76z"), status="from records" if streets else "unknown"),
-        dict(item="Concrete lead time", value="unknown", source=None, status="unknown", note="No supplier record." if not (suppliers.get("Slab concrete") or {}).get("record") else None),
-        dict(item="Warning surface lead time", value="unknown", source=None, status="unknown", note="The supplier record has no lead time."),
-        dict(item="Pedestrian access during work", value="unknown. A detour or protected path needs a plan.", source=LINKS["permits"], status="unknown"),
-        dict(item="Demolition and waste removal", value=f"{removal} sf of existing surface to remove; hauler unknown", source="Draft sequence quantities", status="partly known"),
-        dict(item="Street work permits", value="unknown. None applied for in this demonstration.", source=LINKS["permits"], status="unknown"),
+        dict(item="Staging area", value=staging, source=None, status="unknown", kinds=["unknown", "real"] if staging != "unknown" else ["unknown"]),
+        dict(item="Delivery access", value=access, source=_source(corner, "inkn-q76z"), status="from records" if streets else "unknown", kinds=["real"] if streets else ["unknown"]),
+        dict(item="Concrete lead time", value="unknown", source=None, status="unknown", note="No supplier record." if not (suppliers.get("Slab concrete") or {}).get("record") else None, kinds=["unknown"]),
+        dict(item="Warning surface lead time", value="unknown", source=None, status="unknown", note="The fictional supplier record has no lead time.", kinds=["unknown"]),
+        dict(item="Pedestrian access during work", value="unknown. A detour or protected path needs a plan.", source=LINKS["permits"], status="unknown", kinds=["unknown"]),
+        dict(item="Demolition and waste removal", value=f"{removal} sf of existing surface to remove; hauler unknown", source="Draft sequence quantities", status="partly known", kinds=["synthetic", "unknown"]),
+        dict(item="Street work permits", value="unknown. None applied for in this demonstration.", source=LINKS["permits"], status="unknown", kinds=["unknown"]),
         dict(item="Other active permits on the block", value="; ".join(f"{p['permitnumber']} {p.get('permittypedesc')}, work through {str(p['issuedworkenddate'])[:10]}" for p in active) or "none found in the saved records",
-             source=_source(corner, "tqtj-sjs8"), status="conflict" if active else "from records"),
-        dict(item="Utility markout", value="unknown. Request a markout before any excavation.", source=LINKS["811"], status="unknown"),
+             source=_source(corner, "tqtj-sjs8"), status="conflict" if active else "from records", kinds=["real"]),
+        dict(item="Utility markout", value="unknown. Request a markout before any excavation.", source=LINKS["811"], status="unknown", kinds=["unknown"]),
     ]
 
 
@@ -110,32 +119,34 @@ def sequence(steps: list[dict], preview: dict, company: dict, start: date, activ
     day, rows, conflicts = start, [], []
     for s in steps:
         team = next((t for t in teams if s["id"] in t["qualified_for"]), None)
-        row = dict(step=s["name"], team=team["name"] if team else "unknown", equipment=[], start=None, finish=None, duration_days=None, duration_basis="unknown")
+        row = dict(step=s["name"], team=team["name"] if team else "unknown", team_kind="fictional" if team else "unknown", equipment=[], start=None, finish=None,
+                   duration_days=None, duration_basis="unknown", duration_kind="unknown", quantity_kind="synthetic")
         if day is not None:
             row["start"] = day.isoformat()
             if not team:
-                conflicts.append(f"{s['name']}: no team in the register is qualified for this step.")
+                conflicts.append(dict(text=f"{s['name']}: no team in the register is qualified for this step.", kinds=["unknown"]))
             elif not _available(team["available"], day):
-                conflicts.append(f"{s['name']}: {team['name']} isn't available on {day.isoformat()}.")
+                conflicts.append(dict(text=f"{s['name']}: {team['name']} isn't available on {day.isoformat()}.", kinds=["fictional"]))
             for need in STEP_NEEDS.get(s["id"], []):
                 e = equipment.get(need)
                 ok = bool(e and _available(e["available"], day))
-                row["equipment"].append(dict(type=need, record=e["record"] if e else None, available=ok))
+                row["equipment"].append(dict(type=need, record=e["record"] if e else None, available=ok, kind="fictional" if e else "unknown"))
                 if not ok:
-                    conflicts.append(f"{s['name']}: {need} {'has no record' if not e else 'has no availability'} on {day.isoformat()}.")
+                    conflicts.append(dict(text=f"{s['name']}: {need} {'has no record' if not e else 'has no availability'} on {day.isoformat()}.", kinds=["fictional" if e else "unknown"]))
             for p in active_permits:
                 if (parse_date(p.get("issuedworkstartdate")) or date.min) <= day <= (parse_date(p.get("issuedworkenddate")) or date.min):
-                    conflicts.append(f"{s['name']}: permit {p['permitnumber']} ({p.get('permittypedesc')}) is active on the block on {day.isoformat()}.")
+                    conflicts.append(dict(text=f"{s['name']}: real permit {p['permitnumber']} ({p.get('permittypedesc')}) is active on the block on the fictional schedule's {day.isoformat()}.",
+                                          kinds=["real", "fictional"]))
         h = history.get(s["id"])
         if h and h.get("quantity") in items and h.get("per_day"):
             days = max(1, math.ceil(items[h["quantity"]]["qty"] / h["per_day"]))
-            row.update(duration_days=days, duration_basis=f"Sample record {h['record']}: {h['per_day']} {h['unit']} per day")
+            row.update(duration_days=days, duration_basis=f"Fictional record {h['record']}: {h['per_day']} {h['unit']} per day", duration_kind="fictional")
             if day is not None:
                 row["finish"] = (day + timedelta(days=days - 1)).isoformat()
                 day = day + timedelta(days=days)
         else:
             if day is not None:
-                conflicts.append(f"{s['name']}: no production record, so its duration and every later date are unknown.")
+                conflicts.append(dict(text=f"{s['name']}: no production record, so its duration and every later date are unknown.", kinds=["unknown"]))
             day = None
         rows.append(row)
     return dict(rows=rows, conflicts=conflicts)
@@ -145,7 +156,7 @@ def labor_rules(company: dict) -> dict:
     """M3.5: an agreement applies only when the register ties it to this job. One agreement is never applied to every job."""
     job = company.get("job_id")
     found = [a for a in company.get("agreements", []) if job in a.get("jobs", [])]
-    return dict(job=job, agreement=found[0]["name"] if found else None, status="recorded" if found else "unknown",
+    return dict(job=job, agreement=found[0]["name"] if found else None, status="recorded" if found else "unknown", kinds=["fictional"] if found else ["fictional", "unknown"],
                 note="Labor rules come from this job's own contract and agreement. "
                      + ("" if found else f"No agreement in the register names {job}, so none is applied. ") + "Wages and work rules aren't shown in this demonstration.",
                 source=LINKS["pla"])
@@ -153,11 +164,11 @@ def labor_rules(company: dict) -> dict:
 
 def drafts(run: dict, preview: dict, company: dict, corner_label: str) -> dict:
     """M3.6: drafts for a person. Nothing is sent or submitted from here."""
-    rfis = [dict(number=f"RFI-DRAFT-{i:02d}", question=f"{v['where']}: {v['action']}", reason=v["why"], status="Draft, not sent")
+    rfis = [dict(number=f"RFI-DRAFT-{i:02d}", question=f"{v['where']}: {v['action']}", reason=v["why"], status="Draft, not sent", kinds=["real"])
             for i, v in enumerate(run["site_visit"][:8], 1)]
     items = {i["id"]: i for i in preview["quantities"]}
-    material = [dict(material="Slab concrete", quantity=items["concrete_volume"]["qty"], unit="cy", supplier="unknown"),
-                dict(material="Detectable warning surface", quantity=items["dws_area"]["qty"], unit="sf", supplier="SAMPLE-SUP-02 (fictional)")]
+    material = [dict(material="Slab concrete", quantity=items["concrete_volume"]["qty"], unit="cy", supplier="unknown", kinds=["synthetic", "unknown"]),
+                dict(material="Detectable warning surface", quantity=items["dws_area"]["qty"], unit="sf", supplier="SAMPLE-SUP-02 (fictional)", kinds=["synthetic", "fictional"])]
     report, payroll = company.get("daily_report", {}), company.get("payroll", {})
     reported = {e["person"]: e["hours"] for e in report.get("entries", [])}
     paid = {e["person"]: e["hours"] for e in payroll.get("entries", [])}
@@ -171,8 +182,8 @@ def drafts(run: dict, preview: dict, company: dict, corner_label: str) -> dict:
         elif a != b:
             issues.append(f"{person}: daily report {a} hours, payroll {b} hours.")
     return dict(rfis=rfis, material_request=dict(items=material, status="Draft, not sent"),
-                daily_report=dict(date=report.get("date"), location=corner_label, entries=report.get("entries", []), status="Draft, not filed"),
-                payroll_check=dict(date=payroll.get("date"), issues=issues, status="Draft check for a person to review; nothing is submitted", source=LINKS["payroll"]))
+                daily_report=dict(date=report.get("date"), location=corner_label, entries=report.get("entries", []), status="Draft, not filed", kinds=["fictional"]),
+                payroll_check=dict(date=payroll.get("date"), issues=issues, status="Draft check for a person to review; nothing is submitted", source=LINKS["payroll"], kinds=["fictional"]))
 
 
 def build(corner_key: str, start: str | None = None, dimensions: dict | None = None) -> dict:
@@ -187,7 +198,7 @@ def build(corner_key: str, start: str | None = None, dimensions: dict | None = N
     company = load_company()
     steps = preview["work_plan"]["steps"]
     active = [p for p in corner.get("permits") or [] if (parse_date(p.get("issuedworkenddate")) or date.min) >= start_day]
-    return dict(stamp=STAMP, notice=NOTICE, persona_note="The estimator or project engineer persona is a hypothesis until real users are interviewed.",
+    return dict(stamp=STAMP, notice=NOTICE, kinds=KINDS, persona_note="The estimator or project engineer persona is a hypothesis until real users are interviewed.",
                 company=company["company"], corner=dict(key=corner_key, label=corner["label"], state=run["state"]),
                 revision=preview["revision"], dimensions=preview["inputs"], quantities=preview["quantities"],
                 brief=opportunity_brief(corner, run), capabilities=capability_match(company, steps),

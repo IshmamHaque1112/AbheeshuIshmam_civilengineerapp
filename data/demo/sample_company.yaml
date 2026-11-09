@@ -1,6 +1,7 @@
 # DEMONSTRATION DATA. A fictional company, invented to show how the M3 contractor workflow would read
 # company records. None of this describes a real company, job, person, agreement or rate. Nothing here is
 # used by a corner packet, a label, a plan or a rule check.
+fictional: true
 company:
   name: Sample Concrete Co. (fictional)
   note: Fictional demonstration records. Replace every entry with the company's own verified records before any real use.

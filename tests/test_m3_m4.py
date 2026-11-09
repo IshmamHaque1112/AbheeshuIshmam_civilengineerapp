@@ -10,6 +10,12 @@ from cornerbrief.app import app
 from cornerbrief.paths import RUNS
 
 client = TestClient(app)
+
+
+@pytest.fixture(autouse=True)
+def demos_on(monkeypatch, request):
+    if "demos_off" not in request.keywords:
+        monkeypatch.setenv("SHOW_ROADMAP_DEMOS", "true")
 FORBIDDEN = ("compliant", "approved", "is safe", "safe to", "load capacity", "rated for", "$")
 
 
@@ -42,10 +48,10 @@ def test_m3_logistics_cover_every_area_and_flag_active_permits():  # M3.3
 
 def test_m3_sequence_shows_conflicts_and_never_invents_durations():  # M3.4
     seq = contractor_demo.build("real_test", "2026-11-12")["sequence"]
-    assert any("isn't available" in c for c in seq["conflicts"]) and any("Q012026257A57" in c for c in seq["conflicts"])
+    assert any("isn't available" in c["text"] for c in seq["conflicts"]) and any("Q012026257A57" in c["text"] for c in seq["conflicts"])
     durations = {r["step"]: r for r in seq["rows"]}
     assert durations["Cure the concrete"]["duration_days"] is None and durations["Cure the concrete"]["duration_basis"] == "unknown"
-    assert all(r["duration_days"] is None or "Sample record" in r["duration_basis"] for r in seq["rows"])
+    assert all(r["duration_days"] is None or "Fictional record" in r["duration_basis"] for r in seq["rows"])
     first_unknown = next(i for i, r in enumerate(seq["rows"]) if r["duration_days"] is None)
     assert all(r["start"] is None for r in seq["rows"][first_unknown + 1:])
 
@@ -121,3 +127,66 @@ def test_m4_makes_no_structural_claims():
     for m in structures.MODELS:
         text = json.dumps(structures.build(dict(model=m, **DEFAULTS[m]))).lower()
         assert "no loads" in text and not any(word in text for word in FORBIDDEN)
+
+
+@pytest.mark.demos_off
+def test_demos_are_off_by_default():
+    assert client.get("/api/demo").json() == {"enabled": False}
+    for path in ("/api/demo/contractor?corner=standard", "/api/demo/structures", "/demo/contractor.html", "/demo/structures.js", "/contractor.html", "/structures.html"):
+        assert client.get(path).status_code == 404, path
+
+
+def test_demo_pages_serve_only_known_files():
+    assert client.get("/demo/contractor.html").status_code == 200 and client.get("/demo/structures.js").status_code == 200
+    for path in ("/demo/sample_company.yaml", "/demo/notes.txt", "/demo/"):
+        assert client.get(path).status_code == 404, path
+
+
+def test_every_m3_value_says_where_it_came_from():
+    d = contractor_demo.build("real_test", "2026-11-12")
+    allowed = set(contractor_demo.KINDS)
+    rows = d["brief"] + d["capabilities"] + d["logistics"] + d["sequence"]["conflicts"] + d["drafts"]["rfis"] + d["drafts"]["material_request"]["items"]
+    rows += [d["labor_rules"], d["drafts"]["daily_report"], d["drafts"]["payroll_check"]]
+    assert all(r["kinds"] and set(r["kinds"]) <= allowed for r in rows)
+    for r in d["sequence"]["rows"]:
+        assert {r["team_kind"], r["duration_kind"], r["quantity_kind"]} <= allowed and all(e["kind"] in allowed for e in r["equipment"])
+    permit_conflict = next(c for c in d["sequence"]["conflicts"] if "Q012026257A57" in c["text"])
+    assert permit_conflict["kinds"] == ["real", "fictional"] and "fictional schedule" in permit_conflict["text"]
+    assert all(r["duration_kind"] == "fictional" for r in d["sequence"]["rows"] if r["duration_days"])
+
+
+def test_demo_code_cant_write_to_packets():
+    import ast, inspect
+    banned = {"save_run", "approve", "validate_entries", "merge_entries", "rerun_with_field", "send_brief", "save_photo", "pull", "run_corner"}
+    for module in (contractor_demo, structures):
+        tree = ast.parse(inspect.getsource(module))
+        names = {a.asname or a.name for n in ast.walk(tree) if isinstance(n, (ast.Import, ast.ImportFrom)) for a in n.names}
+        assert not names & banned, (module.__name__, names & banned)
+        for call in (n for n in ast.walk(tree) if isinstance(n, ast.Call) and getattr(n.func, "id", None) == "analyze"):
+            assert any(k.arg == "save" and getattr(k.value, "value", True) is False for k in call.keywords)
+
+
+def test_no_fictional_value_reaches_a_real_packet():
+    from cornerbrief.data_loader import list_corners, load_corner
+    from cornerbrief.llm import OfflineClient
+    from cornerbrief.orchestrator import analyze
+    contractor_demo.build("real_test")
+    for c in list_corners():
+        text = json.dumps(analyze(load_corner(c["key"]), client=OfflineClient(), save=False))
+        for marker in ("SAMPLE-CAP", "SAMPLE-EQ", "SAMPLE-JOB", "SAMPLE-SUP", "SAMPLE-AGREEMENT", "Sample team", "Sample worker", "Sample Concrete Co", "(fictional)"):
+            assert marker not in text, (c["key"], marker)
+
+
+def test_register_must_declare_itself_fictional(tmp_path, monkeypatch):
+    (tmp_path / "demo").mkdir()
+    (tmp_path / "demo" / "sample_company.yaml").write_text("company: {name: Real Co}\n")
+    monkeypatch.setattr(contractor_demo, "DATA", tmp_path)
+    with pytest.raises(ValueError, match="fictional: true"):
+        contractor_demo.load_company()
+
+
+@pytest.mark.parametrize("key", ["../demo/sample_company", "demo/sample_company", "sample_company"])
+def test_packets_cant_load_demo_files(key):
+    from cornerbrief.data_loader import load_corner
+    with pytest.raises(KeyError):
+        load_corner(key)
