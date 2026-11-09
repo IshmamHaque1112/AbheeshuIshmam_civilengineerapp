@@ -109,3 +109,10 @@ def test_build_work_plan_ignores_unknown_quantity_ids():
     plan = build_work_plan(takeoff, "r1")
     assert next(s for s in plan["steps"] if s["id"] == "forming")["quantities"] == [dict(label="Slab", qty=10.0, unit="sf")]
     assert next(s for s in plan["steps"] if s["id"] == "sawcut")["quantities"] == []
+
+
+def test_model_labels_cite_each_dimension_on_the_scene():  # M2.1
+    plan = planning_for()
+    labels = plan["scene"]["labels"]
+    assert len(labels) == len(plan["dimensions"]) and all("· record " in l["text"] and " from " in l["citation"] and l["short"] in l["text"] for l in labels)
+    assert all(len(l["at"]) == 3 for l in labels)

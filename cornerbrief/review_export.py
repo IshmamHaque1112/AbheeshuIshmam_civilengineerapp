@@ -146,7 +146,7 @@ def to_markdown(run: dict) -> str:
             L += [f"- {l['item']}: rate {l.get('rate', 'unknown')} per {l.get('unit', '')}; status {l['status']}; source date {l.get('source_date', 'unknown')}" for l in p["cost"]["lines"]]
         L += ["", "### Labor hours", ""]
         if p["crew"]["result"] == "unknown":
-            L += ["Unknown, because a crew rate is missing."]
+            L += [p["crew"].get("reason") or "Unknown, because a crew rate is missing."]
         else:
             L += [f"- {h['trade']}: {h['hours']} hours{', from sample rates' if p['crew']['contains_sample_rates'] else ''}{', from an out-of-date rate' if p['crew']['rates_out_of_date'] else ''}" for h in p["crew"]["hours"]]
         if p.get("dimensions"):

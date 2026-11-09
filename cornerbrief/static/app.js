@@ -165,7 +165,7 @@ function plan(p) {
     ${c.hidden ? `<p>${esc(c.note)}</p><div class="wrap"><table><thead><tr><th>Item</th><th>Quantity</th></tr></thead><tbody>${p.takeoff.items.map((i) => `<tr><td>${esc(i.label)}</td><td>${i.qty} ${esc(i.unit === "count" ? "" : i.unit)}</td></tr>`).join("")}</tbody></table></div>` : `<p class="money">${c.result === "unknown" ? "Unknown" : `${money(c.low)} to ${money(c.high)}`}</p>
     <p>${c.contains_sample_rates ? "<strong>These numbers use placeholder sample rates, not market prices.</strong> " : ""}${esc(c.range_note)}</p>
     <div class="wrap"><table><thead><tr><th>Item</th><th>Quantity</th><th>Rate</th><th>Amount</th><th>Rate status</th></tr></thead><tbody>${c.lines.map((l) => `<tr><td>${esc(l.item)}</td><td>${l.quantity} ${esc(l.unit || "")}</td><td>${l.rate == null ? "Unknown" : `${money(l.rate)} per ${esc(l.unit)}`}</td><td>${l.amount == null ? "Unknown" : money(l.amount)}</td><td>${esc(l.status)}${l.rate_out_of_date ? ", out of date" : ""}</td></tr>`).join("")}</tbody></table></div>`}
-    <h3>Labor hours</h3>${p.crew.result === "unknown" ? "<p>Unknown, because a crew rate is missing.</p>" : `<ul class="plain">${p.crew.hours.map((h) => `<li>${esc(h.trade)}: ${h.hours} hours${p.crew.contains_sample_rates ? ", from sample rates" : ""}${p.crew.rates_out_of_date ? ", from an out-of-date rate" : ""}</li>`).join("")}</ul>`}
+    <h3>Labor hours</h3>${p.crew.result === "unknown" ? `<p>${esc(p.crew.reason || "Unknown, because a crew rate is missing.")}</p>` : `<ul class="plain">${p.crew.hours.map((h) => `<li>${esc(h.trade)}: ${h.hours} hours${p.crew.contains_sample_rates ? ", from sample rates" : ""}${p.crew.rates_out_of_date ? ", from an out-of-date rate" : ""}</li>`).join("")}</ul>`}
     ${p.dimensions ? `<h3>Dimensions used, with their records</h3><ul class="plain">${p.dimensions.map((d) => `<li>${esc(d.label)}, from ${esc(d.citation)}</li>`).join("")}</ul>` : ""}
     ${p.work_plan ? workPlan(p.work_plan) : `<h3>Work sequence</h3><ol>${p.crew.sequence.map((s) => `<li>${esc(s)}</li>`).join("")}</ol>`}
     <h3>Likely equipment types</h3><ul class="plain">${p.equipment.map((e) => `<li>${esc(e.type)}: ${esc(e.use)}</li>`).join("")}</ul>
@@ -339,6 +339,21 @@ function drawModel(scene) {
       ctx.beginPath(); f.pts.forEach((p, i) => (i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y))); ctx.closePath();
       ctx.fillStyle = shade(f.c, 1); ctx.fill(); ctx.strokeStyle = shade(f.c, 0.72); ctx.lineWidth = 1; ctx.stroke();
     }
+    // Dimension labels: the value on the model, with its record. Labels that would overlap show the value only.
+    const placed = [];
+    ctx.font = "12px system-ui, sans-serif"; ctx.textBaseline = "middle";
+    for (const l of scene.labels || []) {
+      const p = project(l.at);
+      for (const text of [l.text, l.short]) {
+        const tw = ctx.measureText(text).width + 8, box = { x: p.x - tw / 2, y: p.y - 10, w: tw, h: 20 };
+        if (box.x < 0 || box.x + box.w > w || placed.some((q) => box.x < q.x + q.w && q.x < box.x + box.w && box.y < q.y + q.h && q.y < box.y + box.h)) continue;
+        placed.push(box);
+        ctx.fillStyle = "rgba(255,255,255,0.92)"; ctx.fillRect(box.x, box.y, box.w, box.h);
+        ctx.fillStyle = "#1d2a33"; ctx.fillText(text, box.x + 4, p.y);
+        break;
+      }
+    }
+    canvas.labelCount = placed.length;
   }
   canvas.addEventListener("pointerdown", (e) => { drag = [e.clientX, e.clientY]; canvas.setPointerCapture(e.pointerId); });
   canvas.addEventListener("pointermove", (e) => { if (!drag) return; yaw += (e.clientX - drag[0]) * 0.01; pitch = Math.max(0.2, Math.min(1.35, pitch + (e.clientY - drag[1]) * 0.01)); drag = [e.clientX, e.clientY]; draw(); });

@@ -182,7 +182,7 @@ def test_takeoff_cost_and_labor_hand_checked():
     cost = build_cost(t, rates)
     assert cost["base"] == 2000 + 600 + 810 + 750  # 50x40 + 10x60 + 9x90 + 62.5x12
     assert (cost["low"], cost["high"]) == (2080, 8320)
-    hours = {h["trade"]: h["hours"] for h in build_crew(t, rates)["hours"]}
+    hours = {h["trade"]: h["hours"] for h in build_crew(t, rates, allow_sample=True)["hours"]}
     assert hours == {"Cement mason": 16.1, "Laborer": 19.5}  # 12.5+3.6, 15+4.5
 
 
@@ -194,7 +194,7 @@ def test_one_dimension_change_updates_every_planning_result(fully_reviewed):
     b = fully_reviewed(wider)["planning"]
     assert qty(a["takeoff"], "slab_area") < qty(b["takeoff"], "slab_area")
     assert a["cost"]["base"] < b["cost"]["base"]
-    assert a["crew"]["hours"] != b["crew"]["hours"]
+    assert a["work_plan"]["steps"] != b["work_plan"]["steps"] and a["revision"] != b["revision"]
     assert a["scene"] != b["scene"]
 
 
@@ -435,6 +435,12 @@ def test_missing_crew_rate_returns_unknown():
 def test_old_crew_rate_is_flagged():
     t = build_takeoff(build_parts([dict(ramp_id="1", width_ft=5, length_ft=6, landing_width_ft=5, landing_length_ft=4, slope_pct=6)]))
     assert build_crew(t, load_rates(), today=date(2030, 1, 1))["rates_out_of_date"]
+
+
+def test_sample_rates_give_no_labor_hours():  # Roadmap M2.4
+    t = build_takeoff(build_parts([dict(ramp_id="1", width_ft=5, length_ft=6, landing_width_ft=5, landing_length_ft=4, slope_pct=6)]))
+    crew = build_crew(t, load_rates())
+    assert crew["result"] == "unknown" and crew["hours"] == [] and "placeholder samples" in crew["reason"] and crew["contains_sample_rates"]
 
 
 def test_email_and_reading_are_hidden_unless_configured(monkeypatch):

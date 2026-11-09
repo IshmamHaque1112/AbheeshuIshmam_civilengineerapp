@@ -12,7 +12,7 @@ def _box(x0, x1, y0, y1, z0, z1, top, side):
 
 
 def build_scene(ramps: list[dict], curb_extra_ft: float = 4) -> dict:
-    faces, cursor, depth = [], 0.0, 0.0
+    faces, anchors, cursor, depth = [], [], 0.0, 0.0
     side = curb_extra_ft / 2
     for r in ramps:
         w, l, lw, ll = r["width_ft"], r["length_ft"], r["landing_width_ft"], r["landing_length_ft"]
@@ -31,9 +31,15 @@ def build_scene(ramps: list[dict], curb_extra_ft: float = 4) -> dict:
         faces += _box(lx0, lx1, l, l + ll, 0, rise, COLORS["landing"], COLORS["side"])
         faces += _box(x0 - side, x0, -0.5, 0, 0, curb_h, COLORS["curb"], COLORS["curb"])
         faces += _box(x1, x1 + side, -0.5, 0, 0, curb_h, COLORS["curb"], COLORS["curb"])
+        # Where each dimension's label sits, so the viewer can cite the record beside the part it measures
+        anchors += [dict(ramp_id=r.get("ramp_id"), input="width_ft", at=[(x0 + x1) / 2, -1.2, 0]),
+                    dict(ramp_id=r.get("ramp_id"), input="length_ft", at=[x1 + 0.8, l / 2, rise / 2]),
+                    dict(ramp_id=r.get("ramp_id"), input="landing_width_ft", at=[(lx0 + lx1) / 2, l + ll + 0.8, rise]),
+                    dict(ramp_id=r.get("ramp_id"), input="landing_length_ft", at=[lx1 + 0.8, l + ll / 2, rise]),
+                    dict(ramp_id=r.get("ramp_id"), input="slope_pct", at=[x0 - 0.8, l * 0.6, rise * 0.6])]
         depth = max(depth, l + ll)
         cursor = x1 + 6
     span = max(cursor - 6, 1)
     road = {"p": [[-6, -8, -0.01], [span + 6, -8, -0.01], [span + 6, 0, -0.01], [-6, 0, -0.01]], "c": COLORS["road"]}
     walk = {"p": [[-6, 0, -0.005], [span + 6, 0, -0.005], [span + 6, depth + 4, -0.005], [-6, depth + 4, -0.005]], "c": COLORS["walk"]}
-    return {"faces": [road, walk] + faces, "center": [span / 2, depth / 3, 0], "radius": max(span, depth) + 8}
+    return {"faces": [road, walk] + faces, "anchors": anchors, "center": [span / 2, depth / 3, 0], "radius": max(span, depth) + 8}

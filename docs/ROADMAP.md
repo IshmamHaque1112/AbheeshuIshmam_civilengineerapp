@@ -66,10 +66,10 @@ Known limits of M1: the renderer is a lightweight 2D-canvas projection with flat
 
 | # | Acceptance criterion | Status |
 | --- | --- | --- |
-| M2.1 | For a real packet whose evidence passes the existing gates, the concept model is built only from measured, current, unit-documented values, and each dimension label cites its record. | Met Nov 9: `planning.cited_dimensions`, shown under the concept plan and in downloads. `tests/test_m2.py` |
+| M2.1 | For a real packet whose evidence passes the existing gates, the concept model is built only from measured, current, unit-documented values, and each dimension label cites its record. | Met Nov 9: each label on the concept model shows its value and recorded value, and the full citation is listed under the plan and in downloads. `tests/test_m2.py` |
 | M2.2 | Geometry, quantities and any draft plan carry one shared revision. Editing a dimension recalculates quantities and marks the dependent draft estimate and sequence "needs recalculation" until rerun. | Met Nov 9: the preview's draft stays on its revision and says "Needs recalculation" until rebuilt; a packet rerun notes a changed revision. `tests/test_m2.py`, `test_preview_draft_needs_recalculation_until_rebuilt` |
 | M2.3 | A draft small-concrete work sequence (sawcut, demolition, forming, pour, cure, warning surface, restoration) is shown only as an explicit proposed plan with every unknown duration and resource marked unknown. | Met Nov 9: `cornerbrief/work_plan.py`, on the preview page and in gated concept plans |
-| M2.4 | Missing crews, equipment, rates or durations are listed as missing inputs. Nothing is filled from generic trade data. | Met Nov 9 for the draft sequence. The older concept plan's labor hours still use labeled sample rates and stay off by default. |
+| M2.4 | Missing crews, equipment, rates or durations are listed as missing inputs. Nothing is filled from generic trade data. | Met Nov 9. The draft sequence lists them, and labor hours are now unknown while only placeholder sample rates exist. |
 | M2.5 | The city demo still shows no dollar figures, and placeholder rates stay labeled. | Met (unchanged) |
 
 ### M3: Contractor workflow (later, after validating the persona)
