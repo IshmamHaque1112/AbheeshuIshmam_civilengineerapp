@@ -42,7 +42,7 @@ Stages 3 and 4 share one revision, from `cornerbrief/revision.py`. It hashes:
 
 Same basis, same revision. A changed dimension, assumption or model version gives a new revision. Where a value came from (source, date) is recorded in the basis but doesn't change the revision, because it doesn't change the geometry.
 
-Later stages (work packages, sequences, paperwork) must record the revision they were built from, and mark themselves "needs recalculation" when the current revision differs. That marking isn't built yet.
+Later stages (work packages, sequences, paperwork) must record the revision they were built from, and mark themselves "needs recalculation" when the current revision differs. The draft work sequence does this as of Nov 9 (`work_plan.plan_status`).
 
 ## Gates that every stage keeps
 

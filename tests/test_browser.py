@@ -487,3 +487,15 @@ def test_preview_makes_no_packet_requests_and_main_page_links_to_it(browser, bas
     pg.click("#preview-link")
     pg.wait_for_selector("#notice")
     context.close()
+
+
+def test_preview_draft_needs_recalculation_until_rebuilt(preview_page):
+    preview_page.wait_for_function("document.querySelectorAll('#draft-steps tr').length === 7")
+    assert preview_page.locator("#draft-stale").is_hidden() and preview_page.locator("#draft-rebuild").is_hidden()
+    first = preview_page.inner_text("#draft-status")
+    preview_page.fill("#width_ft", "7")
+    preview_page.wait_for_function("!document.querySelector('#draft-stale').hidden")
+    assert "Needs recalculation" in preview_page.inner_text("#draft-stale") and preview_page.inner_text("#draft-status") == first
+    preview_page.click("#draft-rebuild")
+    preview_page.wait_for_function("document.querySelector('#draft-stale').hidden")
+    assert preview_page.inner_text("#draft-status") != first and "Unknown" in preview_page.inner_text("#draft-steps")

@@ -64,6 +64,11 @@ def site_visit_markdown(run: dict) -> str:
     return "\n".join(" ".join(line.splitlines()) for line in L) + "\n"
 
 
+def _step_quantities(step: dict) -> str:
+    shown = "; ".join(f"{q['qty']} {q['unit']} {q['label'].lower()}" for q in step["quantities"])
+    return shown or step["note"] or "none modeled"
+
+
 def to_markdown(run: dict) -> str:
     if not run.get("approval"):
         raise NotApproved("A person must release this packet before it can be downloaded.")
@@ -82,7 +87,9 @@ def to_markdown(run: dict) -> str:
         L += ["## What changed in this rerun", "", f"State: {c['state_before']} to {c['state_after']}.", ""]
         L += [f"- {input_name(i['field'], i['ramp_id'])}: {i['before_label']} {'' if i['before_value'] is None else i['before_value']} to {i['after_label']} {'' if i['after_value'] is None else i['after_value']} {i['unit'] or ''}".rstrip() + (f", {i['after_date']}" if i.get("on_site") else "") for i in c["inputs"]]
         L += [f"- Result, {r['title']}{', ramp ' + r['ramp_id'] if r['ramp_id'] else ''}: {r['before']} to {r['after']}{' (unreviewed calculation)' if r['unreviewed'] else ''}. {r['math']}" for r in c["results"]]
-        L += [f"- Site visit item done: {x}" for x in c["site_visit_done"]] + [f"- New site visit item: {x}" for x in c.get("site_visit_added", [])] + [""]
+        L += [f"- Site visit item done: {x}" for x in c["site_visit_done"]] + [f"- New site visit item: {x}" for x in c.get("site_visit_added", [])]
+        L += [f"- Concept plan: {c['plan_note']}"] if c.get("plan_note") else []
+        L += [""]
     if run["field_measurements"]:
         L += ["## Measured on site", "", "| Input | Value | Unit | Date | Measured by | Photo |", "| --- | --- | --- | --- | --- | --- |"]
         L += [row(input_name(e["field"], None if e["key"].startswith("corner:") else e["key"].split(":")[0]), e["value"], e["unit"], e["date"], e["by"], e["photo"]) for e in run["field_measurements"]] + [""]
@@ -105,6 +112,11 @@ def to_markdown(run: dict) -> str:
     L += [row(d["title"], "Yes" if d["applies"] else "No", d["reason"], f"{d['source_section']} {d['url']}") for d in run["applicability"]]
     L += ["", "## Evidence", "", "| Input | Value | Unit | Label | Source | Date | Note |", "| --- | --- | --- | --- | --- | --- | --- |"]
     L += [row(input_name(e["field"], e["ramp_id"]), e["value"], e["unit"], "measured on site" if e.get("on_site") and e["label"] == "measured" else e["label"], e["source"], e["date"], e["reason"]) for e in run["evidence"]]
+    if run.get("readiness") and run["readiness"]["rows"]:
+        n = run["readiness"]["counts"]
+        L += ["", "## Concept model inputs", "", f"{n['documented']} documented, {n['assumed']} assumed, {n['stale']} stale, {n['unresolved']} unresolved. Only documented dimensions can feed the concept model.", "",
+              "| Ramp | Dimension | Recorded value | Status | Why |", "| --- | --- | --- | --- | --- |"]
+        L += [row(d["ramp_id"], d["dimension"], "" if d["value"] is None else f"{d['value']} {d['unit'] or ''}", d["status"], d["reason"]) for d in run["readiness"]["rows"]]
     L += ["", "## Rule results", "", "| Rule | Ramp | Limit | Result | Math or reason | Source | Quote |", "| --- | --- | --- | --- | --- | --- | --- |"]
     L += [row(o["title"], o["ramp_id"], o["limit_text"], o["result"] + (" (stop: evidence still needed)" if o["evidence_stop"] else ""), o["math"] or o["reason"], f"{o['section'] or ''} {o['url'] or ''}", o["quote"]) for o in run["rule_results"]]
     if run["design_targets"]:
@@ -137,7 +149,15 @@ def to_markdown(run: dict) -> str:
             L += ["Unknown, because a crew rate is missing."]
         else:
             L += [f"- {h['trade']}: {h['hours']} hours{', from sample rates' if p['crew']['contains_sample_rates'] else ''}{', from an out-of-date rate' if p['crew']['rates_out_of_date'] else ''}" for h in p["crew"]["hours"]]
-        L += ["", "### Work sequence", ""] + [f"{i}. {s}" for i, s in enumerate(p["crew"]["sequence"], 1)]
+        if p.get("dimensions"):
+            L += ["", "### Dimensions used, with their records", ""] + [f"- {d['label']}, from {d['citation']}" for d in p["dimensions"]]
+        if p.get("work_plan"):
+            w = p["work_plan"]
+            L += ["", "### Draft work sequence", "", f"{w['label']} Built from revision {w['built_from_revision']}.", ""]
+            L += [f"{s['number']}. {s['name']}. Quantities: {_step_quantities(s)}. Equipment types: {', '.join(s['equipment_types']) or 'none listed'}. Duration: unknown, from {s['duration_source']}. People and equipment available: unknown." for s in w["steps"]]
+            L += ["", "Missing inputs:", ""] + [f"- {m}" for m in w["missing_inputs"]]
+        else:
+            L += ["", "### Work sequence", ""] + [f"{i}. {s}" for i, s in enumerate(p["crew"]["sequence"], 1)]
         L += ["", "### Likely equipment types", ""] + [f"- {e['type']}: {e['use']}" for e in p["equipment"]]
         L += ["", "### Assumptions", ""] + [f"- {a['basis']}" for a in p["takeoff"]["assumptions"]]
         L += ["", "Excluded: " + "; ".join(p["takeoff"]["exclusions"]) + ".", "", "### Questions for a safety professional", ""]

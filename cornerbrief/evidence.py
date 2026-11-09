@@ -349,6 +349,9 @@ def build_evidence(corner: dict, dictionary: dict, field: list[dict] | None = No
     for field, why in NOT_IN_DATASETS.items():
         item = EvidenceItem(key=f"corner:{field}", field=field, label="missing", source="Not in the NYC datasets used here", reason=why)
         item = (field == "sidewalk_width" and _sidewalk_item(corner)) or item
+        categories = sorted({str(d.get("RAMP_TYPE")).strip() for d in corner.get("dot_survey") or [] if d.get("RAMP_TYPE")})
+        if field == "ramp_type" and categories:
+            item = item.model_copy(update=dict(reason=f"{why} NYC DOT's survey map calls {'it' if len(categories) == 1 else 'them'} \"{', '.join(categories)}\", which doesn't name an H-1011 type."))
         items.append(_on_site(item, entries[item.key], built) if item.key in entries else item)
     if corner.get("context", {}).get("road_control_basis") == "assumed" and "corner:road_control" not in entries:
         items.append(EvidenceItem(key="corner:road_control", field="road_control", value="city", label="assumed", source="Default for a street NYSDOT's inventory doesn't list",

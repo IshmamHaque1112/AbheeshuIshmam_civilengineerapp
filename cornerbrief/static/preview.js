@@ -3,6 +3,7 @@ const esc = (v) => String(v ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "
 const canvas = $("#scene"), ctx = canvas.getContext("2d");
 const VIEW = { yaw: -0.7, pitch: 0.8, zoom: 1, panX: 0, panY: 0 };
 const exported = window.CORNERBRIEF_PREVIEW_EXPORT; // Set only in the static copy, which has no backend
+let draft = null; // The draft sequence as last built. It keeps its revision until someone recalculates it.
 let view = { ...VIEW }, model = null, lastQuantities = null, lastRevision = null, stale = null, fields = [], requestNumber = 0, timer = null, drag = null;
 
 function shade(hex, f) { const n = parseInt(hex.slice(1), 16); return `rgb(${[n >> 16, (n >> 8) & 255, n & 255].map((v) => Math.round(v * f)).join(",")})`; }
@@ -81,7 +82,21 @@ function showModel(next) {
   $("#basis-unknown").innerHTML = list(next.input_basis.unknown);
   $("#assumptions").innerHTML = next.assumptions.map((a) => `<li>${esc(a.id.replaceAll("_", " "))}: ${esc(a.value)}${a.unit ? ` ${esc(a.unit)}` : ""}${a.note ? `. ${esc(a.note)}` : ""}</li>`).join("");
   $("#exclusions").innerHTML = next.exclusions.map((x) => `<li>${esc(x)}</li>`).join("");
+  if (!draft) draft = next.work_plan;
+  showDraft();
   describe(); draw();
+}
+
+function showDraft() {
+  if (!draft) return;
+  const behind = model && draft.built_from_revision !== model.revision;
+  $("#draft-status").textContent = `${draft.label} Built from revision ${draft.built_from_revision}.`;
+  $("#draft-stale").textContent = behind ? `Needs recalculation: this draft was built from revision ${draft.built_from_revision}, and the model is now revision ${model.revision}. Its quantities are out of date until you recalculate it.` : "";
+  $("#draft-stale").hidden = !behind;
+  $("#draft-rebuild").hidden = !behind || Boolean(exported);
+  $("#draft-section").classList.toggle("isstale", behind);
+  $("#draft-steps").innerHTML = draft.steps.map((s) => `<tr><td>${s.number}. ${esc(s.name)}</td><td>${s.quantities.length ? s.quantities.map((q) => `${+q.qty.toFixed(2)} ${esc(q.unit === "count" ? "" : q.unit)} ${esc(q.label.toLowerCase())}`).join("; ") : esc(s.note || "None modeled")}</td><td>${esc(s.equipment_types.join(", ") || "None listed")}</td><td>Unknown, from ${esc(s.duration_source)}</td></tr>`).join("");
+  $("#draft-missing").innerHTML = draft.missing_inputs.map((m) => `<li>${esc(m)}</li>`).join("");
 }
 
 function setStatus(text, isError) { const s = $("#status"); s.textContent = text; s.className = isError ? "error" : ""; }
@@ -131,6 +146,8 @@ async function update() {
 const schedule = () => { clearTimeout(timer); timer = setTimeout(update, 120); };
 
 function resetValues() { for (const f of fields) { $(`#${f.id}`).value = f.default; $(`#${f.id}-range`).value = f.default; } }
+
+$("#draft-rebuild").addEventListener("click", () => { if (model && !stale) { draft = model.work_plan; showDraft(); } });
 
 async function start() {
   const info = exported ? exported.defaults : await (await fetch("/api/preview")).json();

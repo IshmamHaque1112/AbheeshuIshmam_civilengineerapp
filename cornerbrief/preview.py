@@ -4,6 +4,7 @@ from .model_3d import build_scene
 from .parts_kit import build_parts
 from .revision import MODEL_VERSION, revision as make_revision
 from .takeoff import build_takeoff
+from .work_plan import build_work_plan
 
 BASIS_VERSION = MODEL_VERSION
 NOTICE ="Synthetic exploration: these dimensions were typed in, not measured. This isn't field evidence, a design or a rule check."
@@ -89,4 +90,4 @@ def build_preview(raw) -> dict:
                 inputs=[dict(id=k, label=FIELDS[k]["label"], value=values[k], unit=FIELDS[k]["unit"], provenance="synthetic, typed in") for k in FIELDS],
                 quantities=[dict(i, basis="provisional, from synthetic inputs and sample assumptions") for i in takeoff["items"]],
                 assumptions=[dict(id=x["id"], value=x["value"], unit=x.get("unit"), note=x.get("basis", "")) for x in takeoff["assumptions"]],
-                exclusions=takeoff["exclusions"], review_note=f"Any estimate or schedule based on an earlier revision needs review against revision {revision}.")
+                exclusions=takeoff["exclusions"], work_plan=build_work_plan(takeoff, revision), review_note=f"Any estimate or schedule based on an earlier revision needs review against revision {revision}.")

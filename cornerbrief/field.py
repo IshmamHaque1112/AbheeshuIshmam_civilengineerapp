@@ -127,5 +127,10 @@ def compare_runs(before: dict, after: dict) -> dict:
         if old is None or _shown(old) != _shown(o) or old["result"] != o["result"] or old["math"] != o["math"]:
             results.append(dict(title=o["title"], ramp_id=o["ramp_id"], before=_shown(old) if old else "not checked", after=_shown(o), math=o["math"] or o["reason"], unreviewed=bool(o["preview"])))
     visit = lambda r: {(v["where"], v["action"]) for v in r["site_visit"]}
-    return dict(state_before=before["state"], state_after=after["state"], inputs=inputs, results=results,
+    old_plan, new_plan = before.get("planning") or {}, after.get("planning") or {}
+    plan_note = None
+    if old_plan.get("revision") and old_plan.get("revision") != new_plan.get("revision"):
+        plan_note = (f"The concept geometry and quantities changed from revision {old_plan['revision']} to {new_plan['revision']}. Any draft sequence or estimate built on "
+                     f"{old_plan['revision']} needs recalculation." if new_plan else f"Revision {old_plan['revision']}'s concept plan no longer applies, so drafts built on it can't be used.")
+    return dict(state_before=before["state"], state_after=after["state"], inputs=inputs, results=results, plan_note=plan_note,
                 site_visit_done=sorted(f"{w}: {a}" for w, a in visit(before) - visit(after)), site_visit_added=sorted(f"{w}: {a}" for w, a in visit(after) - visit(before)))

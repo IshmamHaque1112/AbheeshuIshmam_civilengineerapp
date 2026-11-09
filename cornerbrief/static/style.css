@@ -114,3 +114,4 @@ label.inline input { width:auto; }
 #basis ul { margin:0; font-size:14px; }
 .tag.synthetic-tag { color:var(--blue); border-color:var(--blue); }
 @media (max-width:980px) { .sheet.preview { grid-template-columns:minmax(0,1fr); } .viewer canvas { height:400px; } .synthetic { padding:10px 16px; } }
+[hidden] { display:none !important; }

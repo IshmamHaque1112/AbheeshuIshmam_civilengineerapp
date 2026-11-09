@@ -185,6 +185,8 @@ The code now follows this version:
 
 - **NYC data (Nov 5):** Units now come from the official ramp data dictionary. Real corners also pull Street Centerline, Planimetric Sidewalk, both permit datasets, NYC DOT's survey map record and NYSDOT's Roadway Inventory. Open Data's ramp length and left flare columns are swapped, so the app corrects them. All 300 ramps sampled against DOT's survey map support this. DOT's status is shown as its own record, never as this tool's result.
 
+- **M2a and M2 (Nov 9):** Packets now show each concept dimension as documented, assumed, stale or unresolved. Gated concept plans cite the record behind each dimension and include a draft seven-step concrete sequence. Every duration and resource stays unknown, and missing inputs are listed. The 3D preview carries the same draft, which says "Needs recalculation" when the dimensions change until it's rebuilt.
+
 Still open:
 
 - Queens and Brooklyn reach "checks the evidence supports" with four corner inputs missing, and each affected check shows its own stop. `docs/P0-REVIEW.md` reads the stop wording more strictly, so the team should decide which it wants.

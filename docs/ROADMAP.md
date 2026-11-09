@@ -55,7 +55,7 @@ A separate page, `/preview.html`, offers an editable, parameter-driven ramp and 
 | M1.4 | Dimension labels stay readable and don't overlap while orbiting. | Met | `test_preview_dimension_labels_stay_readable_while_orbiting` |
 | M1.5 | A missing, out-of-range or non-numeric value names the field and its valid range. No geometry or quantity is invented. The last valid model stays, marked **Not updated** on the canvas, in an alert and on dimmed quantities. No console errors. | Met | `test_preview_invalid_dimension_keeps_the_last_model_and_explains`, `test_bad_dimensions_give_feedback_and_no_model`, `test_missing_dimension_isnt_filled_in` |
 | M1.6 | Every output shows its unit, its input provenance (synthetic, assumed, unknown/not modeled) and a revision. The revision covers the dimensions, the assumptions actually used and a basis version for the geometry and takeoff math, so changing any of them gives a new revision. | Met | `test_input_basis_separates_synthetic_assumed_and_unknown`, `test_changed_assumption_changes_quantities_and_revision`, `test_basis_version_is_part_of_the_revision`, `test_every_output_states_its_units_and_source` |
-| M1.7 | Changing a dimension tells the user which earlier revision is superseded and that estimates or schedules built on it must be recalculated. | Partly met. The sandbox has no saved estimates or schedules to invalidate yet; that is M2. | `test_preview_revision_change_flags_dependent_estimates` |
+| M1.7 | Changing a dimension tells the user which earlier revision is superseded and that estimates or schedules built on it must be recalculated. | Met Nov 9, through the draft sequence (M2.2). | `test_preview_revision_change_flags_dependent_estimates` |
 | M1.8 | Synthetic values never reach a packet, label, plan, rule check or field measurement, and the page makes no other API call. | Met | `test_preview_cant_touch_packets`, `test_preview_makes_no_packet_requests_and_main_page_links_to_it` |
 | M1.9 | No dollar figures, crew hours, rule results or permission words appear in the sandbox. | Met | `test_preview_has_no_dollars_crew_rule_results_or_permission` |
 | M1.10 | The concept 3D view inside real evidence packets stays off by default and gated (R4, R11, R25). | Met (unchanged) | `tests/test_v3.py`, `tests/test_p1.py`, `tests/test_bugfixes.py` |
@@ -66,11 +66,11 @@ Known limits of M1: the renderer is a lightweight 2D-canvas projection with flat
 
 | # | Acceptance criterion | Status |
 | --- | --- | --- |
-| M2.1 | For a real packet whose evidence passes the existing gates, the concept model is built only from measured, current, unit-documented values, and each dimension label cites its record. | Proposed. The gated path exists (`parts_kit.checked_ramps`); citing on labels is not built. |
-| M2.2 | Geometry, quantities and any draft plan carry one shared revision. Editing a dimension recalculates quantities and marks the dependent draft estimate and sequence "needs recalculation" until rerun. | Proposed |
-| M2.3 | A draft small-concrete work sequence (sawcut, demolition, forming, pour, cure, warning surface, restoration) is shown only as an explicit proposed plan with every unknown duration and resource marked unknown. | Proposed |
-| M2.4 | Missing crews, equipment, rates or durations are listed as missing inputs. Nothing is filled from generic trade data. | Proposed |
-| M2.5 | The city demo still shows no dollar figures, and placeholder rates stay labeled. | Required carry-over |
+| M2.1 | For a real packet whose evidence passes the existing gates, the concept model is built only from measured, current, unit-documented values, and each dimension label cites its record. | Met Nov 9: `planning.cited_dimensions`, shown under the concept plan and in downloads. `tests/test_m2.py` |
+| M2.2 | Geometry, quantities and any draft plan carry one shared revision. Editing a dimension recalculates quantities and marks the dependent draft estimate and sequence "needs recalculation" until rerun. | Met Nov 9: the preview's draft stays on its revision and says "Needs recalculation" until rebuilt; a packet rerun notes a changed revision. `tests/test_m2.py`, `test_preview_draft_needs_recalculation_until_rebuilt` |
+| M2.3 | A draft small-concrete work sequence (sawcut, demolition, forming, pour, cure, warning surface, restoration) is shown only as an explicit proposed plan with every unknown duration and resource marked unknown. | Met Nov 9: `cornerbrief/work_plan.py`, on the preview page and in gated concept plans |
+| M2.4 | Missing crews, equipment, rates or durations are listed as missing inputs. Nothing is filled from generic trade data. | Met Nov 9 for the draft sequence. The older concept plan's labor hours still use labeled sample rates and stay off by default. |
+| M2.5 | The city demo still shows no dollar figures, and placeholder rates stay labeled. | Met (unchanged) |
 
 ### M3: Contractor workflow (later, after validating the persona)
 

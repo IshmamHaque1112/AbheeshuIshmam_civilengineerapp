@@ -331,7 +331,7 @@ def test_export_includes_every_packet_section():
 
 def test_export_includes_the_plan_only_with_a_label(fully_reviewed):
     text = to_markdown(approve(fully_reviewed(), "Reviewer"))
-    for part in ("Label: probably standard", "Likely options", "Labor hours", "Work sequence", "Likely equipment types", "Assumptions", "Excluded", "Questions for a safety professional", "Source: https"):
+    for part in ("Label: probably standard", "Likely options", "Labor hours", "Draft work sequence", "Dimensions used, with their records", "Likely equipment types", "Assumptions", "Excluded", "Questions for a safety professional", "Source: https"):
         assert part in text, part
 
 

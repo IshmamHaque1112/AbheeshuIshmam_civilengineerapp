@@ -9,6 +9,7 @@ from .revision import MODEL_VERSION, revision
 from .rules import load_rates
 from .safety_questions import build_questions
 from .takeoff import build_takeoff
+from .work_plan import build_work_plan
 
 
 def planning_basis(evidence, ramps: list[dict], takeoff: dict) -> dict:
@@ -29,6 +30,17 @@ def planning_basis(evidence, ramps: list[dict], takeoff: dict) -> dict:
                 assumptions=[dict(id=x["id"], value=x["value"], unit=x.get("unit"), status="assumed", reason=x.get("basis", "")) for x in takeoff["assumptions"]])
 
 
+def cited_dimensions(basis: dict) -> list[dict]:
+    """Label each dimension the model used with the record it came from (roadmap M2.1)."""
+    out = []
+    for x in basis["inputs"]:
+        recorded = f"{x['recorded_value']:g} {x['recorded_unit']}" if isinstance(x["recorded_value"], (int, float)) else str(x["recorded_value"])
+        shown = f"{round(x['value'], 2):g} {x['unit']}"
+        source = x["source"] or "no record"
+        out.append(dict(ramp_id=x["ramp_id"], input=x["input"], label=f"{x['name']}: {shown}", citation=f"{recorded} from {source}{', ' + str(x['date']) if x['date'] else ''}"))
+    return out
+
+
 def run_planning(evidence, rates=None) -> dict | None:
     ramps = checked_ramps(evidence)
     if not ramps:
@@ -38,4 +50,5 @@ def run_planning(evidence, rates=None) -> dict | None:
     basis = planning_basis(evidence, ramps, takeoff)
     return dict(concept_label="Concept only, built from surveyed dimensions, with height exaggerated", scene=build_scene(ramps, assumptions()["curb_extra_length_ft"]["value"]), takeoff=takeoff,
                 cost=build_cost(takeoff, rates), crew=build_crew(takeoff, rates), equipment=build_equipment(takeoff),
-                safety_questions=build_questions(), basis=basis, revision=basis["revision"])
+                safety_questions=build_questions(), basis=basis, revision=basis["revision"],
+                dimensions=cited_dimensions(basis), work_plan=build_work_plan(takeoff, basis["revision"]))

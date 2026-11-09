@@ -140,6 +140,24 @@ function rulesTable(rows) {
   return `<div class="wrap"><table><thead><tr><th>Rule</th><th>Ramp</th><th>Limit</th><th>Result</th><th>Math or reason</th><th>Source</th></tr></thead><tbody>${rows.map((o) => `<tr><td>${esc(o.title)}</td><td>${esc(o.ramp_id || "")}</td><td>${esc(o.limit_text)}</td><td>${resultTag(o.result)}${previewTag(o)}${o.evidence_stop ? ` <span class="tag stoptag">Stop: evidence still needed</span>` : ""}</td><td>${esc(o.math || o.reason)}</td><td>${link(o.section || "Source", o.url)}${o.quote ? `<blockquote>${esc(o.quote)}</blockquote>` : ""}</td></tr>`).join("")}</tbody></table></div>`;
 }
 
+function readinessSection(x) {
+  if (!x || !x.rows.length) return "";
+  const n = x.counts, blocked = x.rows.length - n.documented;
+  const lead = blocked
+    ? `The concept model can't be built: ${blocked} of ${x.rows.length} dimensions aren't documented. Each one moves to documented only through a new record or a site measurement and a rerun.`
+    : "Every dimension the concept model needs is documented. Concept outputs still stay off until every review condition is met.";
+  return `<section><h2>Concept model inputs</h2><p>${esc(lead)}</p>${x.gate_note ? `<p class="stalenote">${esc(x.gate_note)}</p>` : ""}
+    <details><summary>${n.documented} documented, ${n.assumed} assumed, ${n.stale} stale, ${n.unresolved} unresolved</summary><div class="wrap"><table><thead><tr><th>Ramp</th><th>Dimension</th><th>Recorded value</th><th>Status</th><th>Why</th></tr></thead><tbody>
+    ${x.rows.map((d) => `<tr><td>${esc(d.ramp_id)}</td><td>${esc(d.dimension)}</td><td>${d.value == null ? "" : `${esc(d.value)} ${esc(d.unit === "percent" ? "%" : d.unit || "")}`}</td><td><span class="tag ${d.status === "documented" ? "measured" : d.status === "unresolved" ? "missing" : esc(d.status)}">${esc(d.status)}</span></td><td>${esc(d.reason || "")}</td></tr>`).join("")}</tbody></table></div></details></section>`;
+}
+
+function workPlan(w) {
+  return `<h3>Draft work sequence</h3><p>${esc(w.label)} Built from revision ${esc(w.built_from_revision)}.</p>
+    <div class="wrap"><table><thead><tr><th>Step</th><th>Quantities</th><th>Likely equipment types</th><th>Duration</th><th>People and equipment available</th></tr></thead><tbody>
+    ${w.steps.map((s) => `<tr><td>${s.number}. ${esc(s.name)}</td><td>${s.quantities.length ? s.quantities.map((q) => `${q.qty} ${esc(q.unit === "count" ? "" : q.unit)} ${esc(q.label.toLowerCase())}`).join("; ") : esc(s.note || "None modeled")}</td><td>${esc(s.equipment_types.join(", ") || "None listed")}</td><td>Unknown, from ${esc(s.duration_source)}</td><td>Unknown</td></tr>`).join("")}</tbody></table></div>
+    <h3>Missing inputs</h3><ul class="plain">${w.missing_inputs.map((m) => `<li>${esc(m)}</li>`).join("")}</ul>`;
+}
+
 function plan(p) {
   const c = p.cost;
   return `<section><h2>Concept plan</h2>
@@ -148,7 +166,8 @@ function plan(p) {
     <p>${c.contains_sample_rates ? "<strong>These numbers use placeholder sample rates, not market prices.</strong> " : ""}${esc(c.range_note)}</p>
     <div class="wrap"><table><thead><tr><th>Item</th><th>Quantity</th><th>Rate</th><th>Amount</th><th>Rate status</th></tr></thead><tbody>${c.lines.map((l) => `<tr><td>${esc(l.item)}</td><td>${l.quantity} ${esc(l.unit || "")}</td><td>${l.rate == null ? "Unknown" : `${money(l.rate)} per ${esc(l.unit)}`}</td><td>${l.amount == null ? "Unknown" : money(l.amount)}</td><td>${esc(l.status)}${l.rate_out_of_date ? ", out of date" : ""}</td></tr>`).join("")}</tbody></table></div>`}
     <h3>Labor hours</h3>${p.crew.result === "unknown" ? "<p>Unknown, because a crew rate is missing.</p>" : `<ul class="plain">${p.crew.hours.map((h) => `<li>${esc(h.trade)}: ${h.hours} hours${p.crew.contains_sample_rates ? ", from sample rates" : ""}${p.crew.rates_out_of_date ? ", from an out-of-date rate" : ""}</li>`).join("")}</ul>`}
-    <h3>Work sequence</h3><ol>${p.crew.sequence.map((s) => `<li>${esc(s)}</li>`).join("")}</ol>
+    ${p.dimensions ? `<h3>Dimensions used, with their records</h3><ul class="plain">${p.dimensions.map((d) => `<li>${esc(d.label)}, from ${esc(d.citation)}</li>`).join("")}</ul>` : ""}
+    ${p.work_plan ? workPlan(p.work_plan) : `<h3>Work sequence</h3><ol>${p.crew.sequence.map((s) => `<li>${esc(s)}</li>`).join("")}</ol>`}
     <h3>Likely equipment types</h3><ul class="plain">${p.equipment.map((e) => `<li>${esc(e.type)}: ${esc(e.use)}</li>`).join("")}</ul>
     <h3>Not included</h3><p>${p.takeoff.exclusions.map(esc).join(". ")}.</p>
     <h3>Assumptions</h3><ul class="plain">${p.takeoff.assumptions.map((a) => `<li>${esc(a.basis)}</li>`).join("")}</ul>
@@ -172,6 +191,7 @@ function changesSection(c) {
     ${c.inputs.length ? `<h3>Inputs</h3><div class="wrap"><table><thead><tr><th>Input</th><th>Ramp</th><th>Before</th><th>Now</th></tr></thead><tbody>${c.inputs.map((i) => `<tr><td>${esc(fieldNames[i.field] || i.field)}</td><td>${esc(i.ramp_id || "")}</td><td>${esc(i.before_label)}: ${showValue(i.before_value, i.unit)}</td><td>${i.on_site && i.after_label === "measured" ? "measured on site" : esc(i.after_label)}: ${showValue(i.after_value, i.unit)}${i.on_site && i.after_date ? `, ${esc(i.after_date)}` : ""}</td></tr>`).join("")}</tbody></table></div>` : ""}
     ${c.results.length ? `<h3>Results</h3><div class="wrap"><table><thead><tr><th>Rule</th><th>Ramp</th><th>Before</th><th>Now</th><th>Math or reason</th></tr></thead><tbody>${c.results.map((x) => `<tr><td>${esc(x.title)}</td><td>${esc(x.ramp_id || "")}</td><td>${esc(x.before)}</td><td>${esc(x.after)}${x.unreviewed ? ", unreviewed" : ""}</td><td>${esc(x.math)}</td></tr>`).join("")}</tbody></table></div>` : ""}
     ${c.site_visit_done.length ? `<h3>Site visit items no longer needed</h3><ul class="plain">${c.site_visit_done.map((x) => `<li>${esc(x)}</li>`).join("")}</ul>` : ""}
+    ${c.plan_note ? `<p class="stalenote"><strong>Concept plan:</strong> ${esc(c.plan_note)}</p>` : ""}
     ${(c.site_visit_added || []).length ? `<h3>New site visit items</h3><ul class="plain">${c.site_visit_added.map((x) => `<li>${esc(x)}</li>`).join("")}</ul>` : ""}
     <button class="button alt" id="startover">Start over from the original records</button></section>`;
 }
@@ -253,6 +273,7 @@ function render() {
         ${(r.permits || []).length ? `<details><summary>${r.permits.length} street permits for this block</summary><div class="wrap"><table><thead><tr><th>Permit</th><th>Type</th><th>Work dates</th><th>Location</th><th>Status</th></tr></thead><tbody>${r.permits.map((p) => `<tr><td>${esc(p.permitnumber)}</td><td>${esc(p.permittypedesc)}</td><td>${esc(String(p.issuedworkstartdate || "").slice(0, 10))} to ${esc(String(p.issuedworkenddate || "").slice(0, 10))}</td><td>${esc([p.onstreetname, p.fromstreetname, p.tostreetname].filter(Boolean).map((x) => String(x).trim()).join(", "))}</td><td>${esc(p.permitstatusshortdesc)}</td></tr>`).join("")}</tbody></table></div></details>` : ""}
       </section>
       <section><h2>Evidence labels</h2><details open><summary>${r.evidence.length} inputs: ${esc(counts)}</summary><div class="wrap"><table><thead><tr><th>Input</th><th>Ramp</th><th>Value</th><th>Label</th><th>Source and date</th><th>Note</th></tr></thead><tbody>${r.evidence.map((e) => `<tr><td>${esc(fieldNames[e.field] || e.field)}</td><td>${esc(e.ramp_id || "")}</td><td>${e.value == null ? "" : `${esc(e.value)} ${esc(e.unit === "percent" ? "%" : e.unit)}`}</td><td><span class="tag ${esc(e.label)}">${e.on_site && e.label === "measured" ? "measured on site" : esc(e.label)}</span></td><td>${esc(e.source)}${e.date ? `, ${esc(e.date)}` : ""}${e.photo ? ` ${link("Photo", `/api/photos/${e.photo}`)}` : ""}</td><td>${esc(e.reason)}</td></tr>`).join("")}</tbody></table></div></details></section>
+      ${readinessSection(r.readiness)}
       <section><h2>Which rules apply</h2>${nyDecision ? `<p><strong>City or state:</strong> ${esc(nyDecision.reason)} ${link(nyDecision.source_section, nyDecision.url)}</p>` : ""}
       <details><summary>All ${r.applicability.length} rule decisions</summary><div class="wrap"><table><thead><tr><th>Rule</th><th>Applies</th><th>Why</th><th>Basis</th></tr></thead><tbody>${r.applicability.map((d) => `<tr><td>${esc(d.title)}</td><td>${d.applies ? "Yes" : "No"}</td><td>${esc(d.reason)}</td><td>${link(d.source_section, d.url)}</td></tr>`).join("")}</tbody></table></div></details>
       <p class="hint">${r.rule_review.verified} of ${r.rule_review.verified + r.rule_review.awaiting_human_review.length} sourced rules have a named reviewer, so limit results stay unknown until then. ${r.rules_needing_sources.length} rules still need sources, and ${r.rule_review.precedence_awaiting_review.length} which-rule-applies decisions still need review.${r.rule_review.source_check_overdue.length ? ` ${r.rule_review.source_check_overdue.length} source checks are over a year old.` : ""}</p></section>

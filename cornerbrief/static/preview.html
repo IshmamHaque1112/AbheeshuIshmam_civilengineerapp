@@ -44,6 +44,14 @@
       <div class="wrap"><table><thead><tr><th>Item</th><th>Quantity</th><th>Change</th></tr></thead><tbody id="quantities"></tbody></table></div>
       <details><summary>Assumptions and exclusions</summary><div class="detailbody"><h3>Sample assumptions</h3><ul class="plain" id="assumptions"></ul><h3>Not included</h3><ul class="plain" id="exclusions"></ul></div></details>
     </section>
+    <section aria-labelledby="draft-title" id="draft-section">
+      <h2 id="draft-title">Draft work sequence</h2>
+      <p id="draft-status" class="hint" role="status"></p>
+      <p id="draft-stale" class="stalenote" role="alert" hidden></p>
+      <button class="button alt" id="draft-rebuild" type="button" hidden>Recalculate draft</button>
+      <div class="wrap"><table><thead><tr><th>Step</th><th>Quantities</th><th>Equipment types</th><th>Duration</th></tr></thead><tbody id="draft-steps"></tbody></table></div>
+      <details><summary>Missing inputs</summary><div class="detailbody"><p class="hint">This page never fills these in.</p><ul class="plain" id="draft-missing"></ul></div></details>
+    </section>
   </div>
 </main>
 <script src="/preview.js"></script>
