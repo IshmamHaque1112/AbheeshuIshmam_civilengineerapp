@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CornerBrief Contractor Demonstration</title>
+<link rel="stylesheet" href="/style.css">
+</head>
+<body class="demo-zone">
+<header class="top">
+  <h1>CornerBrief</h1>
+  <p>Contractor workflow demonstration (roadmap M3). Demo only, with no affiliation to NYC. <a class="toplink" href="/">Back to corner packets</a></p>
+</header>
+<div class="synthetic demo-stamp" id="notice" role="note">DEMONSTRATION</div>
+<main class="sheet demo">
+  <section class="panel">
+    <h2>Corner and start date</h2>
+    <p class="hint" id="persona"></p>
+    <div class="demo-controls">
+      <label for="corner">Corner</label><select id="corner"></select>
+      <label for="start">Proposed start</label><input id="start" type="date" value="2026-11-16">
+      <button class="button" id="build" type="button">Build the demonstration</button>
+    </div>
+    <p id="status" role="status"></p>
+  </section>
+  <div id="out"></div>
+</main>
+<script src="/demo/contractor.js"></script>
+</body>
+</html>

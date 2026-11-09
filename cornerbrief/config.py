@@ -19,3 +19,8 @@ def load_env():
 def labels_enabled() -> bool:
     """Standard or custom labels and concept plans stay off until the adversarial suite passes and a person turns them on."""
     return os.environ.get("SHOW_LABELS_AND_PLANS", "false").lower() == "true"
+
+
+def roadmap_demos_enabled() -> bool:
+    """The M3 contractor demonstration and M4 structures sandbox use fictional or illustrative data, so they stay off until a person turns them on."""
+    return os.environ.get("SHOW_ROADMAP_DEMOS", "false").lower() == "true"

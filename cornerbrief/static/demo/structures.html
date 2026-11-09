@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CornerBrief Structures Sandbox</title>
+<link rel="stylesheet" href="/style.css">
+</head>
+<body class="demo-zone">
+<header class="top">
+  <h1>CornerBrief</h1>
+  <p>Structures sandbox (roadmap M4). Illustrative geometry only. <a class="toplink" href="/">Back to corner packets</a></p>
+</header>
+<div class="synthetic demo-stamp" id="notice" role="note"></div>
+<main class="sheet preview">
+  <section class="panel" aria-labelledby="params-title">
+    <h2 id="params-title">Model</h2>
+    <label for="model-choice">Structure</label><select id="model-choice"></select>
+    <form id="params" novalidate></form>
+    <p id="status" role="status"></p>
+    <section id="facts"><h2>What's drawn</h2><ul class="plain" id="fact-list"></ul></section>
+  </section>
+  <section class="panel">
+    <div class="viewer">
+      <canvas id="scene" tabindex="0" role="img" aria-label="Illustrative structure geometry"></canvas>
+      <div class="viewbuttons">
+        <button type="button" id="zoom-in" aria-label="Zoom in">+</button>
+        <button type="button" id="zoom-out" aria-label="Zoom out">−</button>
+        <button type="button" id="view-reset">Reset view</button>
+        <button type="button" id="play" hidden>Pause</button>
+      </div>
+    </div>
+    <p class="hint">Drag to rotate, scroll to zoom, and shift-drag or right-drag to pan. Arrow keys rotate, and + or − zoom.</p>
+  </section>
+</main>
+<script src="/demo/structures.js"></script>
+</body>
+</html>

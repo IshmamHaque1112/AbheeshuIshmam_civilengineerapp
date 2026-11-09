@@ -121,12 +121,24 @@ label.inline input { width:auto; }
 .tag.synthetic-tag { color:var(--blue); border-color:var(--blue); }
 @media (max-width:980px) { .sheet.preview { grid-template-columns:minmax(0,1fr); } .viewer canvas { height:400px; } .synthetic { padding:10px 16px; } }
 [hidden] { display:none !important; }
+.demo-stamp { background:#7a3e00; }
+.demo-controls { display:flex; flex-wrap:wrap; gap:8px 14px; align-items:center; }
+.demo-controls label { margin:0; }
+.sheet.demo { display:flex; flex-direction:column; gap:14px; }
+.demo-zone { background:#f6efe4; }
+.demo-zone .top { background:#5a2e00; }
+.kind { display:inline-block; margin:2px 4px 0 0; padding:0 6px; border-radius:3px; font-size:12px; font-weight:700; letter-spacing:.02em; border:1.5px solid; white-space:nowrap; }
+.kind.k-real { color:#1d4d2b; border-color:#1d4d2b; }
+.kind.k-synthetic { color:#0d5c9e; border-color:#0d5c9e; }
+.kind.k-fictional { color:#fff; background:#7a3e00; border-color:#7a3e00; }
+.kind.k-unknown { color:#a8261d; border-color:#a8261d; border-style:dashed; }
+.demo-chip { display:inline-block; margin-left:8px; padding:1px 7px; font-size:12px; font-weight:700; color:#fff; background:#7a3e00; border-radius:3px; vertical-align:middle; }
 </style>
 </head>
 <body>
 <header class="top">
   <h1>CornerBrief</h1>
-  <p>Assembles a traceable packet for a NYC street corner and shows what evidence is still needed. Demo only, with no affiliation to NYC. Pre-design support, not a compliance decision. <a class="toplink" id="preview-link" href="/preview.html">3D preview (synthetic)</a></p>
+  <p>Assembles a traceable packet for a NYC street corner and shows what evidence is still needed. Demo only, with no affiliation to NYC. Pre-design support, not a compliance decision. <a class="toplink" id="preview-link" href="/preview.html">3D preview (synthetic)</a> <span id="demo-links" hidden><a class="toplink" href="/demo/contractor.html">Contractor demonstration (fictional)</a> <a class="toplink" href="/demo/structures.html">Structures sandbox (illustrative)</a></span></p>
 </header>
 <nav class="picker" aria-label="Demo corners" id="picker"></nav>
 <section class="search panel" aria-labelledby="search-title">
@@ -181,6 +193,7 @@ async function start() {
   $("#picker").innerHTML = corners.map((c) => `<button data-key="${esc(c.key)}"><span>${esc(c.label)}</span><small>${c.data_kind === "SAMPLE DATA" ? "Sample data" : "Real test, NYC Open Data"}</small></button>`).join("");
   document.querySelectorAll("#picker button").forEach((b) => b.addEventListener("click", () => run(b.dataset.key)));
   if (exportedPackets) $("#preview-link").href = "preview.html"; // The static copy has the default model only
+  else fetch("/api/demo").then((r) => r.json()).then((d) => { if (d.enabled) $("#demo-links").hidden = false; }).catch(() => {}); // Roadmap demos show only when turned on
   wireSearch();
   const chosen = latest.chosen();
   run(corners.some((c) => c.key === chosen) || (/^real_[0-9]+_[a-f0-9]{12}$/.test(chosen || "") && latest.get(chosen)) ? chosen : corners[0].key);
