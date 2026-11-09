@@ -4,6 +4,8 @@ NYC DOT Standard Details of Construction, Pedestrian Ramps, sheets H-1011-2 to H
 
 Transcribed by Claude on November 9, 2026, from 200 dpi renderings of the PDFs. **No person has checked this transcription against the sheets yet.** Notes are copied word for word, in the sheets' capitals turned to sentence case. Dimension and slope labels are copied from the drawings and named by the view they sit in. Every drawing is "not to scale" (N.T.S.), so only labeled values are recorded. Anything that couldn't be read clearly is marked **[unclear]**.
 
+Second pass, the same day, at 400 dpi: every note on sheets 2 to 5 and the elevations and sections on sheets 3 to 7 were re-read and corrected. Sheet 3 notes 4 to 8 and four sheet 4 notes had been paraphrased and are now word for word. Sheet 3 view E is now recorded as its seven segments. Sheet 9 note 16 and the sheet 4 view J clear space (4'-0" min.) were confirmed. Nothing is marked [unclear] now. A person still needs to check the whole file.
+
 Sheet-level general notes refer to H-1011-1, which is already in `rules/nyc/`.
 
 ## H-1011-2: Corner cases, perpendicular
@@ -66,20 +68,19 @@ Views: C3 Case C3, parallel, isometric; E Elevation view; F Section view.
 1. For index of drawings, slope limits, legend, glossary, general notes, see Dwg. No. H-1011-1.
 2. For detectable warning surfaces (D.W.S.), see Dwg. No. H-1011-9.
 3. For objects in the flare, example scoring patterns, example sidewalk curbs at ramps, and meeting non-compliant slopes see Dwg. No. H-1011-8.
-4. If one side of a corner does not lead to a marked or unmarked crosswalk, the ramp at that side may be omitted as directed by the engineer.
-5. Case C3 may be used where the proposed pedestrian circulation path width is less than eight feet (8').
-6. Case C4 should be used where the proposed pedestrian circulation path width is less than eight feet (8') and the bottom landings cannot be constructed within the crosswalks.
-7. An interior landing (turning space) is required where designed approach slopes exceed 4.5%, see general note 12.
-8. Case C3 gutter flow slope shall not be less than 0.5%.
+4. If one side of a corner does not lead to a marked or unmarked crosswalk, the ramp at that side of the corner may be omitted as directed by the engineer.
+5. Case C3 may be used at corners where proposed pedestrian circulation path width is less than eight feet (8').
+6. For locations where the proposed pedestrian circulation path width is less than eight feet (8') and bottom landings cannot be constructed within the crosswalks, use Case C4.
+7. An interior landing (turning space) must be provided where designed approach slopes exceed 4.5%, and in accordance with general note 12.
+8. For Case C3, the gutter slope must not be less than one half percent (0.5%).
 
 ### Labeled values
 
 | View | Label |
 | --- | --- |
-| E Elevation | Ramps 5'-0" to 15'-0" (one side shown as 2'-6" to 15'-0"), 7.5% max. |
-| E Elevation | Landing (turning space) 5'-0" min., 1.5% max.; middle length varies, 1.5% max. |
-| E Elevation | 0" curb reveal at the landing; 2" min. curb reveal at the middle; 7" curb reveal or as directed by engineer beyond the ramps |
-| E Elevation | Meet existing cross slopes, see general note 20; D.W.S. (typ.) |
+| E Elevation | Seven segments, symmetric, from each end inward: ramp 5'-0" to 15'-0", 7.5% max.; landing (turning space) 5'-0" min., 1.5% max.; ramp 2'-6" to 15'-0", 7.5% max.; and in the middle, length varies, 1.5% max. |
+| E Elevation | 0" curb reveal at both landings; 2" min. curb reveal at each end of the middle segment; 7" curb reveal or as directed by engineer at the outer ends |
+| E Elevation | Meet existing cross slopes, see general note 20; D.W.S. (typ.) at the landings; curb type varies, see general note 4; gutter line with positive drainage (typ.); curb height varies |
 | F Section | Landing (turning space) 5'-0" min., 1.5% max.; roadway 4.5% max.; sidewalk curb as directed by the engineer, see Dwg. No. H-1060; Type II concrete sidewalk (Dwg. No. H-1045); 6" foundation and compacted subgrade, not separate pay items |
 | C3 Isometric | 5'-0" min. (typ.); ramp 5'-0" to 15'-0"; landing running slope, see general note 26; gutter flow slope, see note 8; 2" min. curb reveal |
 
@@ -93,18 +94,18 @@ Views: C4 Case C4, shared parallel; C5 Case C5, blended transition; side treatme
 2. For detectable warning surfaces (D.W.S.), see Dwg. No. H-1011-9.
 3. For objects in the flare, example scoring patterns, example sidewalk curbs at ramps, and meeting non-compliant slopes see Dwg. No. H-1011-8.
 4. Written approval must be obtained from NYC DOT to use Case C4 or Case C5.
-5. Bollards must be installed where deterrents to vehicle off-tracking (poles, trees, hydrants, fences, etc.) are not present, as directed by the engineer. Bollards must not obstruct a minimum 4'-0" wide pedestrian access route for each crosswalk (marked or unmarked).
+5. Bollards must be installed where deterrents to vehicle off-tracking (such as poles, trees, hydrants, fences, etc.) are not present, as directed by the engineer. Bollards must not obstruct a minimum 4'-0" wide pedestrian access route for each crosswalk. (Marked or unmarked)
 6. Where bollards are required, the proposed design must be approved by NYC DOT prior to its fabrication.
-7. D.W.S. in Case C4 and C5 per Detail X, Dwg. No. H-1011-9.
+7. D.W.S. in Case C4 and C5 must be installed in accordance with Detail X, Dwg. No. H-1011-9.
 
 Case C4, shared parallel notes:
 
-8. Case C4 may be used where the proposed pedestrian circulation path width is less than eight feet (8'), the available space at the corner is constrained by obstructions, and Case C3 cannot be constructed within the crosswalks.
-9. Case C4 gutter flow slope shall not be less than 0.5%.
+8. Case C4 may be used at corners where the proposed pedestrian circulation path width is less than eight feet (8'), the available space at the corner is constrained by obstructions, and Case C3 cannot be constructed within the crosswalks.
+9. For Case C4, the gutter flow slope must not be less than one half percent (0.5%).
 
 Case C5, blended transition notes:
 
-10. Case C5 may be used where the proposed pedestrian circulation path width is eight feet (8') or greater, the available space at the corner is constrained by obstructions, and Cases C1 and C2 cannot be constructed within the crosswalks.
+10. Case C5 may be used at corners where the proposed pedestrian circulation path width is eight feet (8') or greater, the available space at the corner is constrained by obstructions, and Cases C1 and C2 cannot be constructed within the crosswalks.
 
 ### Labeled values
 
@@ -296,7 +297,7 @@ Detectable warning surface (D.W.S.) notes:
 13. Embedded D.W.S. must be installed on a planar surface to prevent warping. Any cross slope transitions (warping) within a ramp or turning space must be exclusive of the D.W.S., at a maximum rate of one percent (1.0%) per linear foot.
 14. Pre-fabricated radial D.W.S. may be used for radial D.W.S. placement. Where procurement of pre-fabricated radial D.W.S. is not feasible, rectangular tile arrays may be used to provide radial D.W.S. placement, as directed by the engineer. Where used, radial D.W.S. of any type must meet all applicable requirements on this sheet, including dome spacing.
 15. Detectable warning domes (truncated domes) must meet the requirements of Detail Z.
-16. Where an existing utility casting is located within the proposed location of a D.W.S., the contractor may cut the D.W.S. to accommodate the utility casting; see note 5. **[unclear: the last line of note 16 was read from the overview only]**
+16. Where an existing utility casting is located within the proposed location of a D.W.S., the contractor may cut the D.W.S. to accommodate the utility casting; see note 5.
 
 ### Labeled values
 
