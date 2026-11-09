@@ -115,3 +115,7 @@ label.inline input { width:auto; }
 .tag.synthetic-tag { color:var(--blue); border-color:var(--blue); }
 @media (max-width:980px) { .sheet.preview { grid-template-columns:minmax(0,1fr); } .viewer canvas { height:400px; } .synthetic { padding:10px 16px; } }
 [hidden] { display:none !important; }
+.demo-stamp { background:#7a3e00; }
+.demo-controls { display:flex; flex-wrap:wrap; gap:8px 14px; align-items:center; }
+.demo-controls label { margin:0; }
+.sheet.demo { display:flex; flex-direction:column; gap:14px; }

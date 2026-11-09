@@ -74,22 +74,22 @@ Known limits of M1: the renderer is a lightweight 2D-canvas projection with flat
 
 ### M3: Contractor workflow (later, after validating the persona)
 
-Only after interviews and a role test with real estimators or project engineers:
+Only after interviews and a role test with real estimators or project engineers. As of Nov 9, `/contractor.html` demonstrates every criterion with a fictional sample company (`data/demo/sample_company.yaml`), synthetic quantities and a real corner's records. It's stamped DEMONSTRATION, saves nothing and submits nothing, so none of these criteria is met with real company data yet.
 
 | # | Acceptance criterion | Status |
 | --- | --- | --- |
-| M3.1 | An opportunity brief lists location, scope, deadline, qualifications, documents and open questions, each tied to its source page. | Proposed |
-| M3.2 | Capability and prequalification match uses the company's verified records only, and shows "unknown" where a record is missing. | Proposed |
-| M3.3 | A draft logistics plan covers staging, delivery access, lead times, pedestrian access, demolition, waste removal, permits and utility coordination (for example New York 811), with each item linked to its source or marked unknown. | Proposed |
-| M3.4 | Crew and equipment sequencing uses actual availability and production history, and shows conflicts instead of resolving them silently. | Proposed |
-| M3.5 | Labor rules come from the specific contract and agreement for the job. One project labor agreement is never applied to every union job. | Proposed |
-| M3.6 | RFIs, material requests, daily reports and payroll discrepancy checks are drafts for a person. Submitting any of them is a separate, authorized action. | Proposed |
+| M3.1 | An opportunity brief lists location, scope, deadline, qualifications, documents and open questions, each tied to its source page. | Demonstrated: each brief line links its source or says unknown (`tests/test_m3_m4.py`) |
+| M3.2 | Capability and prequalification match uses the company's verified records only, and shows "unknown" where a record is missing. | Demonstrated: only verified sample records match; the rest stay unknown (`tests/test_m3_m4.py`) |
+| M3.3 | A draft logistics plan covers staging, delivery access, lead times, pedestrian access, demolition, waste removal, permits and utility coordination (for example New York 811), with each item linked to its source or marked unknown. | Demonstrated, including active block permits and New York 811 (`tests/test_m3_m4.py`) |
+| M3.4 | Crew and equipment sequencing uses actual availability and production history, and shows conflicts instead of resolving them silently. | Demonstrated: sample availability and production records; conflicts listed, never resolved (`tests/test_m3_m4.py`) |
+| M3.5 | Labor rules come from the specific contract and agreement for the job. One project labor agreement is never applied to every union job. | Demonstrated: an agreement applies only to a job it names (`tests/test_m3_m4.py`) |
+| M3.6 | RFIs, material requests, daily reports and payroll discrepancy checks are drafts for a person. Submitting any of them is a separate, authorized action. | Demonstrated: drafts only, with a payroll versus daily-report hours check (`tests/test_m3_m4.py`) |
 
 ### M4: Specialist structure modules (future, research only)
 
 The four earlier interactive demos (Pratt truss bridge, lattice transmission tower, geodesic dome and animated gear train) set the long-term bar for **breadth and interaction quality**: procedural geometry from named parameters, smooth orbit, zoom and pan, and readable structure.
 
-They are not supported engineering domains. Each would need its own feasibility research, a qualified engineer, domain rules and validation before any work starts. CornerBrief does not generate bridges, towers, domes or mechanisms, and it makes no claim about structural safety, compliance or approval for anything it draws.
+As of Nov 9, `/structures.html` is a geometry-only sandbox for all four: Pratt truss, lattice tower, geodesic dome and a three-gear train, with named parameters, orbit, zoom and pan. It draws shapes only. They are not supported engineering domains. Each would need its own feasibility research, a qualified engineer, domain rules and validation before any work starts. CornerBrief does not design bridges, towers, domes or mechanisms. The sandbox applies no loads or checks, and CornerBrief makes no claim about structural safety, compliance or approval for anything it draws.
 
 ## Research references to follow up
 

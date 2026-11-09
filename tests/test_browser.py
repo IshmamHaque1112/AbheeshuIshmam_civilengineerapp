@@ -499,3 +499,28 @@ def test_preview_draft_needs_recalculation_until_rebuilt(preview_page):
     preview_page.click("#draft-rebuild")
     preview_page.wait_for_function("document.querySelector('#draft-stale').hidden")
     assert preview_page.inner_text("#draft-status") != first and "Unknown" in preview_page.inner_text("#draft-steps")
+
+
+def test_contractor_demo_page_is_stamped_and_lists_conflicts(browser, base):
+    pg = browser.new_page(viewport=dict(width=1280, height=900))
+    errors = []
+    pg.on("pageerror", lambda e: errors.append(str(e)))
+    pg.goto(base + "/contractor.html")
+    pg.wait_for_selector("text=4. Team and equipment sequence")
+    assert pg.inner_text("#notice").startswith("DEMONSTRATION") and "Conflicts, not resolved" in pg.inner_text("#out")
+    assert "$" not in pg.inner_text("body") and not errors
+
+
+def test_structures_sandbox_draws_every_model(browser, base):
+    pg = browser.new_page(viewport=dict(width=1280, height=900))
+    errors = []
+    pg.on("pageerror", lambda e: errors.append(str(e)))
+    pg.goto(base + "/structures.html")
+    pg.wait_for_selector("#fact-list li")
+    for model, word in (("truss", "diagonals"), ("tower", "braces"), ("dome", "65 struts"), ("gears", "not involute")):
+        pg.select_option("#model-choice", model)
+        pg.wait_for_function(f"document.querySelector('#fact-list').textContent.includes('{word}')")
+    assert pg.locator("#play").is_visible() and "no loads" in pg.inner_text("#notice").lower()
+    pg.fill("#teeth_1", "3")
+    pg.wait_for_function("document.querySelector('#teeth_1-error').textContent.length > 0")
+    assert not errors

@@ -1,0 +1,98 @@
+# DEMONSTRATION DATA. A fictional company, invented to show how the M3 contractor workflow would read
+# company records. None of this describes a real company, job, person, agreement or rate. Nothing here is
+# used by a corner packet, a label, a plan or a rule check.
+company:
+  name: Sample Concrete Co. (fictional)
+  note: Fictional demonstration records. Replace every entry with the company's own verified records before any real use.
+job_id: SAMPLE-JOB-002
+capabilities:
+  - id: sawcut
+    name: Concrete sawcutting
+    record: SAMPLE-CAP-01
+    verified: true
+  - id: demolition
+    name: Sidewalk and curb removal
+    record: SAMPLE-CAP-02
+    verified: true
+  - id: forming
+    name: Forming for slabs and curbs
+    record: SAMPLE-CAP-03
+    verified: true
+  - id: pour
+    name: Concrete placement and finishing
+    record: SAMPLE-CAP-04
+    verified: true
+  - id: warning_surface
+    name: Detectable warning surface installation
+    record: null
+    verified: false
+  - id: restoration
+    name: Surface restoration
+    record: SAMPLE-CAP-06
+    verified: true
+prequalification:
+  - list: NYC DDC prequalified list for sidewalk and pedestrian ramp work
+    record: null
+    url: https://www.nyc.gov/site/ddc/contracts/rfqpql.page
+teams:
+  - id: TEAM-A
+    name: Sample team A
+    qualified_for: [sawcut, demolition, restoration]
+    available: [{from: '2026-11-16', to: '2026-11-18'}]
+  - id: TEAM-B
+    name: Sample team B
+    qualified_for: [forming, pour]
+    available: [{from: '2026-11-17', to: '2026-11-25'}]
+equipment:
+  - type: Concrete saw
+    record: SAMPLE-EQ-01
+    available: [{from: '2026-11-16', to: '2026-11-30'}]
+  - type: Compact excavator or skid steer
+    record: SAMPLE-EQ-02
+    available: []
+  - type: Dump truck
+    record: SAMPLE-EQ-03
+    available: [{from: '2026-11-19', to: '2026-11-30'}]
+  - type: Plate compactor
+    record: SAMPLE-EQ-04
+    available: [{from: '2026-11-16', to: '2026-11-30'}]
+suppliers:
+  - material: Slab concrete
+    record: null
+  - material: Detectable warning surface
+    record: SAMPLE-SUP-02
+    lead_time_days: null
+# Fictional production history. Only these steps have a sample record, so only they get a sample duration.
+production_history:
+  - step: sawcut
+    record: SAMPLE-JOB-0007
+    per_day: 120
+    unit: lf
+    quantity: curb_length
+  - step: forming
+    record: SAMPLE-JOB-0009
+    per_day: 60
+    unit: sf
+    quantity: slab_area
+agreements:
+  - id: SAMPLE-AGREEMENT-1
+    name: Sample project agreement (fictional)
+    jobs: [SAMPLE-JOB-001]
+daily_report:
+  date: '2026-11-17'
+  entries:
+    - person: Sample worker 1
+      hours: 8
+    - person: Sample worker 2
+      hours: 8
+    - person: Sample worker 3
+      hours: 6
+payroll:
+  date: '2026-11-17'
+  entries:
+    - person: Sample worker 1
+      hours: 8
+    - person: Sample worker 2
+      hours: 10
+    - person: Sample worker 4
+      hours: 8
