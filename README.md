@@ -1,3 +1,10 @@
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/images/logo-dark.png">
+    <img src="docs/images/logo-light.png" alt="CornerBrief logo: a street corner seen from above, with a curb ramp in orange" width="420">
+  </picture>
+</p>
+
 # CornerBrief
 
 CornerBrief assembles a traceable investigation packet for a NYC street corner, shows which checks the evidence supports, and tells an engineer exactly what evidence is still needed. It is a demo for pre-design investigation. It does not decide compliance, approve a design or represent NYC.
@@ -29,6 +36,10 @@ CornerBrief does the groundwork in one traceable packet and is honest about what
 5. **Show how documented dimensions could carry forward** into a 3D concept, quantities and a draft work sequence, keeping synthetic examples visibly separate from real evidence.
 
 The decision stays with people. CornerBrief never says a corner is "compliant," never fills a gap with a guess, and never turns an unreviewed rule into a pass or fail.
+
+![CornerBrief showing a real NYC corner, Van Dam Street and Thomson Avenue in Queens. The packet stops with "Stop: evidence still needed" because a ramp permit's work ended after the 2018 survey.](docs/images/app-stop-real-corner.png)
+
+*A real corner from NYC Open Data. Ramp permits located at its ramps ended after the 2018 survey, so CornerBrief stops and lists what to re-measure instead of checking stale numbers.*
 
 ### Who it's for
 
@@ -84,6 +95,10 @@ Regular Python code makes every decision about data, rules and numbers. Four AI 
 | **Unknown**, tagged **"Calculation within limit, unreviewed"** or **"Calculation above limit, unreviewed"** | The math ran, but no named person has reviewed the rule yet, so it can't produce a result. |
 | **Unknown** with no math | The value is assumed, missing or stale, or its unit isn't documented, so no limit was checked. |
 | **No conflict found** or **Limit exceeded** | Appears only for a rule a named person has verified. No rule is verified yet. |
+
+![Rule results for Sample corner A. Each row shows the rule, ramp, limit, an "Unknown" result tagged "Calculation within limit, unreviewed", the math, and the cited source text.](docs/images/app-rule-results.png)
+
+*Rule results for a sample corner. The math runs and each rule quotes its source, but every result stays "Unknown" until a named person reviews the rule.*
 
 A rule counts as verified only after a named person checks it against its source. To record a review, run:
 
