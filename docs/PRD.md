@@ -219,6 +219,20 @@ Still open:
 | R28 adversarial suite and the R4 change | Ishmam (code), to agree |
 | Which real estimators or project engineers can test the contractor persona (section 8)? | Abheeshu, to agree |
 
+**Ishmam's answers to Abheeshu's Nov 10 action list:**
+
+| Item | Answer |
+| --- | --- |
+| Rule review sign-off | No reviewer before Nov 12. The demo shows "Unknown, unreviewed" and presents named review as the next step. |
+| ADA §405–406 source | Already done. All 7 ADA rule files cite ada.gov, retrieved Nov 5. |
+| Queens legal grade | Dropped for the demo. It stays missing and on the site visit list. |
+| R29 role test | Not before Nov 12. The demo says no engineer has tried the app yet. |
+| Manual timing baseline | Ishmam will time one corner by hand before the demo. |
+| Demo corner | Keep Van Dam St & Thomson Ave as the real "stop" example; the 2024 permit is the point. Use 1 Avenue & East 60 Street, Manhattan, as the real "checks" example. |
+| Queens/Brooklyn stop wording | Keep the corner-level result (see section 5). |
+| Budget and date | Confirmed: $40 API budget (about $1.91 used as of Nov 10) and demo on Nov 12, 2026. |
+| Code fixes from `docs/P0-REVIEW.md` (Nov 4) | Label gate, stale-response guards and the saved Thomson Ave corner were fixed after that review. Missing-input wording is the decision above. |
+
 ## 8. Product direction and staged roadmap *(proposal, issue #7)*
 
 Long-term direction: help a construction team turn a job opportunity into a traceable site investigation, an editable 3D concept and a resource-backed execution proposal for professional review. Today's corner packet is the site-investigation step of that workflow. Full milestones and acceptance criteria are in [`docs/ROADMAP.md`](ROADMAP.md).
