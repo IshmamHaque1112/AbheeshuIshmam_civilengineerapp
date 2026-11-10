@@ -249,6 +249,26 @@ A person must release each packet before it can be emailed, and every recipient 
 
 Expand **Agent trace** in a packet to see each agent's input, response and token use. Traces redact credential-like text and dollar figures.
 
+## Tech stack
+
+| Layer | What we used | Why |
+| --- | --- | --- |
+| Language | Python 3.10 or newer | One language for data, rules, checks and the server |
+| Web server | [Starlette](https://www.starlette.io) on [Uvicorn](https://www.uvicorn.org) | A small async web framework, the foundation FastAPI is built on |
+| Data models | [Pydantic](https://docs.pydantic.dev) v2 | Strict shapes for evidence, rule results and agent output, so malformed agent responses are rejected |
+| Rules and settings | YAML files read with [PyYAML](https://pyyaml.org) | One readable, reviewable file per rule, decision and rate |
+| Front end | Plain HTML, CSS and JavaScript, no framework | Runs anywhere with no build step |
+| 3D | A small built-in renderer drawing on an HTML canvas | No outside 3D library was available during the build |
+| AI agents | [Anthropic Python SDK](https://github.com/anthropics/anthropic-sdk-python) (optional), with Claude Sonnet 5.5 and Claude Haiku 5.5 | Live agent wording; demo mode uses saved responses and needs no key |
+| City and state data | NYC Open Data's Socrata API, NYC DOT's and NYSDOT's ArcGIS REST services, through Python's built-in `urllib` | Public sources, queried directly and cached as JSON |
+| Background reading | [Open Library](https://openlibrary.org/developers/api) search API (optional) | Citations only |
+| Certificates on Windows | [truststore](https://github.com/sethmlarson/truststore) | Lets Python use the Windows certificate store, which NYC data needed |
+| Email | Python's built-in `smtplib` | Dry run by default, sends only to allowlisted addresses |
+| Storage | JSON files in `runs`, `cache` and `data` | No database to install or run |
+| Tests | [pytest](https://pytest.org), Starlette's test client (with `httpx2`), and [Playwright](https://playwright.dev) with Chromium for browser checks | 517 tests, including an adversarial suite; browser checks skip without Playwright |
+
+Everything runs locally on one computer. There is no cloud service, database or front-end build step, and the only network calls are to the public data sources, Open Library when it's turned on, and the Claude API in live mode.
+
 ## How it's organized
 
 | Part | Location |
