@@ -27,7 +27,7 @@ If the record gathering is done for them, a junior engineer walks into every sit
 
 ### 1b. Users and needs
 
-- **Primary user:** a Junior Engineer (Design), Pedestrian Ramps Program, NYC DDC Division of Infrastructure, 30-30 Thomson Ave, Queens. Early career, doing "civil engineering tasks of moderate complexity under supervision": research studies, engineering investigations, field surveys and design-related site inspections.
+- **Primary user:** a Junior Engineer (Design), Pedestrian Ramps Program, NYC DDC Division of Infrastructure, 30-30 Thomson Ave, Queens — an entry-level, full-time role (35 hrs/week, $59,747–$68,709; [posting](https://cityjobs.nyc.gov/job/junior-engineer-design-in-queens-jid-48620) open Oct 23–Dec 22, 2026), doing "civil engineering tasks of moderate complexity under the supervision of an Engineer-In-Charge": research studies, engineering investigations and assessments, design, drafting, cost estimates and specifications, and field surveys and design-related site inspections.
 - **Secondary user:** the Engineer-In-Charge, who reviews and signs off and needs every number sourced and every assumption flagged.
 - **Not the user:** the public or the city officials at the demo. They are the audience.
 - **Hypothesis user (not validated):** an estimator or project engineer at a NYC union contractor. This persona and workflow come from issue #7 and need real-user interviews before anything is built for them. See section 8.
