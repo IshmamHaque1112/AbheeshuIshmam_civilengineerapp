@@ -41,6 +41,15 @@ The decision stays with people. CornerBrief never says a corner is "compliant," 
 
 *A real corner from NYC Open Data. Ramp permits located at its ramps ended after the 2018 survey, so CornerBrief stops and lists what to re-measure instead of checking stale numbers.*
 
+### The job it was built for
+
+CornerBrief is built around a real NYC job posting: [Junior Engineer (Design), NYC Department of Design and Construction](https://cityjobs.nyc.gov/job/junior-engineer-design-in-queens-jid-48620), in the Pedestrian Ramps unit of DDC's Division of Infrastructure at 30-30 Thomson Avenue, Queens. It's an entry-level, full-time role (35 hours a week, $59,747–$68,709), posted October 23, 2026 and open until December 22, 2026.
+
+- **The work:** civil engineering tasks "of moderate complexity under the supervision of an Engineer-In-Charge": research studies, engineering investigations and assessments, design, drafting, cost estimates and specifications, and field surveys and design-related site inspections, with hands-on training.
+- **Preferred skills:** NYC DOT, NYS DOT and NYC DEP specifications, MUTCD and AASHTO; roadway, sewer and water main construction; the NYC infrastructure system; AutoCAD and Microsoft Office, with Primavera P6 a plus; strong writing and speaking.
+
+CornerBrief takes on the investigation part of that job: gathering a corner's records, labeling what can be trusted, quoting the rules, and listing what to check on site, while every decision stays with the Engineer-In-Charge.
+
 ### Who it's for
 
 | User | What they need from CornerBrief |
