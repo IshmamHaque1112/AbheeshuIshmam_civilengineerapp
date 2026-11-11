@@ -6,7 +6,7 @@ doesn't make a plan, and nothing here fills in, converts or promotes a value tha
 import math
 from .evidence import input_name
 from .models import EvidenceItem
-from .parts_kit import checked_ramps
+from .parts_kit import checked_ramps, model_dimension
 
 # Each record field the concept geometry needs, the model input it feeds and the unit that input uses
 DIMENSIONS = [
@@ -19,7 +19,7 @@ DIMENSIONS = [
 # Only documented units with a known conversion. A slope stays a percentage; it's never a length.
 TO_MODEL = {"length": {"in": 1 / 12, "ft": 1.0}, "slope": {"percent": 1.0}}
 MODEL_UNIT = {"length": "ft", "slope": "%"}
-PLACEHOLDERS = {999.0, -999.0, 9999.0}
+PLACEHOLDERS = {999.0, -999.0, 9999.0, -9999.0}
 STATUS = {"measured": "documented", "assumed": "assumed", "stale": "stale", "missing": "unresolved"}
 
 
@@ -56,9 +56,11 @@ def _row(spec: dict, ramp_id: str, item: EvidenceItem | None) -> dict:
         problem = f"The unit {item.unit} isn't documented, so the value can't be read."
     elif factor is None:
         problem = f"{item.unit} isn't a unit this model can use for a {spec['kind']}."
+    elif spec["kind"] == "length" and number <= 0:
+        problem = "A model length must be greater than zero."
     if problem:
         return dict(row, status="unresolved", reason=" ".join(x for x in (problem, item.reason) if x))
-    model = abs(number) if spec["kind"] == "slope" else number * factor
+    model = model_dimension(item, slope=spec["kind"] == "slope")
     return dict(row, model_value=model)
 
 
