@@ -112,13 +112,37 @@ def test_unsupported_or_missing_unit_is_unresolved():
     assert row(rows, "8100001:ramp_width")["status"] == "unresolved" and "no unit" in row(rows, "8100001:ramp_width")["reason"]
 
 
-def test_unsupported_unit_the_old_gate_accepts_is_reported_not_hidden():
-    # checked_ramps reads any non-inch unit as feet. That gate is unchanged here, so readiness flags the disagreement.
+def test_unsupported_unit_blocks_geometry_and_planning():
     evidence = evidence_for("standard", dictionary_change={"ramp_width": {"unit": "m"}})
     result = readiness(evidence)
-    assert result["geometry_permitted"] is True and result["gate_note"]
-    basis = run_planning(evidence)["basis"]
-    assert next(i for i in basis["inputs"] if i["ramp_id"] == "8100001" and i["input"] == "width_ft")["status"] == "unresolved"
+    assert result["geometry_permitted"] is False
+    assert checked_ramps(evidence) == [] and run_planning(evidence) is None
+
+
+@pytest.mark.parametrize("field,update", [
+    ("ramp_width", {"unit": None}),
+    ("ramp_running_slope_total", {"unit": "in"}),
+    ("ramp_width", {"value": 999}),
+    ("ramp_width", {"value": float("nan")}),
+    ("ramp_width", {"value": float("inf")}),
+    ("ramp_width", {"value": True}),
+    ("ramp_width", {"value": "bad"}),
+    ("ramp_width", {"value": 0}),
+    ("lnd_length", {"value": -1}),
+])
+def test_invalid_measured_dimension_cannot_generate_quantities(field, update):
+    evidence = with_item(evidence_for("standard"), f"8100001:{field}", **update)
+    assert checked_ramps(evidence) == []
+    assert run_planning(evidence) is None
+    result = readiness(evidence)
+    assert not result["geometry_permitted"]
+    assert row(result["rows"], f"8100001:{field}")["status"] == "unresolved"
+
+
+def test_zero_and_negative_recorded_slopes_remain_valid_percentages():
+    for slope in (0, -6.4):
+        evidence = with_item(evidence_for("standard"), "8100001:ramp_running_slope_total", value=slope)
+        assert checked_ramps(evidence)[0]["slope_pct"] == abs(slope)
 
 
 def test_a_dimension_with_no_record_is_unresolved():

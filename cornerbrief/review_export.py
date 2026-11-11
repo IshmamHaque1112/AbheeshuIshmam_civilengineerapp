@@ -115,8 +115,8 @@ def to_markdown(run: dict) -> str:
     if run.get("readiness") and run["readiness"]["rows"]:
         n = run["readiness"]["counts"]
         L += ["", "## Concept model inputs", "", f"{n['documented']} documented, {n['assumed']} assumed, {n['stale']} stale, {n['unresolved']} unresolved. Only documented dimensions can feed the concept model.", "",
-              "| Ramp | Dimension | Recorded value | Status | Why |", "| --- | --- | --- | --- | --- |"]
-        L += [row(d["ramp_id"], d["dimension"], "" if d["value"] is None else f"{d['value']} {d['unit'] or ''}", d["status"], d["reason"]) for d in run["readiness"]["rows"]]
+              "| Ramp | Dimension | Recorded value | Status | Source | Evidence date | Unit documentation | Why |", "| --- | --- | --- | --- | --- | --- | --- | --- |"]
+        L += [row(d["ramp_id"], d["dimension"], "" if d["value"] is None else f"{d['value']} {d['unit'] or ''}", d["status"], d["source"] or "No source recorded", d["date"] or "Unknown", "Documented" if d["unit_documented"] else "Not documented", d["reason"]) for d in run["readiness"]["rows"]]
     L += ["", "## Rule results", "", "| Rule | Ramp | Limit | Result | Math or reason | Source | Quote |", "| --- | --- | --- | --- | --- | --- | --- |"]
     L += [row(o["title"], o["ramp_id"], o["limit_text"], o["result"] + (" (stop: evidence still needed)" if o["evidence_stop"] else ""), o["math"] or o["reason"], f"{o['section'] or ''} {o['url'] or ''}", o["quote"]) for o in run["rule_results"]]
     if run["design_targets"]:

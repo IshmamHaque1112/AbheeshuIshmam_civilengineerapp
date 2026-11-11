@@ -148,8 +148,8 @@ function readinessSection(x) {
     ? `The concept model can't be built: ${blocked} of ${x.rows.length} dimensions aren't documented. Each one moves to documented only through a new record or a site measurement and a rerun.`
     : "Every dimension the concept model needs is documented. Concept outputs still stay off until every review condition is met.";
   return `<section><h2>Concept model inputs</h2><p>${esc(lead)}</p>${x.gate_note ? `<p class="stalenote">${esc(x.gate_note)}</p>` : ""}
-    <details><summary>${n.documented} documented, ${n.assumed} assumed, ${n.stale} stale, ${n.unresolved} unresolved</summary><div class="wrap"><table><thead><tr><th>Ramp</th><th>Dimension</th><th>Recorded value</th><th>Status</th><th>Why</th></tr></thead><tbody>
-    ${x.rows.map((d) => `<tr><td>${esc(d.ramp_id)}</td><td>${esc(d.dimension)}</td><td>${d.value == null ? "" : `${esc(d.value)} ${esc(d.unit === "percent" ? "%" : d.unit || "")}`}</td><td><span class="tag ${d.status === "documented" ? "measured" : d.status === "unresolved" ? "missing" : esc(d.status)}">${esc(d.status)}</span></td><td>${esc(d.reason || "")}</td></tr>`).join("")}</tbody></table></div></details></section>`;
+    <details><summary>${n.documented} documented, ${n.assumed} assumed, ${n.stale} stale, ${n.unresolved} unresolved</summary><div class="wrap"><table><thead><tr><th>Ramp</th><th>Dimension</th><th>Recorded value</th><th>Status</th><th>Source</th><th>Evidence date</th><th>Unit documentation</th><th>Why</th></tr></thead><tbody>
+    ${x.rows.map((d) => `<tr><td>${esc(d.ramp_id)}</td><td>${esc(d.dimension)}</td><td>${d.value == null ? "" : `${esc(d.value)} ${esc(d.unit === "percent" ? "%" : d.unit || "")}`}</td><td><span class="tag ${d.status === "documented" ? "measured" : d.status === "unresolved" ? "missing" : esc(d.status)}">${esc(d.status)}</span></td><td>${esc(d.source || "No source recorded")}</td><td>${esc(d.date || "Unknown")}</td><td>${d.unit_documented ? "Documented" : "Not documented"}</td><td>${esc(d.reason || "")}</td></tr>`).join("")}</tbody></table></div></details></section>`;
 }
 
 function workPlan(w) {

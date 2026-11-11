@@ -218,10 +218,49 @@ def test_static_export_is_actual_ui_without_backend_calls(browser):
     pg.wait_for_selector('.status')
     assert 'saved sample' in pg.inner_text('#search-status')
     assert pg.locator('#search-form button').is_disabled()
+    assert pg.locator('#picker button').count() == 4
+    pg.click('#picker button[data-key="real_test"]')
+    pg.wait_for_selector('.status.stop')
+    assert 'Real test corner from NYC Open Data' in pg.inner_text('.alert')
+    pg.locator('summary').filter(has_text='street permits for this block').click()
+    assert '2024' in pg.inner_text('#main')
     pick(pg,3);pg.wait_for_selector('.status.stop')
     assert pg.get_by_role('heading',name='Agent trace',exact=True).count()==1
     assert not errors and all(url.startswith('file:') for url in requests)
     context.close()
+
+
+def test_dimension_provenance_survives_field_rerun_and_packet_download(page):
+    pick(page, 3)
+    page.wait_for_selector('.status.stop')
+    section = page.locator('section').filter(has=page.get_by_role('heading', name='Concept model inputs', exact=True))
+    section.locator('summary').click()
+    width = section.locator('tbody tr').filter(has_text='Ramp width')
+    assert '2019-10-19' in width.inner_text()
+    assert 'Pedestrian Ramp Locations, ramp 8300001' in width.inner_text()
+    assert 'stale' in width.inner_text()
+    page.fill('#by', 'Test measurer')
+    page.fill('#on', '2026-11-10')
+    page.fill('#field [data-key="8300001:ramp_width"]', '5')
+    page.click('#rerun')
+    page.wait_for_selector('.changes')
+    section.locator('summary').click()
+    text = width.inner_text()
+    assert 'Measured on site by Test measurer' in text and '2026-11-10' in text
+    assert 'documented' in text
+    # One replacement does not refresh unrelated survey measurements or create a plan.
+    assert 'stale' in section.locator('tbody tr').filter(has_text='Landing length').inner_text()
+    assert page.locator('#model').count() == 0
+    page.fill('#reviewer', 'Test packet release')
+    page.click('#approve')
+    page.wait_for_selector('#release a.button')
+    with page.expect_download() as info:
+        page.locator('#release a.button').click()
+    text = open(info.value.path(), encoding='utf-8').read()
+    table = text.split('## Concept model inputs', 1)[1].split('## Rule results', 1)[0]
+    assert 'Source | Evidence date | Unit documentation' in table
+    assert 'Measured on site by Test measurer' in table and '2026-11-10' in table
+    assert '2019-10-19' in table and 'stale' in table
 
 
 def test_static_export_preview_orbits_the_python_built_model(browser):

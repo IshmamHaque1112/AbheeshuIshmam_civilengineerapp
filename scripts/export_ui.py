@@ -6,16 +6,19 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from cornerbrief import preview
 from cornerbrief.app import public
-from cornerbrief.data_loader import SAMPLE_KEYS, load_corner
-from cornerbrief.llm import ReplayClient
+from cornerbrief.data_loader import list_corners, load_corner
+from cornerbrief.llm import OfflineClient, ReplayClient
 from cornerbrief.orchestrator import analyze
 
 
 def build():
     packets = {}
-    for key in SAMPLE_KEYS:
-        packet = public(analyze(load_corner(key), client=ReplayClient(key), save=False))
-        packet.update(id=f"export-{key}", created="Saved sample preview", features=dict(email=False, labels_and_plans=False, static_export=True))
+    for choice in list_corners():
+        key = choice["key"]
+        corner = load_corner(key)
+        client = ReplayClient(key) if corner.get("data_kind") == "SAMPLE DATA" else OfflineClient()
+        packet = public(analyze(corner, client=client, save=False))
+        packet.update(id=f"export-{key}", created="Saved record preview", features=dict(email=False, labels_and_plans=False, static_export=True))
         packet.update(label=None, label_reason="", planning=None, options=[], approval=None)
         packets[key] = packet
     source = Path(__file__).resolve().parent.parent / "cornerbrief" / "static"

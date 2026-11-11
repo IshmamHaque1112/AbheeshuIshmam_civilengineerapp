@@ -1,4 +1,5 @@
 """Simple concept parts built from checked dimensions. Not a structural design."""
+import math
 import yaml
 from .models import EvidenceItem
 from .paths import DATA
@@ -8,8 +9,18 @@ def assumptions() -> dict:
     return yaml.safe_load((DATA / "kit_assumptions.yaml").read_text(encoding="utf-8"))
 
 
-def _feet(item: EvidenceItem) -> float:
-    return float(item.value) / 12 if item.unit == "in" else float(item.value)
+def model_dimension(item: EvidenceItem, slope: bool = False) -> float | None:
+    """Accept only usable measured values with documented, supported units."""
+    units = {"percent": 1.0} if slope else {"in": 1 / 12, "ft": 1.0}
+    if item.label != "measured" or not item.unit_documented or item.unit not in units or isinstance(item.value, bool):
+        return None
+    try:
+        value = float(item.value)
+    except (TypeError, ValueError):
+        return None
+    if not math.isfinite(value) or abs(value) in (999, 9999) or (not slope and value <= 0):
+        return None
+    return abs(value) if slope else value * units[item.unit]
 
 
 def checked_ramps(evidence: list[EvidenceItem]) -> list[dict]:
@@ -21,11 +32,12 @@ def checked_ramps(evidence: list[EvidenceItem]) -> list[dict]:
     out = []
     for ramp_id, f in ramps.items():
         needed = ["ramp_width", "ramp_length", "lnd_width", "lnd_length", "ramp_running_slope_total"]
-        if not all(k in f and f[k].label == "measured" and f[k].unit_documented for k in needed):
+        values = {k: model_dimension(f[k], slope=k == "ramp_running_slope_total") if k in f else None for k in needed}
+        if any(value is None for value in values.values()):
             return []
-        out.append(dict(ramp_id=ramp_id, width_ft=_feet(f["ramp_width"]), length_ft=_feet(f["ramp_length"]),
-                        landing_width_ft=_feet(f["lnd_width"]), landing_length_ft=_feet(f["lnd_length"]),
-                        slope_pct=abs(float(f["ramp_running_slope_total"].value))))
+        out.append(dict(ramp_id=ramp_id, width_ft=values["ramp_width"], length_ft=values["ramp_length"],
+                        landing_width_ft=values["lnd_width"], landing_length_ft=values["lnd_length"],
+                        slope_pct=values["ramp_running_slope_total"]))
     return out
 
 
