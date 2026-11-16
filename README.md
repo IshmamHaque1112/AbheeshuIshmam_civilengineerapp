@@ -32,7 +32,7 @@ The result is hours of manual cross-checking per corner, and a real risk that a 
 CornerBrief does the groundwork in one traceable packet and is honest about what it can't establish:
 
 1. **Find the right corner** by borough and street, and see which ramps and records exist for it.
-2. **Bring the evidence together** from nine public sources, correct known data errors, and label every value **measured**, **assumed**, **missing** or **stale**, with its source and retrieval time.
+2. **Bring the evidence together** from eight city and state datasets, plus Open Library as an optional, citation-only reference; correct known data errors; and label every value **measured**, **assumed**, **missing** or **stale**, with its source and retrieval time.
 3. **Check what the evidence supports** against 52 cited rules, with the math shown. When the evidence isn't good enough, the packet says **"Stop: evidence still needed"** and explains why, rather than guessing.
 4. **Hand the engineer a site visit list** of exactly what to measure or confirm, and rerun the check with site measurements when they come back.
 5. **Show how documented dimensions could carry forward** into a 3D concept, quantities and a draft work sequence, keeping synthetic examples visibly separate from real evidence.
@@ -74,7 +74,7 @@ The four steps connect. Choosing the correct corner and checking its evidence de
 | Step | Built and working | Synthetic or fictional demonstration | Proposed or gated |
 | --- | --- | --- | --- |
 | **1. Find the corner** | Search NYC records by borough and street name, choose the corner, see its ramps and which records were found, each with its query and retrieval time | Sample corners A, B and C use made-up records | Search by exact intersection |
-| **2. Investigate the evidence** | Records joined from nine sources; every value labeled measured, assumed, missing or stale; cited rule checks with math; "stop" with reasons; site visit list; site measurements and rerun; release and download | Sample corners and saved agent responses | Rule results become pass or fail only after a named reviewer verifies each rule |
+| **2. Investigate the evidence** | Records joined from eight city/state datasets plus Open Library (citation-only); every value labeled measured, assumed, missing or stale; cited rule checks with math; "stop" with reasons; site visit list; site measurements and rerun; release and download | Sample corners and saved agent responses | Rule results become pass or fail only after a named reviewer verifies each rule |
 | **3. Develop a 3D concept** | Each ramp dimension shown as documented, assumed, unresolved or stale with its record; a 3D sandbox that turns dimensions into geometry and provisional quantities | The sandbox uses typed-in dimensions and is labeled synthetic | The packet's own concept model, built from surveyed dimensions, appears only when labels and plans are turned on and the corner has complete evidence, a finished review, verified rules and no exceeded limit |
 | **4. Prepare construction planning** | A draft concrete work sequence (sawcut to restoration) whose durations and crews stay "unknown" and that is flagged for recalculation when its inputs change | Contractor logistics with a fictional company, off by default | Real durations, crews, costs and scheduling, after interviews with estimators and a professional review |
 
