@@ -7,7 +7,9 @@
 
 # CornerBrief
 
-CornerBrief assembles a traceable investigation packet for a NYC street corner, shows which checks the evidence supports, and tells an engineer exactly what evidence is still needed. It is a demo for pre-design investigation. It does not decide compliance, approve a design or represent NYC.
+Before a junior engineer at NYC DDC can redesign a single pedestrian ramp (one of 217,000 citywide), they have to pull answers from eight disconnected city datasets that disagree with each other, don't say when they're stale, and sometimes have the wrong numbers outright. Nothing flags those mistakes until they're built into a design.
+
+CornerBrief assembles a traceable investigation packet for a street corner, shows which checks the evidence supports, and tells the engineer exactly what evidence is still missing. It is a demo for pre-design investigation. It does not decide compliance, approve a design, or represent NYC.
 
 The product requirements are in [`docs/PRD.md`](docs/PRD.md) and the staged direction is in [`docs/ROADMAP.md`](docs/ROADMAP.md). The demo is on November 12, 2026.
 
@@ -18,7 +20,7 @@ New York City has about 217,000 pedestrian ramps across roughly 134,000 street c
 Today those answers are spread across at least eight public sources that don't link to each other:
 
 - **Records are scattered.** Ramp measurements, construction history, permits, complaints, street centerlines, sidewalk outlines, DOT's own survey map and the state road inventory each live in a different dataset or map service, with different identifiers, units and coordinate systems.
-- **Records go out of date without saying so.** DOT's ramp measurements were last updated in October 2021. A ramp rebuilt or permitted since then still shows its old numbers. By our estimate, about 62% of corners citywide stop for evidence in CornerBrief, most often because construction or permits since the survey may have changed them.
+- **Records go out of date without saying so.** DOT's ramp measurements were last updated in October 2021. A ramp rebuilt or permitted since then still shows its old numbers. By our estimate, running CornerBrief on a corner citywide would produce "Stop: evidence still needed" about 62% of the time, most often because construction or permits since the survey may have changed it.
 - **The data has errors.** Two columns in the ramp dataset, ramp length and left flare, are swapped. One sidewalk width field has no documented unit. Nothing in the data warns a reader about either.
 - **The rules overlap.** A single corner ramp can fall under the federal ADA Standards, the NYC Administrative Code, the Rules of the City of New York and DOT's H-1011 standard drawings. They set different limits for the same measurement, in different units, and some apply only to particular ramp designs.
 - **Gaps are found too late.** Missing or outdated information is often discovered on site or in review, which means a second site visit, rework, or a design built on numbers that were never true.
@@ -30,7 +32,7 @@ The result is hours of manual cross-checking per corner, and a real risk that a 
 CornerBrief does the groundwork in one traceable packet and is honest about what it can't establish:
 
 1. **Find the right corner** by borough and street, and see which ramps and records exist for it.
-2. **Bring the evidence together** from nine public sources, correct known data errors, and label every value **measured**, **assumed**, **missing** or **stale**, with its source and retrieval time.
+2. **Bring the evidence together** from eight city and state datasets, plus Open Library as an optional, citation-only reference; correct known data errors; and label every value **measured**, **assumed**, **missing** or **stale**, with its source and retrieval time.
 3. **Check what the evidence supports** against 52 cited rules, with the math shown. When the evidence isn't good enough, the packet says **"Stop: evidence still needed"** and explains why, rather than guessing.
 4. **Hand the engineer a site visit list** of exactly what to measure or confirm, and rerun the check with site measurements when they come back.
 5. **Show how documented dimensions could carry forward** into a 3D concept, quantities and a draft work sequence, keeping synthetic examples visibly separate from real evidence.
@@ -72,7 +74,7 @@ The four steps connect. Choosing the correct corner and checking its evidence de
 | Step | Built and working | Synthetic or fictional demonstration | Proposed or gated |
 | --- | --- | --- | --- |
 | **1. Find the corner** | Search NYC records by borough and street name, choose the corner, see its ramps and which records were found, each with its query and retrieval time | Sample corners A, B and C use made-up records | Search by exact intersection |
-| **2. Investigate the evidence** | Records joined from nine sources; every value labeled measured, assumed, missing or stale; cited rule checks with math; "stop" with reasons; site visit list; site measurements and rerun; release and download | Sample corners and saved agent responses | Rule results become pass or fail only after a named reviewer verifies each rule |
+| **2. Investigate the evidence** | Records joined from eight city/state datasets plus Open Library (citation-only); every value labeled measured, assumed, missing or stale; cited rule checks with math; "stop" with reasons; site visit list; site measurements and rerun; release and download | Sample corners and saved agent responses | Rule results become pass or fail only after a named reviewer verifies each rule |
 | **3. Develop a 3D concept** | Each ramp dimension shown as documented, assumed, unresolved or stale with its record; a 3D sandbox that turns dimensions into geometry and provisional quantities | The sandbox uses typed-in dimensions and is labeled synthetic | The packet's own concept model, built from surveyed dimensions, appears only when labels and plans are turned on and the corner has complete evidence, a finished review, verified rules and no exceeded limit |
 | **4. Prepare construction planning** | A draft concrete work sequence (sawcut to restoration) whose durations and crews stay "unknown" and that is flagged for recalculation when its inputs change | Contractor logistics with a fictional company, off by default | Real durations, crews, costs and scheduling, after interviews with estimators and a professional review |
 
@@ -134,7 +136,7 @@ Open http://127.0.0.1:8000 in your browser. If PowerShell blocks the activate sc
 Use Python 3.10 or newer, because Apple's Python 3.9 won't run the app. For example, if Homebrew installed Python 3.12, run:
 
 ```bash
-python3.12 -m venv .venv
+python3.12 -m venv .venv  # any Python 3.10+ works
 source .venv/bin/activate
 pip install -r requirements.txt
 python -m pytest -q
@@ -154,7 +156,7 @@ python -m playwright install chromium
 
 ## Run the demo
 
-No API key is needed, and the demo stays in this mode while `DEMO_MODE=true`. The corners at the top of the app work offline:
+No API key is needed. Without `ANTHROPIC_API_KEY`, the app runs in demo mode by default (or set `DEMO_MODE=true` explicitly). The corners at the top of the app work offline:
 
 1. **Sample corner A, Queens:** Checks the evidence supports, with the source and math for each calculation.
 2. **Sample corner B, Brooklyn:** Checks the evidence supports, with a utility vault and catch basin to review and one Skeptic rework.
@@ -289,7 +291,7 @@ Expand **Agent trace** in a packet to see each agent's input, response and token
 | Certificates on Windows | [truststore](https://github.com/sethmlarson/truststore) | Lets Python use the Windows certificate store, which NYC data needed |
 | Email | Python's built-in `smtplib` | Dry run by default, sends only to allowlisted addresses |
 | Storage | JSON files in `runs`, `cache` and `data` | No database to install or run |
-| Tests | [pytest](https://pytest.org), Starlette's test client (with `httpx2`), and [Playwright](https://playwright.dev) with Chromium for browser checks | 517 tests, including an adversarial suite; browser checks skip without Playwright |
+| Tests | [pytest](https://pytest.org), Starlette's test client (with `httpx2`), and [Playwright](https://playwright.dev) with Chromium for browser checks | 490+ tests, including an adversarial suite; browser checks skip without Playwright |
 
 Everything runs locally on one computer. There is no cloud service, database or front-end build step, and the only network calls are to the public data sources, Open Library when it's turned on, and the Claude API in live mode.
 
