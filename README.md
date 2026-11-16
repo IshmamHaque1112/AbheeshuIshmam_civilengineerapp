@@ -291,7 +291,7 @@ Expand **Agent trace** in a packet to see each agent's input, response and token
 | Certificates on Windows | [truststore](https://github.com/sethmlarson/truststore) | Lets Python use the Windows certificate store, which NYC data needed |
 | Email | Python's built-in `smtplib` | Dry run by default, sends only to allowlisted addresses |
 | Storage | JSON files in `runs`, `cache` and `data` | No database to install or run |
-| Tests | [pytest](https://pytest.org), Starlette's test client (with `httpx2`), and [Playwright](https://playwright.dev) with Chromium for browser checks | 517 tests, including an adversarial suite; browser checks skip without Playwright |
+| Tests | [pytest](https://pytest.org), Starlette's test client (with `httpx2`), and [Playwright](https://playwright.dev) with Chromium for browser checks | 490+ tests, including an adversarial suite; browser checks skip without Playwright |
 
 Everything runs locally on one computer. There is no cloud service, database or front-end build step, and the only network calls are to the public data sources, Open Library when it's turned on, and the Claude API in live mode.
 
