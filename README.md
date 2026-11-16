@@ -307,6 +307,8 @@ Everything runs locally on one computer. There is no cloud service, database or 
 | Site measurement logic | `cornerbrief/field.py` |
 | Tests, including the adversarial suite | `tests`, with the suite in `tests/test_v3.py` |
 | Product requirements, roadmap and reviews | `docs` |
+| Static demo export (no backend needed) | `demo_export` (rebuilt by `scripts/export_ui.py`) |
+| Data-source audit script and the original build spec | `scripts/data_report.py`, `docs/BUILD_PROMPT.md` |
 | Run logs, including token use | `runs` (created when you run it) |
 | Site photos | `runs/photos` (created when you add one) |
 | Email dry runs | `outbox` (created when you use it) |

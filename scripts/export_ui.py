@@ -28,7 +28,7 @@ def build():
     payload = json.dumps(packets, ensure_ascii=True).replace("<", "\\u003c")
     html = html.replace('<link rel="stylesheet" href="/style.css">', f"<style>{css}</style>")
     html = html.replace('<script src="/app.js"></script>', f"<script>window.CORNERBRIEF_EXPORT = {payload};</script>\n<script>{js}</script>")
-    out = source.parent.parent / ".helix" / "output"
+    out = source.parent.parent / "demo_export"
     out.mkdir(parents=True, exist_ok=True)
     (out / "index.html").write_text(html, encoding="utf-8")
     # The 3D preview's default model comes from the same Python code the local app uses. Editing needs the backend.
@@ -39,7 +39,7 @@ def build():
     page = page.replace('<link rel="stylesheet" href="/style.css">', f"<style>{css}</style>")
     page = page.replace('<script src="/preview.js"></script>', f"<script>window.CORNERBRIEF_PREVIEW_EXPORT = {payload};</script>\n<script>{(source / 'preview.js').read_text(encoding='utf-8')}</script>")
     (out / "preview.html").write_text(page, encoding="utf-8")
-    print("Exported actual UI, saved sample packets and the default 3D preview to .helix/output/. Live search, measurements, release and dimension edits require the local backend.")
+    print("Exported actual UI, saved sample packets and the default 3D preview to demo_export/. Live search, measurements, release and dimension edits require the local backend.")
 
 
 if __name__ == "__main__":
