@@ -214,7 +214,7 @@ def test_static_export_is_actual_ui_without_backend_calls(browser):
     pg=context.new_page();errors=[];requests=[]
     pg.on('pageerror',lambda e:errors.append(str(e)))
     pg.on('request',lambda r:requests.append(r.url))
-    pg.goto((Path(__file__).resolve().parent.parent/'.helix/output/index.html').as_uri())
+    pg.goto((Path(__file__).resolve().parent.parent/'demo_export/index.html').as_uri())
     pg.wait_for_selector('.status')
     assert 'saved sample' in pg.inner_text('#search-status')
     assert pg.locator('#search-form button').is_disabled()
@@ -270,7 +270,7 @@ def test_static_export_preview_orbits_the_python_built_model(browser):
     pg.on('pageerror',lambda e:errors.append(str(e)))
     pg.on('console',lambda m:errors.append(m.text) if m.type=='error' else None)
     pg.on('request',lambda r:requests.append(r.url))
-    pg.goto((Path(__file__).resolve().parent.parent/'.helix/output/index.html').as_uri())
+    pg.goto((Path(__file__).resolve().parent.parent/'demo_export/index.html').as_uri())
     pg.wait_for_selector('.status')
     pg.click('#preview-link');pg.wait_for_selector('#quantities tr')
     assert '55 sf' in pg.inner_text('#quantities') and 'Editing dimensions needs the local' in pg.inner_text('#status')

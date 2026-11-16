@@ -86,9 +86,11 @@ Open `http://127.0.0.1:8008/` for the working application and
 runs in the terminal that started it; Ctrl+C stops it. No `.env` or credential
 is needed for these saved-data demonstrations.
 
-Helix's `.helix/output/index.html` is the actual static export, not the full
-backend. Search, field writes, release/download and synthetic dimension edits
-need the local server; their static limitations remain explicit.
+`demo_export/index.html` (built by `scripts/export_ui.py`, formerly saved to
+`.helix/output/` - renamed so the folder is self-explanatory without knowing
+which tool built it) is the actual static export, not the full backend.
+Search, field writes, release/download and synthetic dimension edits need
+the local server; their static limitations remain explicit.
 
 ## Still owned by people or later milestones
 

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """CornerBrief data report. Python 3.8+, no packages or API keys needed.
-Run: python data_report.py   Output: docs/data_report.md
+Run: python scripts/data_report.py   Output: docs/data_report.md
 """
 import json, os, sys, time, urllib.parse, urllib.request
 from collections import Counter
