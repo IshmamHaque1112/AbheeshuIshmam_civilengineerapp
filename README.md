@@ -7,11 +7,11 @@
 
 # CornerBrief
 
-Before a junior engineer at NYC DDC can redesign a single pedestrian ramp (one of 217,000 citywide), they have to pull answers from eight disconnected city datasets that disagree with each other, don't say when they're stale, and sometimes have the wrong numbers outright. Nothing flags those mistakes until they're built into a design.
+Before a junior engineer at the NYC Department of Design and Construction (DDC) can redesign a single pedestrian ramp (one of 217,000 citywide), they have to pull answers from eight disconnected city datasets that disagree with each other, don't say when they're stale, and sometimes have the wrong numbers outright. Nothing flags those mistakes until they're built into a design.
 
 CornerBrief assembles a traceable investigation packet for a street corner, shows which checks the evidence supports, and tells the engineer exactly what evidence is still missing. It is a demo for pre-design investigation. It does not decide compliance, approve a design, or represent NYC.
 
-The product requirements are in [`docs/PRD.md`](docs/PRD.md) and the staged direction is in [`docs/ROADMAP.md`](docs/ROADMAP.md). The demo is on November 12, 2026.
+The product requirements are in [`docs/PRD.md`](docs/PRD.md) and the staged direction is in [`docs/ROADMAP.md`](docs/ROADMAP.md).
 
 ## The problem
 
@@ -232,7 +232,7 @@ The official data dictionary gives lengths in inches and slopes and flares in pe
 
 **Permits:** A pedestrian ramp permit after the survey labels that ramp's measurements assumed only when its location ties it to the ramp: its point is within 30 m and its corner note, such as SW, fits. Other permits, including ramp permits that only share the block's street names, add a site-visit item. Permit holder names aren't saved. If a lookup fails, the packet says that dataset wasn't checked.
 
-**Still from a person:** Legal grade and the H-1011 ramp type aren't in any dataset used here. Sidewalk width starts from DOT's approach width, read as inches and labeled assumed, because no document gives its unit. A site measurement replaces it.
+**Still from a person:** Legal grade (the street's officially mapped elevation) and the H-1011 ramp type aren't in any dataset used here. Sidewalk width starts from DOT's approach width, read as inches and labeled assumed, because no document gives its unit. A site measurement replaces it.
 
 ## Rules
 
