@@ -11,7 +11,7 @@ Before a junior engineer at the NYC Department of Design and Construction (DDC) 
 
 CornerBrief assembles a traceable investigation packet for a street corner, shows which checks the evidence supports, and tells the engineer exactly what evidence is still missing. It is a demo for pre-design investigation. It does not decide compliance, approve a design, or represent NYC.
 
-The product requirements are in [`docs/PRD.md`](docs/PRD.md) and the staged direction is in [`docs/ROADMAP.md`](docs/ROADMAP.md). The demo is on November 12, 2026.
+The product requirements are in [`docs/PRD.md`](docs/PRD.md) and the staged direction is in [`docs/ROADMAP.md`](docs/ROADMAP.md).
 
 ## The problem
 
