@@ -136,7 +136,7 @@ Open http://127.0.0.1:8000 in your browser. If PowerShell blocks the activate sc
 Use Python 3.10 or newer, because Apple's Python 3.9 won't run the app. For example, if Homebrew installed Python 3.12, run:
 
 ```bash
-python3.12 -m venv .venv
+python3.12 -m venv .venv  # any Python 3.10+ works
 source .venv/bin/activate
 pip install -r requirements.txt
 python -m pytest -q
@@ -156,7 +156,7 @@ python -m playwright install chromium
 
 ## Run the demo
 
-No API key is needed, and the demo stays in this mode while `DEMO_MODE=true`. The corners at the top of the app work offline:
+No API key is needed. Without `ANTHROPIC_API_KEY`, the app runs in demo mode by default (or set `DEMO_MODE=true` explicitly). The corners at the top of the app work offline:
 
 1. **Sample corner A, Queens:** Checks the evidence supports, with the source and math for each calculation.
 2. **Sample corner B, Brooklyn:** Checks the evidence supports, with a utility vault and catch basin to review and one Skeptic rework.
