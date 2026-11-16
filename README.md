@@ -7,7 +7,9 @@
 
 # CornerBrief
 
-CornerBrief assembles a traceable investigation packet for a NYC street corner, shows which checks the evidence supports, and tells an engineer exactly what evidence is still needed. It is a demo for pre-design investigation. It does not decide compliance, approve a design or represent NYC.
+Before a junior engineer at NYC DDC can redesign a single pedestrian ramp (one of 217,000 citywide), they have to pull answers from eight disconnected city datasets that disagree with each other, don't say when they're stale, and sometimes have the wrong numbers outright. Nothing flags those mistakes until they're built into a design.
+
+CornerBrief assembles a traceable investigation packet for a street corner, shows which checks the evidence supports, and tells the engineer exactly what evidence is still missing. It is a demo for pre-design investigation. It does not decide compliance, approve a design, or represent NYC.
 
 The product requirements are in [`docs/PRD.md`](docs/PRD.md) and the staged direction is in [`docs/ROADMAP.md`](docs/ROADMAP.md). The demo is on November 12, 2026.
 
